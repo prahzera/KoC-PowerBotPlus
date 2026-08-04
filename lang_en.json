@@ -704,10 +704,16 @@
     "Save Changes": "",
     "Export": "",
     "Import": "",
-    "GloryFarm": "",
-    "Glory Farm Search": "",
+    "GloryFarm": "Target Finder",
+    "Glory Farm Search": "Target Finder Search",
     "Center City": "",
     "Searching map...": "",
     "Hiding": "",
-    "Checking...": ""
+    "Checking...": "",
+    "DEFENDING": "Defending",
+    "Actions": "Actions",
+    "Target Finder Description": "Scans the map for player cities and checks if they are currently defending (ideal for farming glory).",
+    "Center City Description": "Center coordinates of the search. Choose an owned city or type custom coordinates.",
+    "Radius Description": "Radius in map blocks to search around the center (no distance limit).",
+    "Actions Description": "'Scout' sends an immediate spy mission; 'March+' opens the attack window with coordinates pre-filled."
 }

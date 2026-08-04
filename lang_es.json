@@ -746,10 +746,16 @@
     "Save Changes": "Guardar Cambios",
     "Export": "Exportar",
     "Import": "Importar",
-    "GloryFarm": "Granja de Gloria",
-    "Glory Farm Search": "Búsqueda de Granja de Gloria",
+    "GloryFarm": "Buscador de Objetivos",
+    "Glory Farm Search": "Búsqueda de Objetivos",
     "Center City": "Ciudad Centro",
     "Searching map...": "Buscando mapa...",
     "Hiding": "Escondido",
-    "Checking...": "Comprobando..."
+    "Checking...": "Comprobando...",
+    "DEFENDING": "Defendiendo",
+    "Actions": "Acciones",
+    "Target Finder Description": "Escanea el mapa buscando ciudades enemigas para comprobar si tienen la defensa activa (ideal para ganar gloria).",
+    "Center City Description": "Coordenadas centrales de búsqueda. Elige una de tus ciudades o escribe manualmente.",
+    "Radius Description": "Radio en bloques de mapa para buscar a la redonda (sin límite de distancia).",
+    "Actions Description": "'Espiar' envía un espía de inmediato; 'March+' abre la ventana de ataque con las coordenadas cargadas."
 }

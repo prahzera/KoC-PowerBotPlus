@@ -30652,6 +30652,12 @@ Tabs.GloryFarm = {
 		uWExportFunction('gloryfarmquickmarch', Tabs.GloryFarm.quickMarch);
 
 		var m = '<DIV class=divHeader align="center">' + tx('Glory Farm Search') + '</div>';
+		m += '<div class="description" style="margin: 6px 8px; padding: 8px 12px; border: 1px solid #997040; background: rgba(50, 35, 20, 0.45); border-radius: 4px; font-size: 11px; line-height: 15px; color: #dfdfdf;">';
+		m += '<strong>' + tx('Target Finder Description') + '</strong><br/>';
+		m += '<span style="display:inline-block; margin-top: 4px;">• <strong>' + tx('Center City') + '</strong>: ' + tx('Center City Description') + '</span><br/>';
+		m += '• <strong>' + tx('Radius') + '</strong>: ' + tx('Radius Description') + '<br/>';
+		m += '• <strong>' + tx('Actions') + '</strong>: ' + tx('Actions Description');
+		m += '</div>';
 		m += '<TABLE width=100% class=xtab>';
 		m += '<TR><TD align=right width=20%>' + tx('Center City') + ':&nbsp;</td><TD><SPAN id=pbGloryCitySpan></span></td></TR>';
 		m += '<TR><TD align=right width=20%>' + tx('Radius') + ':&nbsp;</td><TD><INPUT id=pbGloryRadius size=3 value=10 />';
@@ -30870,16 +30876,26 @@ Tabs.GloryFarm = {
 		for (var i = 0; i < t.mapDat.length; i++) {
 			var city = t.mapDat[i];
 			var rowClass = (i % 2) ? 'evenRow' : 'oddRow';
-			if (city.defendStatus.indexOf('DEFENDING') >= 0) {
+			var rowStyle = '';
+			var badgeHtml = '';
+
+			if (city.defendStatus === 'DEFENDING' || city.defendStatus.indexOf('DEFENDING') >= 0) {
 				rowClass += ' highRow';
+				rowStyle = 'background-color: rgba(39, 174, 96, 0.15); font-weight: 600;';
+				badgeHtml = '<span style="background-color: #27ae60; color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 10px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.15); text-transform: uppercase;">' + tx('DEFENDING') + '</span>';
+			} else if (city.defendStatus === 'Hiding' || city.defendStatus.indexOf('Hiding') >= 0) {
+				badgeHtml = '<span style="background-color: #7f8c8d; color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 10px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.15); text-transform: uppercase;">' + tx('Hiding') + '</span>';
+			} else {
+				badgeHtml = '<span style="background-color: #f39c12; color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 10px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.15); text-transform: uppercase;">' + tx('Checking...') + '</span>';
 			}
-			m += '<tr id="glory_row_' + i + '" class="' + rowClass + '">';
+
+			m += '<tr id="glory_row_' + i + '" class="' + rowClass + '" style="' + rowStyle + '">';
 			m += '<td class=xtab><a class=xlink onclick="btGotoMap(' + city.x + ',' + city.y + ')">' + city.x + ',' + city.y + '</a></td>';
 			m += '<td class=xtab>' + city.dist.toFixed(1) + '</td>';
 			m += '<td class=xtab>' + city.player + '</td>';
 			m += '<td class=xtab>' + city.alliance + '</td>';
 			m += '<td class=xtab align=right>' + addCommas(city.might) + '</td>';
-			m += '<td class=xtab align=center id="glory_status_' + i + '">' + city.defendStatus + '</td>';
+			m += '<td class=xtab align=center id="glory_status_' + i + '">' + badgeHtml + '</td>';
 			m += '<td class=xtab align=center>';
 			m += '<a class="inlineButton btButton blue14" onclick="quickscoutsearch(' + city.x + ',' + city.y + ',' + t.ModelCityId + ');return false;"><span>' + tx('Scout') + '</span></a>&nbsp;';
 			m += '<a class="inlineButton btButton red14" onclick="gloryfarmquickmarch(' + city.x + ',' + city.y + ');return false;"><span>' + tx('March+') + '</span></a>';
@@ -30907,24 +30923,17 @@ Tabs.GloryFarm = {
 		}
 
 		var city = t.mapDat[nextIdx];
-		var statusDiv = ById('glory_status_' + nextIdx);
-		if (statusDiv) statusDiv.innerHTML = '<span>' + tx('Checking...') + '</span>';
 
 		getDefendStatus(city.x, city.y, null, true, function (rslt) {
 			if (!t.statusCheckRunning) return;
 			city.checked = true;
-			var row = ById('glory_row_' + nextIdx);
-			var statusDiv = ById('glory_status_' + nextIdx);
 
 			if (rslt.ok && rslt.ok == "true") {
-				city.defendStatus = '<span class=boldMagenta>* DEFENDING *</span>';
-				if (statusDiv) statusDiv.innerHTML = city.defendStatus;
-				if (row) jQuery(row).addClass("highRow");
+				city.defendStatus = 'DEFENDING';
 			} else {
-				city.defendStatus = '<span>' + tx('Hiding') + '</span>';
-				if (statusDiv) statusDiv.innerHTML = city.defendStatus;
-				if (row) jQuery(row).removeClass("highRow");
+				city.defendStatus = 'Hiding';
 			}
+			t.renderResults();
 
 			t.DefendTimer = setTimeout(function () { t.checkNextDefendStatus(); }, 1250); // Delay to avoid spamming
 		}, nextIdx, t.mapDat.length, null);
