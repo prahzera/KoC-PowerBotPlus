@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.70
-// @releasenotes	        Language packs now loaded from GitHub releases
+// @version			3.71
+// @releasenotes	        Language packs now loaded from GitHub releases, Extra Tools button hidden, README updated
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.70';
+var Version = '3.71';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
