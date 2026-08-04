@@ -959,6 +959,15 @@ function PowerBotStartup() {
 	var gg = ByCl('gem_gifting');
 	if (gg.length > 0) for (var g = 0; g < gg.length; g++) gg[g].style.display = 'none';
 
+	// Hide the game's built-in "Extra Tools" nav button (replaced by Power Bot Plus)
+	var navTabs = ByCl('navTab');
+	for (var n = 0; n < navTabs.length; n++) {
+		if (navTabs[n].getAttribute('onclick') && navTabs[n].getAttribute('onclick').indexOf('toggleExtraTools') !== -1) {
+			navTabs[n].style.display = 'none';
+			break;
+		}
+	}
+
 	if (!GlobalOptions.btPowerBar) {
 		AddMainTabLink(tx('POWERBOT+'), 'PBPButton', eventHideShow, mouseMainTab);
 	}
