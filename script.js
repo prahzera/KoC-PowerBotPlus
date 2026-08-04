@@ -30662,7 +30662,8 @@ Tabs.GloryFarm = {
 
 		div.innerHTML = m;
 
-		t.ModelCity = new CdispCityPicker('pbGloryCity', ById('pbGloryCitySpan'), true, t.citySelNotify, null).bindToXYboxes(ById('pbGloryX'), ById('pbGloryY'));
+		t.ModelCity = new CdispCityPicker ('pbGloryCity', ById ('pbGloryCitySpan'), true, t.citySelNotify, null);
+		t.ModelCity.bindToXYboxes(ById ('pbGloryX'), ById ('pbGloryY'));
 
 		ById('pbGlorySubmit').addEventListener('click', t.clickedSearch, false);
 	},
