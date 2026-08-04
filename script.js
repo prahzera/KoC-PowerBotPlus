@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.67
+// @version			3.68
 // @releasenotes	        Eagle Warrier changes updated
-// @downloadURL https://update.greasyfork.org/scripts/399012/KoC%20Power%20Bot%20Plus.user.js
-// @updateURL https://update.greasyfork.org/scripts/399012/KoC%20Power%20Bot%20Plus.meta.js
+// @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js
+// @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.67';
+var Version = '3.68';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
