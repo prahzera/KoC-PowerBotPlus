@@ -35,7 +35,7 @@
 // @grant	GM_xmlhttpRequest
 // @grant	unsafeWindow
 // @run-at	document-end
-// @author      Twiries
+// @author      Prahzera
 // @license     CC-BY-4.0
 // @original-script             https://sourceforge.net/p/koc-battle-console/code/HEAD/tree/trunk/KoCPowerBotPlus.user.js
 // @original-license            http://creativecommons.org/licenses/by/4.0/
@@ -30668,8 +30668,8 @@ Tabs.GloryFarm = {
 
 		div.innerHTML = m;
 
-		t.ModelCity = new CdispCityPicker ('pbGloryCity', ById ('pbGloryCitySpan'), true, t.citySelNotify, null);
-		t.ModelCity.bindToXYboxes(ById ('pbGloryX'), ById ('pbGloryY'));
+		t.ModelCity = new CdispCityPicker('pbGloryCity', ById('pbGloryCitySpan'), true, t.citySelNotify, null);
+		t.ModelCity.bindToXYboxes(ById('pbGloryX'), ById('pbGloryY'));
 
 		ById('pbGlorySubmit').addEventListener('click', t.clickedSearch, false);
 	},
