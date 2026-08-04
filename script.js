@@ -30704,7 +30704,10 @@ Tabs.GloryFarm = {
 		t.mapDat = [];
 		t.dat = [];
 
+		console.log("GloryFarm: Starting search at center X=" + t.opt.startX + ", Y=" + t.opt.startY + " with radius=" + t.opt.radius);
+
 		t.BlockList = t.MapAjax.generateBlockList(t.opt.startX - t.opt.radius, t.opt.startY - t.opt.radius, t.opt.radius);
+		console.log("GloryFarm: Generated BlockList to query (" + t.BlockList.length + " blocks):", t.BlockList);
 
 		// Sort the BlockList by distance from center city so we search starting from closest
 		t.BlockList.sort(function (a, b) {
@@ -30730,6 +30733,7 @@ Tabs.GloryFarm = {
 		if (!t.searchRunning) return;
 
 		if (t.blocksSearched >= t.blocksTotal) {
+			console.log("GloryFarm: All blocks searched. Total = " + t.blocksSearched);
 			t.finishSearch();
 			return;
 		}
@@ -30741,6 +30745,8 @@ Tabs.GloryFarm = {
 		}
 		blockString = blockString.substring(0, blockString.length - 3);
 
+		console.log("GloryFarm: Querying map blocks: " + blockString + " (Progress: " + t.blocksSearched + "/" + t.blocksTotal + ")");
+
 		ById('pbGloryResults').innerHTML = '<center>' + tx('Searching map...') + ' ' + Math.floor((t.blocksSearched / t.blocksTotal) * 100) + '%</center>';
 
 		t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetMap(rslt, blocksToSearch); });
@@ -30751,6 +30757,7 @@ Tabs.GloryFarm = {
 		if (!t.searchRunning) return;
 
 		if (!rslt.ok) {
+			console.log("GloryFarm: Map lookup failed/returned ok=false. Retrying block string.");
 			t.SearchTimer = setTimeout(function () { t.doSearch(); }, MAP_DELAY);
 			return;
 		}
@@ -30761,52 +30768,73 @@ Tabs.GloryFarm = {
 		var userInfo = rslt.userInfo;
 		var alliance = rslt.allianceNames;
 
+		var tileCount = 0;
 		if (map) {
-			for (var k = 0; k < map.length; k++) {
+			for (var dummy in map) { tileCount++; }
+		}
+		console.log("GloryFarm: Map AJAX response received. Total tiles: " + tileCount);
+
+		if (map) {
+			for (var k in map) {
+				if (!map.hasOwnProperty(k)) continue;
 				var tile = map[k];
 				var u = tile.tileUserId || 0;
-				if (u != 0 && u != Seed.player.uid) {
-					if (tile.tileType == 51 || tile.tileType == 53) {
-						var dist = distance(t.opt.startX, t.opt.startY, tile.xCoord, tile.yCoord);
-						if (dist <= t.opt.radius) {
-							// Avoid duplicates
-							var isDup = false;
-							for (var d = 0; d < t.mapDat.length; d++) {
-								if (t.mapDat[d].x == tile.xCoord && t.mapDat[d].y == tile.yCoord) {
-									isDup = true;
-									break;
-								}
-							}
-							if (!isDup) {
-								var name = tile.cityName || '';
-								var player = '???';
-								var might = 0;
-								var alli = '---';
-								var aID = 0;
-								if (userInfo && userInfo['u' + u]) {
-									player = userInfo['u' + u].n;
-									might = parseIntNan(userInfo['u' + u].m);
-									if (alliance && alliance['a' + userInfo['u' + u].a]) {
-										alli = alliance['a' + userInfo['u' + u].a];
-										aID = userInfo['u' + u].a;
+				if (u != 0) {
+					console.log("GloryFarm: Evaluated tile at (" + tile.xCoord + "," + tile.yCoord + ") - User ID: " + u + ", Type: " + tile.tileType + ", City Name: '" + tile.cityName + "'");
+					if (u != Seed.player.uid) {
+						if (tile.tileType == 51 || tile.tileType == 53) {
+							var dist = distance(t.opt.startX, t.opt.startY, tile.xCoord, tile.yCoord);
+							console.log("  -> City type matched (51/53). Distance to center: " + dist);
+							if (dist <= t.opt.radius) {
+								// Avoid duplicates
+								var isDup = false;
+								for (var d = 0; d < t.mapDat.length; d++) {
+									if (t.mapDat[d].x == tile.xCoord && t.mapDat[d].y == tile.yCoord) {
+										isDup = true;
+										break;
 									}
 								}
+								if (!isDup) {
+									var name = tile.cityName || '';
+									var player = '???';
+									var might = 0;
+									var alli = '---';
+									var aID = 0;
+									if (userInfo && userInfo['u' + u]) {
+										player = userInfo['u' + u].n;
+										might = parseIntNan(userInfo['u' + u].m);
+										if (alliance && alliance['a' + userInfo['u' + u].a]) {
+											alli = alliance['a' + userInfo['u' + u].a];
+											aID = userInfo['u' + u].a;
+										}
+									}
 
-								t.mapDat.push({
-									x: tile.xCoord,
-									y: tile.yCoord,
-									dist: dist,
-									name: name,
-									player: player,
-									uid: u,
-									alliance: alli,
-									allianceId: aID,
-									might: might,
-									defendStatus: 'Checking...',
-									checked: false
-								});
+									console.log("  -> ADDING to results list. Name: '" + name + "', Player: '" + player + "', Might: " + might);
+
+									t.mapDat.push({
+										x: tile.xCoord,
+										y: tile.yCoord,
+										dist: dist,
+										name: name,
+										player: player,
+										uid: u,
+										alliance: alli,
+										allianceId: aID,
+										might: might,
+										defendStatus: 'Checking...',
+										checked: false
+									});
+								} else {
+									console.log("  -> Duplicate tile coordinates, skipping.");
+								}
+							} else {
+								console.log("  -> Excluded: Distance " + dist + " is greater than radius " + t.opt.radius);
 							}
+						} else {
+							console.log("  -> Excluded: Tile type " + tile.tileType + " is not 51 or 53 (City/Misted City)");
 						}
+					} else {
+						console.log("  -> Excluded: Matches current user ID (Self)");
 					}
 				}
 			}
