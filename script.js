@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.69
-// @releasenotes	        Eagle Warrier changes updated
+// @version			3.70
+// @releasenotes	        Language packs now loaded from GitHub releases
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.69';
+var Version = '3.70';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -19769,9 +19769,7 @@ Tabs.Options = {
 		// Check for new Language Pack Availability...
 
 		if (LanguageArray.LangVersion) { t.languagestatus = tx('Language pack') + ' (' + LanguageArray.CurrLang + ') ' + tx('Version') + ' ' + LanguageArray.LangVersion + ' ' + tx('loaded'); }
-		else {
-			if (Options.Language != 'en') { t.languagestatus = tx('Language pack unavailable'); }
-		};
+		else { t.languagestatus = tx('Language pack unavailable'); };
 		var now = unixTime();
 		if (Options.LanguageLastChecked + (3600 * 24 * 7) < now) { // only check for new lang pack once a week
 			t.LoadLanguage(Options.Language);
@@ -21852,8 +21850,7 @@ Tabs.Options = {
 		var t = Tabs.Options;
 		Options.LanguageLastChecked = unixTime();
 		saveOptions();
-		if (lang == 'en') { if (notify) { notify(); } return; } // english is default language - no pack available!
-		var LangURL = EXTERNAL_RESOURCE + 'languages/translation_' + lang + '.js?' + new Date();
+		var LangURL = 'https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/lang_' + lang + '.json?' + new Date();
 		try {
 			GM_xmlhttpRequest({
 				method: 'GET',
