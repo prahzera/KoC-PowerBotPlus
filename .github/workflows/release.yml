@@ -1,0 +1,51 @@
+name: Create Release on Version Commit
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Commit Message for Version
+        id: check_msg
+        run: |
+          # Get the full commit message from local git log
+          commit_msg=$(git log -1 --pretty=%B)
+          first_line=$(echo "$commit_msg" | head -n 1)
+          echo "Commit message first line: $first_line"
+          if [[ "$first_line" =~ ^KoC\ Power\ Bot\ Plus\ v([0-9.]+) ]]; then
+            version="${BASH_REMATCH[1]}"
+            echo "VERSION=$version" >> $GITHUB_ENV
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+            echo "Matched version: $version"
+          else
+            echo "SHOULD_RELEASE=false" >> $GITHUB_ENV
+            echo "Commit message does not match 'KoC Power Bot Plus vX.XX'"
+          fi
+
+      - name: Create Release and Upload Assets
+        if: env.SHOULD_RELEASE == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: KoC Power Bot Plus v${{ env.VERSION }}
+          body: |
+            Automatic release for version ${{ env.VERSION }}.
+            
+            Commit Message:
+            ${{ github.event.head_commit.message }}
+          files: |
+            script.js
+            lang_es.json
+            lang_en.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
