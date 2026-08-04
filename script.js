@@ -30621,6 +30621,308 @@ Tabs.Search = {
 	},
 };
 
+/** GloryFarm Tab **/
+
+Tabs.GloryFarm = {
+	tabOrder: 1025,
+	tabLabel: 'GloryFarm',
+	myDiv: null,
+	MapAjax : new CMapAjax(),
+	searchRunning : false,
+	statusCheckRunning: false,
+	blocksTotal : 0,
+	blocksSearched : 0,
+	BlockList : [],
+	mapDat : [],
+	dat : [],
+	opt : {},
+	SearchTimer : null,
+	DefendTimer : null,
+	ModelCity: null,
+	ModelCityId: 0,
+
+	init: function (div) {
+		var t = Tabs.GloryFarm;
+		t.myDiv = div;
+		
+		uWExportFunction('gloryfarmquickmarch', Tabs.GloryFarm.quickMarch);
+		
+		var m = '<DIV class=divHeader align="center">' + tx('Glory Farm Search') + '</div>';
+		m += '<TABLE width=100% class=xtab>';
+		m += '<TR><TD align=right width=20%>' + tx('Center City') + ':&nbsp;</td><TD><SPAN id=pbGloryCitySpan></span></td></TR>';
+		m += '<TR><TD align=right width=20%>' + tx('Radius') + ':&nbsp;</td><TD><INPUT id=pbGloryRadius size=3 value=10 />';
+		m += '&nbsp;&nbsp;<SPAN id=pbGloryXSpan>X: <INPUT id=pbGloryX type=text size=3 /> &nbsp;Y: <INPUT id=pbGloryY type=text size=3 /></SPAN></td>';
+		m += '<td align=left width=30%><a id=pbGlorySubmit class="inlineButton btButton blue20"><span>' + tx('Start Search') + '</span></a></td></tr>';
+		m += '</table>';
+		m += '<DIV id=pbGloryResults style="height:400px; overflow-y:auto;"></div>';
+		
+		div.innerHTML = m;
+		
+		t.ModelCity = new CdispCityPicker ('pbGloryCity', ById ('pbGloryCitySpan'), true, t.citySelNotify, null).bindToXYboxes(ById ('pbGloryX'), ById ('pbGloryY'));
+		
+		ById('pbGlorySubmit').addEventListener('click', t.clickedSearch, false);
+	},
+
+	citySelNotify : function (city,x,y){
+		var t = Tabs.GloryFarm;
+		if (city) {
+			t.ModelCityId = city.id;
+		}
+	},
+
+	clickedSearch: function() {
+		var t = Tabs.GloryFarm;
+		if (t.searchRunning || t.statusCheckRunning) {
+			t.stopSearch(tx('Search Cancelled!'));
+			return;
+		}
+		
+		t.opt.radius = parseInt(ById('pbGloryRadius').value);
+		if (isNaN(t.opt.radius) || t.opt.radius < 1) {
+			ById('pbGloryResults').innerHTML = '<center><FONT COLOR=#800>' + tx('ERROR') + ':</font><BR><BR>' + tx('Radius must be greater than or equal to 1') + '</center>';
+			return;
+		}
+		
+		var startX = parseInt(ById('pbGloryX').value);
+		var startY = parseInt(ById('pbGloryY').value);
+		if (isNaN(startX) || isNaN(startY)) {
+			ById('pbGloryResults').innerHTML = '<center><FONT COLOR=#800>' + tx('ERROR') + ':</font><BR><BR>Selected city coordinates are invalid</center>';
+			return;
+		}
+		t.opt.startX = startX;
+		t.opt.startY = startY;
+		
+		t.searchRunning = true;
+		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
+		ById('pbGloryResults').innerHTML = '<center>' + tx('Searching map...') + '</center>';
+		
+		t.mapDat = [];
+		t.dat = [];
+		
+		t.BlockList = t.MapAjax.generateBlockList(t.opt.startX - t.opt.radius, t.opt.startY - t.opt.radius, t.opt.radius);
+		
+		// Sort the BlockList by distance from center city so we search starting from closest
+		t.BlockList.sort(function(a, b) {
+			var partsA = a.split('_');
+			var ax = parseInt(partsA[1]);
+			var ay = parseInt(partsA[3]);
+			var partsB = b.split('_');
+			var bx = parseInt(partsB[1]);
+			var by = parseInt(partsB[3]);
+			var distA = distance(t.opt.startX, t.opt.startY, ax + 2, ay + 2);
+			var distB = distance(t.opt.startX, t.opt.startY, bx + 2, by + 2);
+			return distA - distB;
+		});
+		
+		t.blocksTotal = t.BlockList.length;
+		t.blocksSearched = 0;
+		
+		t.doSearch();
+	},
+
+	doSearch: function() {
+		var t = Tabs.GloryFarm;
+		if (!t.searchRunning) return;
+		
+		if (t.blocksSearched >= t.blocksTotal) {
+			t.finishSearch();
+			return;
+		}
+		
+		var blockString = '';
+		var blocksToSearch = Math.min(MAX_BLOCKS, t.blocksTotal - t.blocksSearched);
+		for (var i = 0; i < blocksToSearch; i++) {
+			blockString += t.BlockList[t.blocksSearched + i] + '%2C';
+		}
+		blockString = blockString.substring(0, blockString.length - 3);
+		
+		ById('pbGloryResults').innerHTML = '<center>' + tx('Searching map...') + ' ' + Math.floor((t.blocksSearched / t.blocksTotal) * 100) + '%</center>';
+		
+		t.MapAjax.LookupMap(blockString, function(rslt) { t.eventGetMap(rslt, blocksToSearch); });
+	},
+
+	eventGetMap: function(rslt, blocksSearched) {
+		var t = Tabs.GloryFarm;
+		if (!t.searchRunning) return;
+		
+		if (!rslt.ok) {
+			t.SearchTimer = setTimeout(function() { t.doSearch(); }, MAP_DELAY);
+			return;
+		}
+		
+		t.blocksSearched += blocksSearched;
+		
+		var map = rslt.data;
+		var userInfo = rslt.userInfo;
+		var alliance = rslt.allianceNames;
+		
+		if (map) {
+			for (var k = 0; k < map.length; k++) {
+				var tile = map[k];
+				var u = tile.tileUserId || 0;
+				if (u != 0 && u != Seed.player.uid) {
+					if (tile.tileType == 51 || tile.tileType == 53) {
+						var dist = distance(t.opt.startX, t.opt.startY, tile.xCoord, tile.yCoord);
+						if (dist <= t.opt.radius) {
+							// Avoid duplicates
+							var isDup = false;
+							for (var d = 0; d < t.mapDat.length; d++) {
+								if (t.mapDat[d].x == tile.xCoord && t.mapDat[d].y == tile.yCoord) {
+									isDup = true;
+									break;
+								}
+							}
+							if (!isDup) {
+								var name = tile.cityName || '';
+								var player = '???';
+								var might = 0;
+								var alli = '---';
+								var aID = 0;
+								if (userInfo && userInfo['u' + u]) {
+									player = userInfo['u' + u].n;
+									might = parseIntNan(userInfo['u' + u].m);
+									if (alliance && alliance['a' + userInfo['u' + u].a]) {
+										alli = alliance['a' + userInfo['u' + u].a];
+										aID = userInfo['u' + u].a;
+									}
+								}
+								
+								t.mapDat.push({
+									x: tile.xCoord,
+									y: tile.yCoord,
+									dist: dist,
+									name: name,
+									player: player,
+									uid: u,
+									alliance: alli,
+									allianceId: aID,
+									might: might,
+									defendStatus: 'Checking...',
+									checked: false
+								});
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		t.SearchTimer = setTimeout(function() { t.doSearch(); }, MAP_DELAY);
+	},
+
+	finishSearch: function() {
+		var t = Tabs.GloryFarm;
+		t.searchRunning = false;
+		t.statusCheckRunning = true;
+		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
+		
+		t.mapDat.sort(function(a, b) { return a.dist - b.dist; });
+		
+		t.renderResults();
+		t.checkNextDefendStatus();
+	},
+
+	renderResults: function() {
+		var t = Tabs.GloryFarm;
+		var m = '<table width=100% cellpadding=0 cellspacing=0 class=xtab><tr>';
+		m += '<td class=xtabHD><b>' + tx('Co-ords') + '</b></td>';
+		m += '<td class=xtabHD><b>' + tx('Dist') + '</b></td>';
+		m += '<td class=xtabHD><b>' + tx('Player') + '</b></td>';
+		m += '<td class=xtabHD><b>' + tx('Alliance') + '</b></td>';
+		m += '<td class=xtabHD align=right><b>' + tx('Might') + '</b></td>';
+		m += '<td class=xtabHD align=center><b>' + tx('Status') + '</b></td>';
+		m += '<td class=xtabHD align=center><b>' + tx('Action') + '</b></td>';
+		m += '</tr>';
+		
+		for (var i = 0; i < t.mapDat.length; i++) {
+			var city = t.mapDat[i];
+			var rowClass = (i % 2) ? 'evenRow' : 'oddRow';
+			if (city.defendStatus.indexOf('DEFENDING') >= 0) {
+				rowClass += ' highRow';
+			}
+			m += '<tr id="glory_row_' + i + '" class="' + rowClass + '">';
+			m += '<td class=xtab><a class=xlink onclick="btGotoMap(' + city.x + ',' + city.y + ')">' + city.x + ',' + city.y + '</a></td>';
+			m += '<td class=xtab>' + city.dist.toFixed(1) + '</td>';
+			m += '<td class=xtab>' + city.player + '</td>';
+			m += '<td class=xtab>' + city.alliance + '</td>';
+			m += '<td class=xtab align=right>' + addCommas(city.might) + '</td>';
+			m += '<td class=xtab align=center id="glory_status_' + i + '">' + city.defendStatus + '</td>';
+			m += '<td class=xtab align=center>';
+			m += '<a class="inlineButton btButton blue14" onclick="quickscoutsearch(' + city.x + ',' + city.y + ',' + t.ModelCityId + ');return false;"><span>' + tx('Scout') + '</span></a>&nbsp;';
+			m += '<a class="inlineButton btButton red14" onclick="gloryfarmquickmarch(' + city.x + ',' + city.y + ');return false;"><span>' + tx('March+') + '</span></a>';
+			m += '</td></tr>';
+		}
+		m += '</table>';
+		ById('pbGloryResults').innerHTML = m;
+	},
+
+	checkNextDefendStatus: function() {
+		var t = Tabs.GloryFarm;
+		if (!t.statusCheckRunning) return;
+		
+		var nextIdx = -1;
+		for (var i = 0; i < t.mapDat.length; i++) {
+			if (!t.mapDat[i].checked) {
+				nextIdx = i;
+				break;
+			}
+		}
+		
+		if (nextIdx == -1) {
+			t.statusCheckRunning = false;
+			return; // All checked
+		}
+		
+		var city = t.mapDat[nextIdx];
+		var statusDiv = ById('glory_status_' + nextIdx);
+		if (statusDiv) statusDiv.innerHTML = '<span>' + tx('Checking...') + '</span>';
+		
+		getDefendStatus(city.x, city.y, null, true, function(rslt) {
+			if (!t.statusCheckRunning) return;
+			city.checked = true;
+			var row = ById('glory_row_' + nextIdx);
+			var statusDiv = ById('glory_status_' + nextIdx);
+			
+			if (rslt.ok && rslt.ok == "true") {
+				city.defendStatus = '<span class=boldMagenta>* DEFENDING *</span>';
+				if (statusDiv) statusDiv.innerHTML = city.defendStatus;
+				if (row) jQuery(row).addClass("highRow");
+			} else {
+				city.defendStatus = '<span>' + tx('Hiding') + '</span>';
+				if (statusDiv) statusDiv.innerHTML = city.defendStatus;
+				if (row) jQuery(row).removeClass("highRow");
+			}
+			
+			t.DefendTimer = setTimeout(function() { t.checkNextDefendStatus(); }, 1250); // Delay to avoid spamming
+		}, nextIdx, t.mapDat.length, null);
+	},
+
+	stopSearch: function(msg) {
+		var t = Tabs.GloryFarm;
+		t.searchRunning = false;
+		t.statusCheckRunning = false;
+		clearTimeout(t.SearchTimer);
+		clearTimeout(t.DefendTimer);
+		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
+		if (msg) ById('pbGloryResults').innerHTML = '<center>' + msg + '</center>';
+	},
+
+	quickMarch: function(x, y) {
+		var cityId = uW.currentcityid;
+		QuickMarch.MapClick(x, y, Cities.byID[cityId].idx);
+	},
+
+	hide: function () {},
+	show: function (init) {
+		var t = Tabs.GloryFarm;
+		var DispCityId = uW.currentcityid;
+		if (init) { DispCityId = InitialCityId; }
+		if (t.ModelCityId != DispCityId && Cities.byID[DispCityId]) {
+			t.ModelCity.selectBut(Cities.byID[DispCityId].idx);
+		}
+	}
+};
+
 /** Notes Tab **/
 
 Tabs.Notes = {
