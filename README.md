@@ -13,7 +13,7 @@
 **KoC Power Bot Plus** is a powerful Tampermonkey/Greasemonkey userscript that automates and enhances the gameplay experience in Kingdoms of Camelot. It provides a comprehensive control panel with dozens of automation features, multi-language support, and a fully configurable interface.
 
 - **Original author:** barbarossa69  
-- **Current maintainer:** Twiries  
+- **Current maintainer:** prahzera  
 - **License:** [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
 
 ---
@@ -98,6 +98,7 @@ The script defaults to **English**. A complete **Spanish** translation is includ
 - Fixed Import Language button (3 bugs resolved)
 - Wrapped all hardcoded English UI strings in translation system (`tx()`)
 - Improved error handling in language import/export
+- **Maintained by:** prahzera
 
 ### v3.65
 - Previous release by barbarossa69
@@ -129,4 +130,4 @@ See [LICENSE](https://creativecommons.org/licenses/by/4.0/) for details.
 
 ---
 
-*Original script by [barbarossa69](https://greasyfork.org/scripts/399012) · Maintained by Twiries*
+*Original script by [barbarossa69](https://greasyfork.org/scripts/399012) · Maintained by prahzera*
