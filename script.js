@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.71
-// @releasenotes	        Language packs now loaded from GitHub releases, Extra Tools button hidden, README updated
+// @version			3.72
+// @releasenotes	        Target Finder excludes own cities and no longer stalls on status checks
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.71';
+var Version = '3.72';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30648,6 +30648,9 @@ Tabs.GloryFarm = {
 	opt: {},
 	SearchTimer: null,
 	DefendTimer: null,
+	DefendFailsafe: null,
+	myUid: 0,
+	myCityCoords: {},
 	ModelCity: null,
 	ModelCityId: 0,
 
@@ -30715,6 +30718,14 @@ Tabs.GloryFarm = {
 
 		t.mapDat = [];
 		t.dat = [];
+
+		// Exclude our own cities: build a set of coordinates for all our cities
+		t.myUid = uW.tvuid;
+		t.myCityCoords = {};
+		for (var cid in Cities.byID) {
+			var myc = Cities.byID[cid];
+			if (myc) { t.myCityCoords[myc.x + ',' + myc.y] = true; }
+		}
 
 		console.log("GloryFarm: Starting search at center X=" + t.opt.startX + ", Y=" + t.opt.startY + " with radius=" + t.opt.radius);
 
@@ -30793,7 +30804,7 @@ Tabs.GloryFarm = {
 				var u = tile.tileUserId || 0;
 				if (u != 0) {
 					console.log("GloryFarm: Evaluated tile at (" + tile.xCoord + "," + tile.yCoord + ") - User ID: " + u + ", Type: " + tile.tileType + ", City Name: '" + tile.cityName + "'");
-					if (u != Seed.player.uid) {
+					if (u != t.myUid && !t.myCityCoords[tile.xCoord + ',' + tile.yCoord]) {
 						if (tile.tileType == 51 || tile.tileType == 53) {
 							var dist = distance(t.opt.startX, t.opt.startY, tile.xCoord, tile.yCoord);
 							console.log("  -> City type matched (51/53). Distance to center: " + dist);
@@ -30846,7 +30857,7 @@ Tabs.GloryFarm = {
 							console.log("  -> Excluded: Tile type " + tile.tileType + " is not 51 or 53 (City/Misted City)");
 						}
 					} else {
-						console.log("  -> Excluded: Matches current user ID (Self)");
+						console.log("  -> Excluded: Own city or own user ID (Self)");
 					}
 				}
 			}
@@ -30930,7 +30941,17 @@ Tabs.GloryFarm = {
 
 		var city = t.mapDat[nextIdx];
 
+		// Failsafe: if the AJAX call never responds, mark as Hiding and move on after 15s
+		t.DefendFailsafe = setTimeout(function () {
+			if (city.checked) return;
+			city.checked = true;
+			city.defendStatus = 'Hiding';
+			t.renderResults();
+			t.DefendTimer = setTimeout(function () { t.checkNextDefendStatus(); }, 1250);
+		}, 15000);
+
 		getDefendStatus(city.x, city.y, null, true, function (rslt) {
+			clearTimeout(t.DefendFailsafe);
 			if (!t.statusCheckRunning) return;
 			city.checked = true;
 
@@ -30951,6 +30972,7 @@ Tabs.GloryFarm = {
 		t.statusCheckRunning = false;
 		clearTimeout(t.SearchTimer);
 		clearTimeout(t.DefendTimer);
+		clearTimeout(t.DefendFailsafe);
 		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 		if (msg) ById('pbGloryResults').innerHTML = '<center>' + msg + '</center>';
 	},

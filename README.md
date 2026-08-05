@@ -2,7 +2,7 @@
 
 > All-in-One automation userscript for **Kingdoms of Camelot** (Facebook / Web)
 
-[![Version](https://img.shields.io/badge/version-3.71-blue)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest)
+[![Version](https://img.shields.io/badge/version-3.72-blue)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest)
 [![License](https://img.shields.io/badge/license-CC--BY--4.0-green)](https://creativecommons.org/licenses/by/4.0/)
 [![Install](https://img.shields.io/badge/Install-Tampermonkey-brightgreen)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js)
 
@@ -86,6 +86,10 @@ Language packs are fetched directly from GitHub releases when you change the lan
 ---
 
 ## 🔄 Changelog
+
+### v3.72
+- Target Finder now excludes the player's own cities from results
+- Fixed Target Finder getting stuck on "Checking..." when a status request never responds
 
 ### v3.71
 - Language packs now loaded directly from GitHub releases (no CDN dependency)
