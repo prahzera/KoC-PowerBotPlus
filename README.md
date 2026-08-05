@@ -8,6 +8,7 @@
 
 ---
 
+
 ## 📖 Description
 
 **KoC Power Bot Plus** is a powerful Tampermonkey userscript that automates and enhances the gameplay experience in Kingdoms of Camelot. It provides a comprehensive control panel with dozens of automation features, multi-language support, and a fully configurable interface.
