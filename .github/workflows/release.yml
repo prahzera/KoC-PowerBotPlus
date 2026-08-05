@@ -32,12 +32,15 @@ jobs:
             echo "Commit message does not match 'KoC Power Bot Plus vX.XX'"
           fi
 
-      - name: Generate Meta File
+      - name: Generate Meta File and User Script
         if: env.SHOULD_RELEASE == 'true'
         run: |
           # Extract content between UserScript tags
           sed -n '/\/\/ ==UserScript==/,/\/\/ ==\/UserScript==/p' script.js > script.meta.js
           echo "Generated script.meta.js"
+          # Copy script with .user.js extension so Tampermonkey detects it as installable
+          cp script.js script.user.js
+          echo "Generated script.user.js"
 
       - name: Create Release and Upload Assets
         if: env.SHOULD_RELEASE == 'true'
@@ -52,6 +55,7 @@ jobs:
             ${{ github.event.head_commit.message }}
           files: |
             script.js
+            script.user.js
             script.meta.js
             lang_es.json
             lang_en.json

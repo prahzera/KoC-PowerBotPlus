@@ -2,9 +2,9 @@
 
 > All-in-One automation userscript for **Kingdoms of Camelot** (Facebook / Web)
 
-[![Version](https://img.shields.io/badge/version-3.72-blue)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest)
+[![Version](https://img.shields.io/badge/version-3.73-blue)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest)
 [![License](https://img.shields.io/badge/license-CC--BY--4.0-green)](https://creativecommons.org/licenses/by/4.0/)
-[![Install](https://img.shields.io/badge/Install-Tampermonkey-brightgreen)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js)
+[![Install](https://img.shields.io/badge/Install-Tampermonkey-brightgreen)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js)
 
 ---
 
@@ -39,7 +39,7 @@
 1. Install [Tampermonkey](https://www.tampermonkey.net/) (Chrome / Edge / Firefox)
 2. Click the button below to install the script directly from the latest release:
 
-[![Install Script](https://img.shields.io/badge/⬇️%20Install%20Script-latest%20release-brightgreen?style=for-the-badge)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.js)
+[![Install Script](https://img.shields.io/badge/⬇️%20Install%20Script-latest%20release-brightgreen?style=for-the-badge)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js)
 
 3. Confirm the installation in Tampermonkey
 4. Open Kingdoms of Camelot — the bot panel will appear automatically
@@ -78,7 +78,9 @@ Language packs are fetched directly from GitHub releases when you change the lan
 ## 📁 Repository Structure
 
 ```
-├── script.js        # Main userscript (install this)
+├── script.js        # Main userscript source
+├── script.user.js   # Installable userscript (generated on release, .user.js extension)
+├── script.meta.js   # Script metadata (generated on release, used for auto-updates)
 ├── lang_en.json     # English language template
 ├── lang_es.json     # Spanish translation (complete)
 └── README.md        # This file
@@ -88,6 +90,9 @@ Language packs are fetched directly from GitHub releases when you change the lan
 
 ## 🔄 Changelog
 
+### v3.73
+- Install button now points to `script.user.js` so Tampermonkey detects and shows the install dialog (instead of just downloading the file)
+
 ### v3.72
 - Target Finder now excludes the player's own cities from results
 - Fixed Target Finder getting stuck on "Checking..." when a status request never responds
@@ -95,7 +100,6 @@ Language packs are fetched directly from GitHub releases when you change the lan
 ### v3.71
 - Language packs now loaded directly from GitHub releases (no CDN dependency)
 - Hidden the game's built-in "Extra Tools" button (replaced by Power Bot Plus panel)
-- **Maintained by:** prahzera
 
 ### v3.65
 - Previous release by barbarossa69
