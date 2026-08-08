@@ -157,7 +157,15 @@ function build() {
   const eol = sections[0].content.includes('\r\n') ? '\r\n' : '\n';
   let script = sections.map((s) => s.content).join(eol);
   script = injectVersion(script);
-  const meta = sections[0].content + eol; // header banner, como el sed del workflow
+  // El meta (script.meta.js) también debe llevar la versión de package.json, o
+  // Tampermonkey lee el @version viejo del meta y nunca detecta actualizaciones.
+  // No usamos injectVersion() aquí porque buscaría 'var Version =' y fallaría (0 coincidencias).
+  let meta = sections[0].content + eol; // header banner, como el sed del workflow
+  meta = meta.replace(
+    /^(\/\/ @version\s+)[0-9][0-9.]*$/m,
+    (_full, prefix) => `${prefix}${VERSION}`,
+    'meta // @version'
+  );
   return { script, meta, sections };
 }
 
