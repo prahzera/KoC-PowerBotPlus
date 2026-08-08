@@ -1,0 +1,14 @@
+{
+  "name": "koc-power-bot-plus",
+  "version": "3.74",
+  "private": true,
+  "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
+  "scripts": {
+    "build": "node build.js",
+    "build:check": "node build.js --check",
+    "watch": "node build.js --watch"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.73
+// @version			3.74
 // @releasenotes	        Publish script.user.js so Tampermonkey shows the install dialog
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.73';
+var Version = '3.74';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -388,6 +388,7 @@ var GlobalOptions = {
 	btWinSize: { x: 1000, y: 100 },
 	btTrackOpen: true,
 	btTransparent: false,
+	btKocBgColor: '#ffffff', // Color de fondo del contenedor del juego (#kocContainer)
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,
@@ -1671,6 +1672,8 @@ function SetGameScreen() {
 
 		try { ById('progressBar').parentNode.removeChild(ById('progressBar')); } catch (e) { }
 		try { ById('crossPromoBarContainer').parentNode.removeChild(ById('crossPromoBarContainer')); } catch (e) { }
+
+		ApplyKocBgColor();
 	}
 
 	setTimeout(function () {
@@ -1681,6 +1684,20 @@ function SetGameScreen() {
 
 	KOCWatchdog();
 	setGame();
+}
+
+/** Aplica el color de fondo configurado al contenedor del juego (#kocContainer).
+ *  Usa una regla CSS con !important para que sobreviva a los estilos del juego,
+ *  y actualiza el estilo en vivo si el div ya existe. */
+function ApplyKocBgColor(color) {
+	if (!color) color = GlobalOptions.btKocBgColor || '#ffffff';
+	var el = ById('kocContainer');
+	if (el) el.style.backgroundColor = color;
+	if (!ApplyKocBgColor._style) {
+		ApplyKocBgColor._style = document.createElement('style');
+		(document.head || document.documentElement).appendChild(ApplyKocBgColor._style);
+	}
+	ApplyKocBgColor._style.innerHTML = '#kocContainer { background-color: ' + color + ' !important; }';
 }
 
 function FacebookInstance() {
@@ -20265,6 +20282,7 @@ Tabs.Options = {
 		m += '<TD class=xtab><div id=btShowChatBeforeDash><INPUT id=btChatBeforeDash type=checkbox />&nbsp;' + tx("Put chat before dashboard") + '</div></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btWideMap type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Enable wide map expansion button on the map panel") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
 		var UpdateLocations = { 0: "SourceForge", 1: "GreasyFork", 2: "GitHub", 3: "pbkplowplow.com" };
 		m += '<TR><td class=xtab><INPUT disabled id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=ExtendedDebugChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Extended debug mode (Activates additional logging)") + '</td></tr>';
@@ -20297,6 +20315,7 @@ Tabs.Options = {
 		t.togGlobalOpt('btWideMap', 'btWideMap', WideScreen.useWideMap);
 		t.togGlobalOpt('btTrackOpen', 'btTrackOpen');
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
+		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
 
 		//		t.togGlobalOpt ('AutoUpdateChk', 'AutoUpdates');
 		t.togGlobalOpt('ExtendedDebugChk', 'ExtendedDebugMode', t.RestartReminder);

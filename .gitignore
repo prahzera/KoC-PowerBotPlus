@@ -15,3 +15,7 @@ Thumbs.db
 
 # Node modules (if any dev tooling is added)
 node_modules/
+
+# Generated release artifacts (created by build.js / CI)
+script.user.js
+script.meta.js

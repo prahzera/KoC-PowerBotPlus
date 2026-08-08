@@ -1,0 +1,14 @@
+var cardQuality = ['Simple', 'Common', 'Uncommon', 'Rare', 'Epic', 'Wondrous', 'Miraculous'];
+var champImageTypes = { 0: "weapon", 1: "chestArmor", 2: "helmet", 3: "feet", 4: "shield", 5: "ring1", 7: "pendant", 8: "cloak" };
+var champUniqueImageTypes = { 0: "weapon", 1: "chestArmor", 2: "helmet", 3: "feet", 4: "shield", 5: "ring", 7: "pendant", 8: "cloak" };
+var chTypeStrings = { 0: "weapon", 1: "chest", 2: "helm", 3: "boots", 4: "shield", 5: "ring", 7: "pendant", 8: "cloak" };
+var chTypes = ['weapon', 'chest', 'helm', 'boots', 'shield', 'ring1', 'ring2', 'pendant', 'cloak']; // must be in this order
+var trTypes = ['chair', 'advisor', 'window', 'banner', 'table', 'trophy', 'candelabrum', 'hero', 'statue', 'pet', 'tapestry', 'pillar']; // must be in this order
+var cardFaction = ['briton', 'fey', 'druid'];
+var jewelTypes = ["general_buff", "general_debuff", "unit_specific", "base_building"];
+var jewelQuality = ["cracked", "flawed", "cloudy", "subdued", "bright"];
+var guardTypes = ["wood", "ore", "food", "stone"];
+var tileTypes = { 0: "Bog", 10: "Grassland", 11: "Lake", 20: "Wood", 30: "Hill", 40: "Mountain", 50: "Plain", 51: "City", 52: "Ruin", 53: "Misted City", 54: "Dark Forest", 55: "Merc Camp", 56: "Nomad Camp", 57: "Megalith" };
+var wildImages = { 0: "bog", 10: "grasslands", 11: "lake", 20: "forest", 30: "hills", 40: "mountains", 50: "plains" };
+var SpellBlessings = { 1: 12, 2: 22, 3: 32 };
+var SpellTypes = { 1: 11, 2: 21, 3: 31 };

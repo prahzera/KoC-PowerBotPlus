@@ -1,0 +1,12 @@
+var JSON2 = JSON;
+var uW = unsafeWindow;
+var Seed = uW.seed;
+var CM = uW.cm;
+var FFVersion = getFirefoxVersion();
+var GMVersion = getGMVersion();
+var NoRegEx = (FFVersion.Mozilla && (parseIntNan(FFVersion.Version) <= 16));
+var http = window.location.protocol + "\/\/";
+var EXTERNAL_RESOURCE = 'https://koc-cdn.popreach.com/fb/e2/src/pb/';
+var KOCMON_LOGO = '';
+var KOCMON_ON = false;
+var GameURL = 'www.rycamelot.com';

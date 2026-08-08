@@ -32,12 +32,17 @@ jobs:
             echo "Commit message does not match 'KoC Power Bot Plus vX.XX'"
           fi
 
+      - name: Build from src/
+        if: env.SHOULD_RELEASE == 'true'
+        run: |
+          # Compile src/*.js -> script.js + script.meta.js.
+          # --check fails the build if the output would differ from the committed script.js.
+          node build.js --check
+          echo "Built script.js from src/"
+
       - name: Generate Meta File and User Script
         if: env.SHOULD_RELEASE == 'true'
         run: |
-          # Extract content between UserScript tags
-          sed -n '/\/\/ ==UserScript==/,/\/\/ ==\/UserScript==/p' script.js > script.meta.js
-          echo "Generated script.meta.js"
           # Copy script with .user.js extension so Tampermonkey detects it as installable
           cp script.js script.user.js
           echo "Generated script.user.js"
