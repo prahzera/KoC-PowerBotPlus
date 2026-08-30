@@ -89,6 +89,15 @@ function ApplyKocBgColor(color) {
 
 // Observar cambios en el DOM para re-aplicar el estilo si el contenedor se recrea
 var observer = new MutationObserver(function(mutations) {
-	ApplyKocBgColor();
+	// Solo actuamos si el contenedor existe
+	var el = ById('kocContainer');
+	if (el) {
+		// Verificamos si el estilo ya está aplicado para no entrar en bucle
+		var targetColor = GlobalOptions.btKocBgColor || '#ffffff';
+		if (el.style.backgroundColor !== targetColor) {
+			ApplyKocBgColor(targetColor);
+		}
+	}
 });
-observer.observe(document.documentElement, { childList: true, subtree: true });
+// Observamos el body para detectar cuando el contenedor es añadido
+observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
