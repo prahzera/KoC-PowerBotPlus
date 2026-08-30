@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.76
-// @releasenotes	        Make game background color persistent with MutationObserver
+// @version			3.77
+// @releasenotes	        Fix infinite loop in background color observer
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.76';
+var Version = '3.77';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -1706,9 +1706,18 @@ function ApplyKocBgColor(color) {
 
 // Observar cambios en el DOM para re-aplicar el estilo si el contenedor se recrea
 var observer = new MutationObserver(function(mutations) {
-	ApplyKocBgColor();
+	// Solo actuamos si el contenedor existe
+	var el = ById('kocContainer');
+	if (el) {
+		// Verificamos si el estilo ya está aplicado para no entrar en bucle
+		var targetColor = GlobalOptions.btKocBgColor || '#ffffff';
+		if (el.style.backgroundColor !== targetColor) {
+			ApplyKocBgColor(targetColor);
+		}
+	}
 });
-observer.observe(document.documentElement, { childList: true, subtree: true });
+// Observamos el body para detectar cuando el contenedor es añadido
+observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
 
 function FacebookInstance() {
 
