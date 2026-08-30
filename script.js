@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.79
-// @releasenotes	        Add Full Map and Full Province search modes
+// @version			3.80
+// @releasenotes	        Move QuickAttack Selected to Players tab, revert Full Map search modes
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.79';
+var Version = '3.80';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -26943,6 +26943,7 @@ Tabs.Player = {
 	hostilebtn: '',
 	aName: '',
 	ReqSent: {},
+	QAMarching: {},
 	Options: {
 		sortColNum: 8,
 		sortDir: 1,
@@ -27019,6 +27020,7 @@ Tabs.Player = {
 		m += '<tr><td>';
 		if (Tabs.BulkScout) m += strButton20(tx('Add to Scout List'), 'id=ptScoutExport') + '&nbsp;';
 		if (Tabs.BulkAttack) m += strButton20(tx('Add to Attack List'), 'id=ptBulkAttackExport') + '&nbsp;';
+		if (Options.OneClickAttackPreset != 0) m += strButton20(tx('QuickAttack Selected'), 'id=ptQuickAttackExport') + '&nbsp;';
 		m += strButton20(tx('Highlight Defending Cities'), 'id=ptHighDefenders') + '</td><td align=right>&nbsp;' + tx('ETA') + ':&nbsp;</b></span><select id="idFindETASelect"><option value="0">-- ' + uW.g_js_strings.commonstr.select + ' --</option>';
 		for (var ui in CM.UNIT_TYPES) {
 			i = CM.UNIT_TYPES[ui];
@@ -27036,6 +27038,7 @@ Tabs.Player = {
 
 		if (ById('ptScoutExport')) ById('ptScoutExport').addEventListener('click', t.ExportScoutList, false);
 		if (ById('ptBulkAttackExport')) ById('ptBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
+		if (ById('ptQuickAttackExport')) ById('ptQuickAttackExport').addEventListener('click', t.QuickAttackSelected, false);
 		ById('ptHighDefenders').addEventListener('click', t.HighlightDefenders, false);
 		ById('idFindETASelect').addEventListener('click', t.handleEtaSelect, false);
 
@@ -28011,6 +28014,29 @@ Tabs.Player = {
 		var coordlist = t.getSelected();
 		if (coordlist != "") {
 			Tabs.BulkAttack.ImportCoords(coordlist.split(" "));
+		}
+	},
+
+	QuickAttackSelected: function () {
+		var t = Tabs.Player;
+		var cid = (t.ModelCityId && Cities.byID[t.ModelCityId]) ? t.ModelCityId : uW.currentcityid;
+		var qadelay = 0;
+		var count = 0;
+		for (var k = 0; k < t.dat.length; k++) {
+			var city = t.dat[k][11].toString();
+			var cb = ById('ptScout_' + city);
+			if (cb && cb.checked) {
+				var coords = t.dat[k][5].toString() + '_' + t.dat[k][6].toString();
+				if (!t.QAMarching[coords] || t.QAMarching[coords] == 0) {
+					t.QAMarching[coords] = 1;
+					setTimeout(uW.quickattacksearch, (5000 * qadelay), t.dat[k][5], t.dat[k][6], cid, true);
+					qadelay = qadelay + 1;
+					count++;
+				}
+			}
+		}
+		if (count > 0) {
+			ById('allplayerr').innerHTML = tx('QuickAttacking') + ': ' + count + ' ' + tx('tiles');
 		}
 	},
 
@@ -29376,8 +29402,6 @@ Tabs.Search = {
 		PlayerName: '',
 		sortColNum: 2,
 		sortDir: 1,
-		FullMap: false,
-		FullProvince: false,
 	},
 
 	// t.mapDat
@@ -29430,11 +29454,10 @@ Tabs.Search = {
 		if (ArcanaEnabled()) {
 			m += '<a class=xlink id=pbSearchAura>&nbsp;' + tx('Search HQ Arcane Aura') + '</a>';
 		}
-		m += '</td><td colspan=2 align=right id=pbsavedsearch>&nbsp;</td></tr><TR id=pbSearchCoordsRow><TD align=right width=20%>' + tx('Search Coords') + ':&nbsp;</td><TD colspan=3>X:&nbsp;<INPUT id=pbSearchX type=text\> &nbsp;Y:&nbsp;<INPUT id=pbSearchY type=text\>';
+		m += '</td><td colspan=2 align=right id=pbsavedsearch>&nbsp;</td></tr><tr><TD align=right width=20%>' + tx('Search Coords') + ':&nbsp;</td><TD colspan=3>X:&nbsp;<INPUT id=pbSearchX type=text\> &nbsp;Y:&nbsp;<INPUT id=pbSearchY type=text\>';
 		m += '&nbsp;&nbsp;' + tx("Radius") + ':&nbsp;<INPUT id=pbSearchDist size=3 value=10 />';
 		m += '&nbsp;&nbsp;<SPAN id=pbSearchCitySpan></span></td></tr>';
-		m += '<TR id=pbSearchModeRow><TD align=right>' + tx('Search Mode') + ':&nbsp;</td><TD colspan=3><INPUT id=pbSearchFullMap type=checkbox />&nbsp;' + tx('Full Map Search') + '&nbsp;&nbsp;&nbsp;<INPUT id=pbSearchFullProvince type=checkbox />&nbsp;' + tx('Full Province Search') + '</td></tr>';
-		m += '<TR id=pbSearchProvinceRow><TD align=right>' + tx('Or Search') + ':&nbsp;</td><TD colspan=2><select id="pbSearchProvince"><option value=0>-- ' + uW.g_js_strings.commonstr.province + ' --</option>';
+		m += '<TR><TD align=right>' + tx('Or Search') + ':&nbsp;</td><TD colspan=2><select id="pbSearchProvince"><option value=0>-- ' + uW.g_js_strings.commonstr.province + ' --</option>';
 		for (var i in Provinces) {
 			m += '<option value="' + i + '">' + uW.provincenames[i] + '</option>';
 		}
@@ -29506,10 +29529,6 @@ Tabs.Search = {
 		ById('pbSearchY').addEventListener('change', t.e_coordChange, false);
 		ById('pbSearchSubmit').addEventListener('click', t.clickedSearch, false);
 
-		ById('pbSearchFullMap').addEventListener('change', t.toggleFullMap, false);
-		ById('pbSearchFullProvince').addEventListener('change', t.toggleFullProvince, false);
-		t.updateSearchMode();
-
 		if (ById('pbSearchAura')) {
 			ById('pbSearchAura').addEventListener('click', t.clickedSearchAura, false);
 		}
@@ -29562,34 +29581,6 @@ Tabs.Search = {
 
 	searchquickmarch: function (x, y) {
 		QuickMarch.MapClick(x, y, Cities.byID[Tabs.Search.ModelCityId].idx);
-	},
-
-	updateSearchMode: function () {
-		var t = Tabs.Search;
-		if (ById('pbSearchFullMap')) { ById('pbSearchFullMap').checked = Options.SearchOptions.FullMap; ById('pbSearchFullMap').disabled = t.searchRunning; }
-		if (ById('pbSearchFullProvince')) { ById('pbSearchFullProvince').checked = Options.SearchOptions.FullProvince; ById('pbSearchFullProvince').disabled = t.searchRunning; }
-		var fullMap = ById('pbSearchFullMap') && ById('pbSearchFullMap').checked;
-		var fullProv = ById('pbSearchFullProvince') && ById('pbSearchFullProvince').checked;
-		if (ById('pbSearchCoordsRow')) ById('pbSearchCoordsRow').style.display = (fullMap || fullProv) ? 'none' : '';
-		if (ById('pbSearchProvinceRow')) ById('pbSearchProvinceRow').style.display = fullMap ? 'none' : '';
-	},
-
-	toggleFullMap: function () {
-		var t = Tabs.Search;
-		Options.SearchOptions.FullMap = ById('pbSearchFullMap').checked;
-		if (Options.SearchOptions.FullMap) { Options.SearchOptions.FullProvince = false; ById('pbSearchFullProvince').checked = false; }
-		saveOptions();
-		t.updateSearchMode();
-		t.dispMapTable();
-	},
-
-	toggleFullProvince: function () {
-		var t = Tabs.Search;
-		Options.SearchOptions.FullProvince = ById('pbSearchFullProvince').checked;
-		if (Options.SearchOptions.FullProvince) { Options.SearchOptions.FullMap = false; ById('pbSearchFullMap').checked = false; }
-		saveOptions();
-		t.updateSearchMode();
-		t.dispMapTable();
 	},
 
 	e_coordChange: function () {
@@ -29741,23 +29732,15 @@ Tabs.Search = {
 		t.opt.province = ById('pbSearchProvince').value;
 		t.opt.provinceSlice = ById('pbProvinceSlice').value;
 		t.opt.provinceSlices = ById('pbProvinceSlices').value;
-		t.opt.FullMap = ById('pbSearchFullMap') ? ById('pbSearchFullMap').checked : Options.SearchOptions.FullMap;
-		t.opt.FullProvince = ById('pbSearchFullProvince') ? ById('pbSearchFullProvince').checked : Options.SearchOptions.FullProvince;
-		t.FullMapMode = !!(t.opt.FullMap || t.opt.FullProvince);
 
 		errMsg = '';
 
-		if (!t.FullMapMode) {
-			if (isNaN(t.opt.startX) || t.opt.startX < 0 || t.opt.startX > 749)
-				errMsg = "X " + tx("co-ordinate must be between 0 and 749") + "<BR>";
-			if (isNaN(t.opt.startY) || t.opt.startY < 0 || t.opt.startY > 749)
-				errMsg += "Y " + tx("co-ordinate must be between 0 and 749") + "<BR>";
-			if (isNaN(t.opt.maxDistance) || t.opt.maxDistance < 1 || t.opt.maxDistance > 75)
-				errMsg += tx("Radius (distance) must be between") + " 1 " + tx("and") + " 75<BR>";
-		}
-		else if (t.opt.FullProvince && !Provinces[t.opt.province]) {
-			errMsg += tx('Select a province') + "<BR>";
-		}
+		if (isNaN(t.opt.startX) || t.opt.startX < 0 || t.opt.startX > 749)
+			errMsg = "X " + tx("co-ordinate must be between 0 and 749") + "<BR>";
+		if (isNaN(t.opt.startY) || t.opt.startY < 0 || t.opt.startY > 749)
+			errMsg += "Y " + tx("co-ordinate must be between 0 and 749") + "<BR>";
+		if (isNaN(t.opt.maxDistance) || t.opt.maxDistance < 1 || t.opt.maxDistance > 75)
+			errMsg += tx("Radius (distance) must be between") + " 1 " + tx("and") + " 75<BR>";
 		if (errMsg != '') {
 			ById('pbSearchResults').innerHTML = '<center><FONT COLOR=#800>' + tx("ERROR") + ':</font><BR><BR>' + errMsg + '</center>';
 			return;
@@ -29798,28 +29781,8 @@ Tabs.Search = {
 		if (t.lastY >= 750) { t.lastY -= 750; }
 
 		t.BlockList = t.MapAjax.generateBlockList(t.firstX, t.firstY, t.opt.maxDistance);
-		t.ZoneList = [];
-		if (t.FullMapMode) {
-			t.ZoneList = [];
-			if (t.opt.FullProvince) {
-				var prov = Provinces[t.opt.province];
-				t.ZoneList.push(t.MapAjax.generateBlockList(prov.x, prov.y, 75));
-			}
-			else {
-				for (var gx = 0; gx < 750; gx += 150) {
-					for (var gy = 0; gy < 750; gy += 150) {
-						t.ZoneList.push(t.MapAjax.generateBlockList(gx, gy, 75));
-					}
-				}
-			}
-			t.BlockList = t.ZoneList[0];
-		}
 
 		t.blocksTotal = t.BlockList.length;
-		if (t.FullMapMode) {
-			t.blocksTotal = 0;
-			for (var zz = 0; zz < t.ZoneList.length; zz++) t.blocksTotal += t.ZoneList[zz].length;
-		}
 		t.blocksSearched = 0;
 		t.tilesFound = 0;
 
@@ -30275,12 +30238,6 @@ Tabs.Search = {
 		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
 		t.dispMapTable();
 
-		// en modo Full Map / Full Province, cuando se agota la zona actual pasar a la siguiente
-		if (t.BlockList.length == 0 && t.FullMapMode && t.ZoneList.length > 1) {
-			t.ZoneList.shift();
-			t.BlockList = t.ZoneList[0];
-		}
-
 		var counter = t.BlockList.length;
 		if (counter == 0) {
 			t.stopSearch(tx('Completed!'), true);
@@ -30377,7 +30334,7 @@ Tabs.Search = {
 		t.dat = [];
 
 		for (var i = 0; i < t.mapDat.length; i++) {
-			var TileOK = (Options.SearchOptions.SearchShape == 0 || t.mapDat[i][2] <= t.opt.maxDistance || t.FullMapMode); // check distance on circle search (Full Map/Province ignora distancia)
+			var TileOK = (Options.SearchOptions.SearchShape == 0 || t.mapDat[i][2] <= t.opt.maxDistance); // check distance on circle search
 
 			if (TileOK) { // check type
 				if (Options.SearchOptions.SearchType == 0) { // city

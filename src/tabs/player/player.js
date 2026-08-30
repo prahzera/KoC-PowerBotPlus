@@ -19,6 +19,7 @@ Tabs.Player = {
 	hostilebtn: '',
 	aName: '',
 	ReqSent: {},
+	QAMarching: {},
 	Options: {
 		sortColNum: 8,
 		sortDir: 1,
@@ -95,6 +96,7 @@ Tabs.Player = {
 		m += '<tr><td>';
 		if (Tabs.BulkScout) m += strButton20(tx('Add to Scout List'), 'id=ptScoutExport') + '&nbsp;';
 		if (Tabs.BulkAttack) m += strButton20(tx('Add to Attack List'), 'id=ptBulkAttackExport') + '&nbsp;';
+		if (Options.OneClickAttackPreset != 0) m += strButton20(tx('QuickAttack Selected'), 'id=ptQuickAttackExport') + '&nbsp;';
 		m += strButton20(tx('Highlight Defending Cities'), 'id=ptHighDefenders') + '</td><td align=right>&nbsp;' + tx('ETA') + ':&nbsp;</b></span><select id="idFindETASelect"><option value="0">-- ' + uW.g_js_strings.commonstr.select + ' --</option>';
 		for (var ui in CM.UNIT_TYPES) {
 			i = CM.UNIT_TYPES[ui];
@@ -112,6 +114,7 @@ Tabs.Player = {
 
 		if (ById('ptScoutExport')) ById('ptScoutExport').addEventListener('click', t.ExportScoutList, false);
 		if (ById('ptBulkAttackExport')) ById('ptBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
+		if (ById('ptQuickAttackExport')) ById('ptQuickAttackExport').addEventListener('click', t.QuickAttackSelected, false);
 		ById('ptHighDefenders').addEventListener('click', t.HighlightDefenders, false);
 		ById('idFindETASelect').addEventListener('click', t.handleEtaSelect, false);
 
@@ -1087,6 +1090,29 @@ Tabs.Player = {
 		var coordlist = t.getSelected();
 		if (coordlist != "") {
 			Tabs.BulkAttack.ImportCoords(coordlist.split(" "));
+		}
+	},
+
+	QuickAttackSelected: function () {
+		var t = Tabs.Player;
+		var cid = (t.ModelCityId && Cities.byID[t.ModelCityId]) ? t.ModelCityId : uW.currentcityid;
+		var qadelay = 0;
+		var count = 0;
+		for (var k = 0; k < t.dat.length; k++) {
+			var city = t.dat[k][11].toString();
+			var cb = ById('ptScout_' + city);
+			if (cb && cb.checked) {
+				var coords = t.dat[k][5].toString() + '_' + t.dat[k][6].toString();
+				if (!t.QAMarching[coords] || t.QAMarching[coords] == 0) {
+					t.QAMarching[coords] = 1;
+					setTimeout(uW.quickattacksearch, (5000 * qadelay), t.dat[k][5], t.dat[k][6], cid, true);
+					qadelay = qadelay + 1;
+					count++;
+				}
+			}
+		}
+		if (count > 0) {
+			ById('allplayerr').innerHTML = tx('QuickAttacking') + ': ' + count + ' ' + tx('tiles');
 		}
 	},
 
