@@ -234,6 +234,99 @@ QuickScout = {
 
 			uWExportFunction('quickattack', FNQuickAttack);
 
+			/** Ataca un tile con el preset configurado (OneClickAttackPreset) desde el tab de buscar.
+			 *  Es el equivalente del QuickAttack del menú del mapa pero por coordenadas,
+			 *  lo que permite atacar varios tiles (ej. Dark Forests) con tropas pre-configuradas. */
+			function FNQuickAttackSearch(x, y, cid, auto) {
+				// si es automático, chequear slots de rally
+				if (auto) {
+					var marches = parseIntNan(March.getMarchSlots(cid));
+					var maxmarches = parseIntNan(March.getTotalSlots(cid));
+					var keepfree = Number(Options.FreeRallySlots);
+					if ((marches + keepfree) >= maxmarches) {
+						var divid = 'pbsrch_' + x + '_' + y;
+						if (ById(divid)) {
+							var msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickattacksearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickAttack") + '</a></span>';
+							ById(divid).innerHTML = msg;
+						}
+						if (Tabs.Search) { Tabs.Search.QAMarching[x + '_' + y] = 0; }
+						return;
+					}
+				}
+
+				if (Options.OneClickAttackPreset == 0 || !Options.QuickMarchOptions.MarchPresets[Options.OneClickAttackPreset]) {
+					QuickMarch.MapClick(x, y, Cities.byID[cid] ? Cities.byID[cid].idx : 0);
+					return;
+				}
+
+				// enviar el preset seleccionado como ataque
+
+				var knt = getAvailableKnights(cid);
+				if (!knt[0]) {
+					QuickMarch.MapClick(x, y, Cities.byID[cid] ? Cities.byID[cid].idx : 0);
+					return;
+				}
+
+				var params = uW.Object.clone(uW.g_ajaxparams);
+				params.cid = cid;
+				params.type = 4;
+				params.kid = knt[0].ID;
+				params.xcoord = x;
+				params.ycoord = y;
+				params.gold = 0;
+				params.r1 = 0;
+				params.r2 = 0;
+				params.r3 = 0;
+				params.r4 = 0;
+				params.r5 = 0;
+
+				for (var ui in CM.UNIT_TYPES) {
+					var i = CM.UNIT_TYPES[ui];
+					params["u" + i] = 0;
+					if (Options.QuickMarchOptions.MarchPresets[Options.OneClickAttackPreset][i]) {
+						params["u" + i] = parseIntNan(Options.QuickMarchOptions.MarchPresets[Options.OneClickAttackPreset][i]);
+					}
+				}
+
+				var iused = new Array();
+				for (var i = 0; i < QuickMarch.ItemList.length; i++) {
+					if (Options.QuickMarchOptions.MarchPresets[Options.OneClickAttackPreset]["item" + QuickMarch.ItemList[i]] == true && Seed.items["i" + QuickMarch.ItemList[i]]) {
+						iused.push(QuickMarch.ItemList[i]);
+					}
+				}
+				params.items = iused.join(",");
+
+				params.champid = 0;
+				if (Options.QuickMarchOptions.AutoChamp) {
+					var citychamp = getCityChampion(cid);
+					if (citychamp.championId && citychamp.status != "10") { params.champid = citychamp.championId; }
+				}
+
+				if (Options.QuickMarchOptions.AutoSpell) {
+					var spells = getSpellData(cid);
+					if (spells.spellavailable && !spells.cooldownactive) {
+						params.bs = SpellTypes[faction];
+					}
+				}
+
+				March.addMarch(params, function (rslt) {
+					if (Tabs.Search) { Tabs.Search.QAMarching[x + '_' + y] = 0; }
+					if (!rslt.ok) {
+						var sd = 'pbsrch_' + x + '_' + y;
+						if (ById(sd)) {
+							if (rslt.error_code == 208 || rslt.error_code == 207) {
+								var msgt = (rslt.error_code == 208) ? tx('Target is truced - Cannot attack') : tx('You are truced - Cannot attack another player');
+								ById(sd).innerHTML = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + msgt + '!</span>';
+							}
+							else {
+								ById(sd).innerHTML = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Error Code') + ' - ' + rslt.error_code + '</span>&nbsp;&nbsp;<SPAN onclick="quickattacksearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickAttack") + '</a></span>';
+							}
+						}
+					}
+				}, true); // force march so it never gets queued
+			}
+			uWExportFunction('quickattacksearch', FNQuickAttackSearch);
+
 			function FNAutoAttack(e) {
 				Tabs.Attack.RouteObject = null; // clear route object
 				Tabs.Attack.NewRoute(e.tile.x, e.tile.y);

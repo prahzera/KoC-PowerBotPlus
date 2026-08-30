@@ -29,6 +29,7 @@ Tabs.Search = {
 	lastY: 0,
 	LastSearch: {},
 	QSMarching: {},
+	QAMarching: {},
 	ReqSent: {},
 	mists: 0,
 	scouted: 0,
@@ -1306,12 +1307,14 @@ Tabs.Search = {
 		if (Tabs.BulkScout) m += strButton20(tx('Add to Scout List'), 'id=pbScoutExport') + '&nbsp;';
 		if (Tabs.BulkAttack) m += strButton20(tx('Add to Attack List'), 'id=pbBulkAttackExport') + '&nbsp;';
 		if (Tabs.Attack) m += strButton20(tx('Add to Auto-Attack'), 'id=pbAttackExport') + '&nbsp;';
+		if (Options.OneClickAttackPreset != 0) m += strButton20(tx('QuickAttack Selected'), 'id=pbQuickAttackExport') + '&nbsp;';
 		m += '&nbsp;</div>&nbsp;';
 
 		ById('pbSearchMessages').innerHTML = m;
 		if (ById('pbScoutExport')) ById('pbScoutExport').addEventListener('click', t.ExportScoutList, false);
 		if (ById('pbBulkAttackExport')) ById('pbBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
 		if (ById('pbAttackExport')) ById('pbAttackExport').addEventListener('click', t.ExportAttack, false);
+		if (ById('pbQuickAttackExport')) ById('pbQuickAttackExport').addEventListener('click', t.QuickAttackSelected, false);
 		ById('pbCoordCopy').addEventListener('click', t.CopyCoords, false);
 		if (ById('pbHighDefenders')) ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
 
@@ -1367,6 +1370,27 @@ Tabs.Search = {
 		if (sel) {
 			Tabs.Attack.NewRoute();
 			ById('bttcAttack').click();
+		}
+	},
+
+	QuickAttackSelected: function () {
+		var t = Tabs.Search;
+		var qadelay = 0;
+		var count = 0;
+		for (var k = 0; k < t.dat.length; k++) {
+			var coords = t.dat[k][0].toString() + '_' + t.dat[k][1].toString();
+			var cb = ById('pbSearchScout_' + coords);
+			if (cb && cb.checked) {
+				if (!t.QAMarching[coords] || t.QAMarching[coords] == 0) {
+					t.QAMarching[coords] = 1;
+					setTimeout(uW.quickattacksearch, (5000 * qadelay), t.dat[k][0], t.dat[k][1], t.ModelCityId, true);
+					qadelay = qadelay + 1;
+					count++;
+				}
+			}
+		}
+		if (count > 0) {
+			ById('pbStatStatus').innerHTML = tx('QuickAttacking') + ': ' + count + ' ' + tx('tiles');
 		}
 	},
 
