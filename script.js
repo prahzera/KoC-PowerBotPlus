@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.75
-// @releasenotes	        Fix script.meta.js version so Tampermonkey detects updates
+// @version			3.76
+// @releasenotes	        Make game background color persistent with MutationObserver
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.75';
+var Version = '3.76';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -1691,14 +1691,24 @@ function SetGameScreen() {
  *  y actualiza el estilo en vivo si el div ya existe. */
 function ApplyKocBgColor(color) {
 	if (!color) color = GlobalOptions.btKocBgColor || '#ffffff';
-	var el = ById('kocContainer');
-	if (el) el.style.backgroundColor = color;
+	
+	// Crear o actualizar el estilo global
 	if (!ApplyKocBgColor._style) {
 		ApplyKocBgColor._style = document.createElement('style');
 		(document.head || document.documentElement).appendChild(ApplyKocBgColor._style);
 	}
 	ApplyKocBgColor._style.innerHTML = '#kocContainer { background-color: ' + color + ' !important; }';
+	
+	// Aplicar directamente al elemento si ya existe
+	var el = ById('kocContainer');
+	if (el) el.style.backgroundColor = color;
 }
+
+// Observar cambios en el DOM para re-aplicar el estilo si el contenedor se recrea
+var observer = new MutationObserver(function(mutations) {
+	ApplyKocBgColor();
+});
+observer.observe(document.documentElement, { childList: true, subtree: true });
 
 function FacebookInstance() {
 

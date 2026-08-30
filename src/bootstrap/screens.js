@@ -74,11 +74,21 @@ function SetGameScreen() {
  *  y actualiza el estilo en vivo si el div ya existe. */
 function ApplyKocBgColor(color) {
 	if (!color) color = GlobalOptions.btKocBgColor || '#ffffff';
-	var el = ById('kocContainer');
-	if (el) el.style.backgroundColor = color;
+	
+	// Crear o actualizar el estilo global
 	if (!ApplyKocBgColor._style) {
 		ApplyKocBgColor._style = document.createElement('style');
 		(document.head || document.documentElement).appendChild(ApplyKocBgColor._style);
 	}
 	ApplyKocBgColor._style.innerHTML = '#kocContainer { background-color: ' + color + ' !important; }';
+	
+	// Aplicar directamente al elemento si ya existe
+	var el = ById('kocContainer');
+	if (el) el.style.backgroundColor = color;
 }
+
+// Observar cambios en el DOM para re-aplicar el estilo si el contenedor se recrea
+var observer = new MutationObserver(function(mutations) {
+	ApplyKocBgColor();
+});
+observer.observe(document.documentElement, { childList: true, subtree: true });
