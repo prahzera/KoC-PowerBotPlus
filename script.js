@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.84
-// @releasenotes	        Add hostile alliances modal with search; fix exclude persistence
+// @version			3.85
+// @releasenotes	        Fix hostile filter modal toggle + remove inline list
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.84';
+var Version = '3.85';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -29854,7 +29854,7 @@ Tabs.Search = {
 		m += '<tr id=pbsmisted2><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=pbSearchNewMists type=checkbox ' + (Options.SearchOptions.NewMists ? 'CHECKED' : '') + '/>' + tx('New') + '</td></tr>';
 		m += '<tr id=pbsfriendly><td><INPUT id=pbSearchFriendly type=checkbox ' + (Options.SearchOptions.Friendly ? 'CHECKED' : '') + '/>' + tx('Friendly') + '</td></tr>';
 		m += '<tr id=pbshostile><td><INPUT id=pbSearchHostile type=checkbox ' + (Options.SearchOptions.Hostile ? 'CHECKED' : '') + '/>' + tx('Hostile') + '</td></tr>';
-		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div style="cursor:pointer;" id=pbSearchHostileOpen>' + tx('Exclude Hostile Alliances') + '</div><div id=pbSearchHostileList style="max-height:120px;overflow-y:auto;"></div></td></tr>';
+		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div style="cursor:pointer;" id=pbSearchHostileOpen>' + tx('Exclude Hostile Alliances') + '</div></td></tr>';
 		m += '<tr id=pbsneutral><td><INPUT id=pbSearchNeutral type=checkbox ' + (Options.SearchOptions.Neutral ? 'CHECKED' : '') + '/>' + tx('Neutral') + '</td></tr>';
 		m += '<tr id=pbsunallied><td><INPUT id=pbSearchUnallied type=checkbox ' + (Options.SearchOptions.Unallied ? 'CHECKED' : '') + '/>' + tx('Unallied') + '</td></tr>';
 		m += '</table></td></tr>';
@@ -30100,7 +30100,6 @@ Tabs.Search = {
 				var showHostileFilter = (stype == 0 && ById('pbSearchHostile') && ById('pbSearchHostile').checked);
 				if (showHostileFilter) {
 					jQuery('#pbshostilefilter').removeClass('divHide');
-					t.paintHostileAllianceFilter();
 				}
 				else {
 					jQuery('#pbshostilefilter').addClass('divHide');
@@ -30109,33 +30108,6 @@ Tabs.Search = {
 		}
 		catch (e) { logerr(e); }
 
-	},
-
-	paintHostileAllianceFilter: function () {
-		var t = Tabs.Search;
-		try {
-			var list = ById('pbSearchHostileList');
-			if (!list) return;
-			if (!Seed.allianceDiplomacies || !Seed.allianceDiplomacies.hostile) {
-				list.innerHTML = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>';
-				return;
-			}
-			var m = '';
-			for (var k in Seed.allianceDiplomacies.hostile) {
-				var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
-				var checked = !!(Options.SearchOptions.HostileAlliances && Options.SearchOptions.HostileAlliances[aid]);
-				m += '<div><INPUT id=pbSearchHostileA_' + aid + ' type=checkbox ' + (checked ? 'CHECKED' : '') + '/> ' + Seed.allianceDiplomacies.hostile[k].allianceName + '</div>';
-			}
-			if (m == '') { m = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>'; }
-			list.innerHTML = m;
-			for (var k in Seed.allianceDiplomacies.hostile) {
-				var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
-				if (ById('pbSearchHostileA_' + aid)) {
-					ById('pbSearchHostileA_' + aid).addEventListener('change', t.toggleHostileAlliance, false);
-				}
-			}
-		}
-		catch (e) { logerr(e); }
 	},
 
 	toggleHostileAlliance: function (e) {
@@ -30155,7 +30127,9 @@ Tabs.Search = {
 		var t = Tabs.Search;
 		var pop = WinManager.get('btHostileFilter');
 		if (pop) {
-			pop.show(false);
+			pop.show(true);
+			pop.focusMe();
+			t.paintHostileModal();
 			return pop;
 		}
 		var off = getOffset(ById('pbshostilefilter'));
@@ -30219,7 +30193,6 @@ Tabs.Search = {
 			Options.SearchOptions.HostileAlliances[aid] = val;
 		}
 		saveOptions();
-		t.paintHostileAllianceFilter();
 		t.paintHostileModal();
 		t.dispMapTable();
 	},
