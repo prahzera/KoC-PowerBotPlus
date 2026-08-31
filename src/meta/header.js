@@ -41,8 +41,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.82
-// @releasenotes	        Add hostile alliance exclusion filter to Search tab
+// @version			3.83
+// @releasenotes	        Fix Search sidebar broken by hostile alliance filter
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

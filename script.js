@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.82
-// @releasenotes	        Add hostile alliance exclusion filter to Search tab
+// @version			3.83
+// @releasenotes	        Fix Search sidebar broken by hostile alliance filter
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.82';
+var Version = '3.83';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30011,18 +30011,6 @@ Tabs.Search = {
 
 		var stype = Options.SearchOptions.SearchType;
 
-		// mostrar/ocultar el filtro de alianzas hostiles (solo Cities + Hostile marcado)
-		if (ById('pbshostilefilter')) {
-			var showHostileFilter = (stype == 0 && ById('pbSearchHostile') && ById('pbSearchHostile').checked);
-			if (showHostileFilter) {
-				jQuery('#pbshostilefilter').removeClass('divHide');
-				t.paintHostileAllianceFilter();
-			}
-			else {
-				jQuery('#pbshostilefilter').addClass('divHide');
-			}
-		}
-
 		if (stype == 2) {
 			jQuery('#pbswild1').removeClass('divHide');
 			jQuery('#pbswild2').removeClass('divHide');
@@ -30101,30 +30089,49 @@ Tabs.Search = {
 			jQuery('#pbsunallied').removeClass('divHide');
 		}
 
+		// filtro de alianzas hostiles AL FINAL y aislado: un error aquí NUNCA debe romper
+		// el ocultamiento del resto del sidebar (eso pasaba antes al ir al inicio de la función).
+		try {
+			if (ById('pbshostilefilter')) {
+				var showHostileFilter = (stype == 0 && ById('pbSearchHostile') && ById('pbSearchHostile').checked);
+				if (showHostileFilter) {
+					jQuery('#pbshostilefilter').removeClass('divHide');
+					t.paintHostileAllianceFilter();
+				}
+				else {
+					jQuery('#pbshostilefilter').addClass('divHide');
+				}
+			}
+		}
+		catch (e) { logerr(e); }
+
 	},
 
 	paintHostileAllianceFilter: function () {
 		var t = Tabs.Search;
-		var list = ById('pbSearchHostileList');
-		if (!list) return;
-		if (!Seed.allianceDiplomacies || !Seed.allianceDiplomacies.hostile) {
-			list.innerHTML = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>';
-			return;
-		}
-		var m = '';
-		for (var k in Seed.allianceDiplomacies.hostile) {
-			var aid = Seed.allianceDiplomacies.hostile[k].allianceId;
-			var checked = !!(Options.SearchOptions.HostileAlliances[aid]);
-			m += '<div><INPUT id=pbSearchHostileA_' + aid + ' type=checkbox ' + (checked ? 'CHECKED' : '') + '/> ' + Seed.allianceDiplomacies.hostile[k].allianceName + '</div>';
-		}
-		if (m == '') { m = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>'; }
-		list.innerHTML = m;
-		for (var k in Seed.allianceDiplomacies.hostile) {
-			var aid = Seed.allianceDiplomacies.hostile[k].allianceId;
-			if (ById('pbSearchHostileA_' + aid)) {
-				ById('pbSearchHostileA_' + aid).addEventListener('change', t.toggleHostileAlliance, false);
+		try {
+			var list = ById('pbSearchHostileList');
+			if (!list) return;
+			if (!Seed.allianceDiplomacies || !Seed.allianceDiplomacies.hostile) {
+				list.innerHTML = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>';
+				return;
+			}
+			var m = '';
+			for (var k in Seed.allianceDiplomacies.hostile) {
+				var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
+				var checked = !!(Options.SearchOptions.HostileAlliances && Options.SearchOptions.HostileAlliances[aid]);
+				m += '<div><INPUT id=pbSearchHostileA_' + aid + ' type=checkbox ' + (checked ? 'CHECKED' : '') + '/> ' + Seed.allianceDiplomacies.hostile[k].allianceName + '</div>';
+			}
+			if (m == '') { m = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>'; }
+			list.innerHTML = m;
+			for (var k in Seed.allianceDiplomacies.hostile) {
+				var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
+				if (ById('pbSearchHostileA_' + aid)) {
+					ById('pbSearchHostileA_' + aid).addEventListener('change', t.toggleHostileAlliance, false);
+				}
 			}
 		}
+		catch (e) { logerr(e); }
 	},
 
 	toggleHostileAlliance: function (e) {
