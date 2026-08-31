@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.80
-// @releasenotes	        Move QuickAttack Selected to Players tab, revert Full Map search modes
+// @version			3.81
+// @releasenotes	        Hide Players tab (Search covers it; keep helper functions)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.80';
+var Version = '3.81';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -26927,6 +26927,7 @@ Tabs.Reference = {
 Tabs.Player = {
 	tabOrder: 1010,
 	tabLabel: 'Players',
+	tabDisabled: true, // tab oculto del menú: Search incluye todo esto y mejor (las funciones auxiliares se mantienen para otros tabs: ViewChamps, eventMapExternalTabClick, userobj)
 	myDiv: null,
 	MemberListRslt: {},
 	userobj: {},
@@ -27169,7 +27170,9 @@ Tabs.Player = {
 
 	eventPlayerExternalTabClick: function (uid) {
 		var t = Tabs.Player;
-		ById('bttcPlayer').click();
+		var btn = ById('bttcPlayer');
+		if (!btn) return; // tab oculto (tabDisabled)
+		btn.click();
 		ById('allplayerr').innerHTML = '';
 		ById('allCitySelect').style.display = 'none';
 		ById('allPlayerInfo').style.display = 'none';
@@ -27185,7 +27188,9 @@ Tabs.Player = {
 
 	eventMapExternalTabClick: function (aid, aname) {
 		var t = Tabs.Player;
-		ById('bttcPlayer').click();
+		var btn = ById('bttcPlayer');
+		if (!btn) return; // tab oculto (tabDisabled)
+		btn.click();
 		ById('allplayerr').innerHTML = '';
 		ById('allCitySelect').style.display = 'none';
 		ById('allPlayerInfo').style.display = 'none';
@@ -27195,7 +27200,9 @@ Tabs.Player = {
 
 	eventAllianceExternalTabClick: function (aid) {
 		var t = Tabs.Player;
-		ById('bttcPlayer').click();
+		var btn = ById('bttcPlayer');
+		if (!btn) return; // tab oculto (tabDisabled)
+		btn.click();
 		ById('allplayerr').innerHTML = '';
 		ById('allCitySelect').style.display = 'none';
 		ById('allPlayerInfo').style.display = 'none';

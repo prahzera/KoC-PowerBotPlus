@@ -41,8 +41,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.80
-// @releasenotes	        Move QuickAttack Selected to Players tab, revert Full Map search modes
+// @version			3.81
+// @releasenotes	        Hide Players tab (Search covers it; keep helper functions)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
