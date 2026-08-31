@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.81
-// @releasenotes	        Hide Players tab (Search covers it; keep helper functions)
+// @version			3.82
+// @releasenotes	        Add hostile alliance exclusion filter to Search tab
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.81';
+var Version = '3.82';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -29854,6 +29854,7 @@ Tabs.Search = {
 		m += '<tr id=pbsmisted2><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=pbSearchNewMists type=checkbox ' + (Options.SearchOptions.NewMists ? 'CHECKED' : '') + '/>' + tx('New') + '</td></tr>';
 		m += '<tr id=pbsfriendly><td><INPUT id=pbSearchFriendly type=checkbox ' + (Options.SearchOptions.Friendly ? 'CHECKED' : '') + '/>' + tx('Friendly') + '</td></tr>';
 		m += '<tr id=pbshostile><td><INPUT id=pbSearchHostile type=checkbox ' + (Options.SearchOptions.Hostile ? 'CHECKED' : '') + '/>' + tx('Hostile') + '</td></tr>';
+		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div class=divHeader>' + tx('Exclude Hostile Alliances') + '</div><div id=pbSearchHostileList style="max-height:120px;overflow-y:auto;"></div></td></tr>';
 		m += '<tr id=pbsneutral><td><INPUT id=pbSearchNeutral type=checkbox ' + (Options.SearchOptions.Neutral ? 'CHECKED' : '') + '/>' + tx('Neutral') + '</td></tr>';
 		m += '<tr id=pbsunallied><td><INPUT id=pbSearchUnallied type=checkbox ' + (Options.SearchOptions.Unallied ? 'CHECKED' : '') + '/>' + tx('Unallied') + '</td></tr>';
 		m += '</table></td></tr>';
@@ -29921,7 +29922,7 @@ Tabs.Search = {
 		ToggleOption('SearchOptions', 'pbSearchOldMists', 'OldMists', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchNewMists', 'NewMists', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchFriendly', 'Friendly', t.dispMapTable);
-		ToggleOption('SearchOptions', 'pbSearchHostile', 'Hostile', t.dispMapTable);
+		ToggleOption('SearchOptions', 'pbSearchHostile', 'Hostile', function () { t.setupFilterDisplay(); t.dispMapTable(); });
 		ToggleOption('SearchOptions', 'pbSearchNeutral', 'Neutral', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchUnallied', 'Unallied', t.dispMapTable);
 
@@ -30010,6 +30011,18 @@ Tabs.Search = {
 
 		var stype = Options.SearchOptions.SearchType;
 
+		// mostrar/ocultar el filtro de alianzas hostiles (solo Cities + Hostile marcado)
+		if (ById('pbshostilefilter')) {
+			var showHostileFilter = (stype == 0 && ById('pbSearchHostile') && ById('pbSearchHostile').checked);
+			if (showHostileFilter) {
+				jQuery('#pbshostilefilter').removeClass('divHide');
+				t.paintHostileAllianceFilter();
+			}
+			else {
+				jQuery('#pbshostilefilter').addClass('divHide');
+			}
+		}
+
 		if (stype == 2) {
 			jQuery('#pbswild1').removeClass('divHide');
 			jQuery('#pbswild2').removeClass('divHide');
@@ -30088,6 +30101,38 @@ Tabs.Search = {
 			jQuery('#pbsunallied').removeClass('divHide');
 		}
 
+	},
+
+	paintHostileAllianceFilter: function () {
+		var t = Tabs.Search;
+		var list = ById('pbSearchHostileList');
+		if (!list) return;
+		if (!Seed.allianceDiplomacies || !Seed.allianceDiplomacies.hostile) {
+			list.innerHTML = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>';
+			return;
+		}
+		var m = '';
+		for (var k in Seed.allianceDiplomacies.hostile) {
+			var aid = Seed.allianceDiplomacies.hostile[k].allianceId;
+			var checked = !!(Options.SearchOptions.HostileAlliances[aid]);
+			m += '<div><INPUT id=pbSearchHostileA_' + aid + ' type=checkbox ' + (checked ? 'CHECKED' : '') + '/> ' + Seed.allianceDiplomacies.hostile[k].allianceName + '</div>';
+		}
+		if (m == '') { m = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>'; }
+		list.innerHTML = m;
+		for (var k in Seed.allianceDiplomacies.hostile) {
+			var aid = Seed.allianceDiplomacies.hostile[k].allianceId;
+			if (ById('pbSearchHostileA_' + aid)) {
+				ById('pbSearchHostileA_' + aid).addEventListener('change', t.toggleHostileAlliance, false);
+			}
+		}
+	},
+
+	toggleHostileAlliance: function (e) {
+		var t = Tabs.Search;
+		var aid = e.target.id.substr(18); // pbSearchHostileA_
+		Options.SearchOptions.HostileAlliances[aid] = e.target.checked;
+		saveOptions();
+		t.dispMapTable();
 	},
 
 	ToggleSearchFilters: function () {
@@ -30418,6 +30463,13 @@ Tabs.Search = {
 							else {
 								if (dip == uW.g_js_strings.commonstr.hostile) { // hostile
 									TileOK = (Options.SearchOptions.Hostile);
+									// excluir alianzas hostiles marcadas en el filtro (HostileAlliances: aid -> true = excluir)
+									if (TileOK && Options.SearchOptions.HostileAlliances) {
+										var tAid = t.mapDat[i][11];
+										if (tAid != null && Options.SearchOptions.HostileAlliances[tAid]) {
+											TileOK = false;
+										}
+									}
 								}
 								else {
 									TileOK = (Options.SearchOptions.Neutral); // neutral

@@ -438,6 +438,8 @@
     "QuickAttack Selected": "Ataque Rápido de los Seleccionados",
     "QuickAttacking": "Atacando",
     "tiles": "tiles",
+    "Exclude Hostile Alliances": "Excluir Alianzas Hostiles",
+    "No hostile alliances": "No hay alianzas hostiles",
     "Target is truced - Cannot attack": "El objetivo está en tregua - No se puede atacar",
     "You are truced - Cannot attack another player": "Estás en tregua - No puedes atacar a otro jugador",
     "Auto Attack": "Ataque Automático",
