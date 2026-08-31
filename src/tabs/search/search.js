@@ -503,7 +503,7 @@ Tabs.Search = {
 		m += '<tr id=pbsmisted2><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=pbSearchNewMists type=checkbox ' + (Options.SearchOptions.NewMists ? 'CHECKED' : '') + '/>' + tx('New') + '</td></tr>';
 		m += '<tr id=pbsfriendly><td><INPUT id=pbSearchFriendly type=checkbox ' + (Options.SearchOptions.Friendly ? 'CHECKED' : '') + '/>' + tx('Friendly') + '</td></tr>';
 		m += '<tr id=pbshostile><td><INPUT id=pbSearchHostile type=checkbox ' + (Options.SearchOptions.Hostile ? 'CHECKED' : '') + '/>' + tx('Hostile') + '</td></tr>';
-		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div class=divHeader>' + tx('Exclude Hostile Alliances') + '</div><div id=pbSearchHostileList style="max-height:120px;overflow-y:auto;"></div></td></tr>';
+		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div style="cursor:pointer;" id=pbSearchHostileOpen>' + tx('Exclude Hostile Alliances') + '</div><div id=pbSearchHostileList style="max-height:120px;overflow-y:auto;"></div></td></tr>';
 		m += '<tr id=pbsneutral><td><INPUT id=pbSearchNeutral type=checkbox ' + (Options.SearchOptions.Neutral ? 'CHECKED' : '') + '/>' + tx('Neutral') + '</td></tr>';
 		m += '<tr id=pbsunallied><td><INPUT id=pbSearchUnallied type=checkbox ' + (Options.SearchOptions.Unallied ? 'CHECKED' : '') + '/>' + tx('Unallied') + '</td></tr>';
 		m += '</table></td></tr>';
@@ -574,6 +574,10 @@ Tabs.Search = {
 		ToggleOption('SearchOptions', 'pbSearchHostile', 'Hostile', function () { t.setupFilterDisplay(); t.dispMapTable(); });
 		ToggleOption('SearchOptions', 'pbSearchNeutral', 'Neutral', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchUnallied', 'Unallied', t.dispMapTable);
+
+		if (ById('pbSearchHostileOpen')) {
+			ById('pbSearchHostileOpen').addEventListener('click', t.openHostileFilter, false);
+		}
 
 		if (parseIntNan(Options.SearchOptions.Rank) != 0) {
 			t.AllianceRankings(Options.SearchOptions.Rank, Options.SearchOptions.RankType, function (e) {
@@ -785,9 +789,87 @@ Tabs.Search = {
 
 	toggleHostileAlliance: function (e) {
 		var t = Tabs.Search;
-		var aid = e.target.id.substr(18); // pbSearchHostileA_
+		// el id puede ser pbSearchHostileA_<aid> (sidebar, 17) o pbModalHostileA_<aid> (modal, 16)
+		var id = e.target.id;
+		var aid = id.lastIndexOf('A_') != -1 ? id.substr(id.lastIndexOf('A_') + 2) : '';
+		if (!Options.SearchOptions.HostileAlliances) { Options.SearchOptions.HostileAlliances = {}; }
 		Options.SearchOptions.HostileAlliances[aid] = e.target.checked;
 		saveOptions();
+		t.dispMapTable();
+		if (ById('pbHostileModalList')) { t.paintHostileModal(); }
+	},
+
+	// Modal con buscador y lista de alianzas hostiles
+	openHostileFilter: function () {
+		var t = Tabs.Search;
+		var pop = WinManager.get('btHostileFilter');
+		if (pop) {
+			pop.show(false);
+			return pop;
+		}
+		var off = getOffset(ById('pbshostilefilter'));
+		var modal = new CPopup('btHostileFilter', off.left, off.top + 20, 360, 400, true);
+		modal.getTopDiv().innerHTML = '<CENTER><B>' + tx('Exclude Hostile Alliances') + '</b></center>';
+		modal.centerMe(mainPop.getMainDiv());
+		var m = '<INPUT id=pbHostileSearch type=text class=btInput style="width:95%;" placeholder="' + tx('Search alliance...') + '" />';
+		m += '<br><div id=pbHostileModalList style="max-height:320px;overflow-y:auto;margin-top:5px;">&nbsp;</div>';
+		m += '<div align=center style="margin-top:5px;"><a id=pbHostileSelAll class="inlineButton btButton blue14"><span>' + tx('Select All') + '</span></a>&nbsp;<a id=pbHostileSelNone class="inlineButton btButton blue14"><span>' + tx('Select None') + '</span></a></div>';
+		modal.getMainDiv().innerHTML = m;
+		modal.show(true);
+		ResetFrameSize('btHostileFilter', 400, 360);
+
+		ById('pbHostileSearch').addEventListener('keyup', t.filterHostileModal, false);
+		ById('pbHostileSelAll').addEventListener('click', function () {
+			t.setAllHostile(true);
+		}, false);
+		ById('pbHostileSelNone').addEventListener('click', function () {
+			t.setAllHostile(false);
+		}, false);
+		t.paintHostileModal();
+		return modal;
+	},
+
+	paintHostileModal: function () {
+		var t = Tabs.Search;
+		var list = ById('pbHostileModalList');
+		if (!list) return;
+		if (!Seed.allianceDiplomacies || !Seed.allianceDiplomacies.hostile) {
+			list.innerHTML = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>';
+			return;
+		}
+		var search = ById('pbHostileSearch') ? ById('pbHostileSearch').value.toLowerCase() : '';
+		var m = '';
+		for (var k in Seed.allianceDiplomacies.hostile) {
+			var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
+			var name = Seed.allianceDiplomacies.hostile[k].allianceName || k;
+			if (search != '' && name.toLowerCase().indexOf(search) == -1) continue;
+			var checked = !!(Options.SearchOptions.HostileAlliances && Options.SearchOptions.HostileAlliances[aid]);
+			m += '<div><INPUT id=pbModalHostileA_' + aid + ' type=checkbox ' + (checked ? 'CHECKED' : '') + '/> ' + name + '</div>';
+		}
+		if (m == '') { m = '<span style="color:#800;">' + tx('No matches') + '</span>'; }
+		list.innerHTML = m;
+		for (var k in Seed.allianceDiplomacies.hostile) {
+			var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
+			if (ById('pbModalHostileA_' + aid)) {
+				ById('pbModalHostileA_' + aid).addEventListener('change', t.toggleHostileAlliance, false);
+			}
+		}
+	},
+
+	filterHostileModal: function () {
+		Tabs.Search.paintHostileModal();
+	},
+
+	setAllHostile: function (val) {
+		var t = Tabs.Search;
+		if (!Options.SearchOptions.HostileAlliances) { Options.SearchOptions.HostileAlliances = {}; }
+		for (var k in Seed.allianceDiplomacies.hostile) {
+			var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
+			Options.SearchOptions.HostileAlliances[aid] = val;
+		}
+		saveOptions();
+		t.paintHostileAllianceFilter();
+		t.paintHostileModal();
 		t.dispMapTable();
 	},
 
