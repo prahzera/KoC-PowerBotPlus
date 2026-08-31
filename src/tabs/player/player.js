@@ -3,7 +3,6 @@
 Tabs.Player = {
 	tabOrder: 1010,
 	tabLabel: 'Players',
-	tabDisabled: true, // tab oculto del menú: Search incluye todo esto y mejor (las funciones auxiliares se mantienen para otros tabs: ViewChamps, eventMapExternalTabClick, userobj)
 	myDiv: null,
 	MemberListRslt: {},
 	userobj: {},

@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.85
-// @releasenotes	        Fix hostile filter modal toggle + remove inline list
+// @version			3.86
+// @releasenotes	        Re-enable Players tab
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.85';
+var Version = '3.86';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -26927,7 +26927,6 @@ Tabs.Reference = {
 Tabs.Player = {
 	tabOrder: 1010,
 	tabLabel: 'Players',
-	tabDisabled: true, // tab oculto del menú: Search incluye todo esto y mejor (las funciones auxiliares se mantienen para otros tabs: ViewChamps, eventMapExternalTabClick, userobj)
 	myDiv: null,
 	MemberListRslt: {},
 	userobj: {},
