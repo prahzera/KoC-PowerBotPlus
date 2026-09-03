@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.87
+// @version			3.88
 // @releasenotes	        Re-enable Players tab
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.87';
+var Version = '3.88';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -474,6 +474,8 @@ var Options = {
 		BoldOrange: '#F80',
 		BoldGreen: '#080',
 		BoldMagenta: '#808',
+		ReportVictory: '#080',
+		ReportDefeat: '#CC0000',
 	},
 	ChatOptions: {
 		Colors: {
@@ -15832,26 +15834,27 @@ var Rpt = {
 			h += '</b></div>';
 			h += '<div id=reportHeaderCenter style="float:left;width:40%;text-align:center;">';
 			if (rpt.side0TileTypeText != tx('City') && rpt.side0TileTypeText != tx('Barb Camp') && rpt.marchType == 4) {
+				var vCol = (Options.Colors.ReportVictory || '#080'), lCol = (Options.Colors.ReportDefeat || '#CC0000');
 				if (rpt.sideId == 0) {
-					if (rslt['conquered'] != 0) { h += '<FONT color="#CC0000"><B>' + tx('Conquered') + '</B></font>'; }
-					else { h += '<FONT color="#080"><B>' + tx('Secured') + '</B></font>'; }
+					if (rslt['conquered'] != 0) { h += '<FONT color="' + lCol + '"><B>' + tx('Conquered') + '</B></font>'; }
+					else { h += '<FONT color="' + vCol + '"><B>' + tx('Secured') + '</B></font>'; }
 				}
 				else {
-					if (rslt['conquered'] != 0) { h += '<FONT color="#080"><B>' + tx('Conquered') + '</B></font>'; }
-					else { h += '<FONT color="#CC0000"><B>' + tx('Secured') + '</B></font>'; }
+					if (rslt['conquered'] != 0) { h += '<FONT color="' + vCol + '"><B>' + tx('Conquered') + '</B></font>'; }
+					else { h += '<FONT color="' + lCol + '"><B>' + tx('Secured') + '</B></font>'; }
 				}
 			} else if ((rslt['winner'] == 1 && rpt.sideId == 0) || (rslt['winner'] == 0 && rpt.sideId == 1)) {
 				if (rpt.marchName == uW.g_js_strings.commonstr.scout)
-					h += '<FONT color="#CC0000"><B>' + tx('Scouting Failed') + '</B></font>';
+					h += '<FONT color="' + lCol + '"><B>' + tx('Scouting Failed') + '</B></font>';
 				else
-					h += '<FONT color="#CC0000"><B>' + tx('You were defeated') + '</B></font>';
+					h += '<FONT color="' + lCol + '"><B>' + tx('You were defeated') + '</B></font>';
 			} else if (rslt['winner'] == 0 && rpt.sideId == 0)
-				h += '<FONT color="#080"><B>' + tx('You defended successfully') + '!</B></font>';
+				h += '<FONT color="' + vCol + '"><B>' + tx('You defended successfully') + '!</B></font>';
 			else if (rslt['winner'] == 1 && rpt.sideId == 1) {
 				if (rpt.marchName == uW.g_js_strings.commonstr.scout)
-					h += '<FONT color="#080"><B>' + tx('Scouting Report') + '</B></font>';
+					h += '<FONT color="' + vCol + '"><B>' + tx('Scouting Report') + '</B></font>';
 				else
-					h += '<FONT color="#080"><B>' + tx('You were victorious') + '!</B></font>';
+					h += '<FONT color="' + vCol + '"><B>' + tx('You were victorious') + '!</B></font>';
 			}
 			h += '</div>';
 			h += '<div id=reportHeaderRight style="float:right;width:30%;text-align:right;">';
@@ -15870,7 +15873,7 @@ var Rpt = {
 				n += '<TD align=center>???</td>';
 				n += '<TD align=center>???</td>';
 				if (fought > 0) {
-					n += '<TD align=center><FONT color="#CC0000">(' + addCommas(fought) + ')</FONT></td></tr>';
+					n += '<TD align=center><FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '">(' + addCommas(fought) + ')</FONT></td></tr>';
 					if (side == "s0" && unit_type < 50) { t.defmight += parseInt(uW.unitmight['unt' + unit_type] * fought); }
 					if (side == "s0" && unit_type >= 50 && unit_type < 99) {
 						var fm = parseIntNan(fortmight['f' + unit_type]);
@@ -15884,8 +15887,8 @@ var Rpt = {
 				var killed = parseInt(fought) - parseInt(survived);
 				if (killed > 0) {
 					n += '<TD align=center>' + addCommas(fought) + '</td>';
-					n += '<TD align=center><FONT color="#CC0000">' + addCommas(survived) + '</FONT></td>';
-					n += '<TD align=center><FONT color="#CC0000">(' + addCommas(killed) + ')</FONT></td></tr>';
+					n += '<TD align=center><FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '">' + addCommas(survived) + '</FONT></td>';
+					n += '<TD align=center><FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '">(' + addCommas(killed) + ')</FONT></td></tr>';
 					if (side == "s1") { t.atkmight += parseInt(uW.unitmight['unt' + unit_type] * killed); }
 					if (side == "s0" && unit_type < 51) { t.defmight += parseInt(uW.unitmight['unt' + unit_type] * killed); }
 					if (side == "s0" && unit_type >= 51 && unit_type < 99) {
@@ -15914,7 +15917,7 @@ var Rpt = {
 			m += '<div style="width:50%;float:left;">';
 			m += '<B>' + tx('Attackers') + ':</B> ' + rpt.side1Name + ' (<A class=xlink onclick="btGotoMapRpt(' + rpt.side1XCoord + ',' + rpt.side1YCoord + ')">' + rpt.side1XCoord + ',' + rpt.side1YCoord + '</a>) ';
 			if (rslt['winner'] == 1)
-				m += '<FONT color="#CC0000"><B> ' + tx('Winner') + '</B></FONT>';
+				m += '<FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '"><B> ' + tx('Winner') + '</B></FONT>';
 			m += '<br>';
 			if (rpt.side1AllianceId && (rpt.side1AllianceId != 0)) m += uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side1AllianceId) + '>' + rpt.side1AllianceName + '</span><br>';
 			if (rpt.side1PlayerId && (rpt.side1PlayerId != 0)) m += 'UID:&nbsp;' + MonitorLinkUID(rpt.side1PlayerId) + '<br>';
@@ -15928,7 +15931,7 @@ var Rpt = {
 			m += '<div style="width:50%;float:left;">';
 			m += '<B>' + tx('Defenders') + '</B> ' + rpt.side0Name + ' (<A class=xlink onclick="btGotoMapRpt(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>) ';
 			if (rslt['winner'] == 0)
-				m += '<FONT color="#CC0000"><B> ' + tx('Winner') + '</B></FONT>';
+				m += '<FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '"><B> ' + tx('Winner') + '</B></FONT>';
 			m += '<br>';
 			if (rpt.side0AllianceId && (rpt.side0AllianceId != 0)) m += uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side0AllianceId) + '>' + rpt.side0AllianceName + '</span><br>';
 			if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += 'UID:' + MonitorLinkUID(rpt.side0PlayerId) + '<br>';
@@ -19553,7 +19556,7 @@ Tabs.Options = {
 				div#throneMainContainer div#advisorContainer{width:141px;height:240px;bottom:0pt;right:0pt;}\
 				div#throneMainContainer div#heroContainer{width:85px;height:150px;top:190px;left:585px;z-index:97;}',
 	Colors: {
-		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#800', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', },
+		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#800', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', ReportVictory: '#080', ReportDefeat: '#CC0000', },
 	},
 	ReportOptions: {
 		EnhanceAR: false,
@@ -21676,6 +21679,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=text size=7 maxlength=7 value="' + Options.Colors.Highlight + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=text size=7 maxlength=7 value="' + Options.Colors.HighlightText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#800') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#800') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=text size=7 maxlength=7 value="' + (Options.Colors.BoldGreen || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=text size=7 maxlength=7 value="' + (Options.Colors.BoldMagenta || '#808') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Report Result Colours") + ': </td><TD class=xtab><INPUT id=togReportVictory type=text size=7 maxlength=7 value="' + (Options.Colors.ReportVictory || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportVictory || '#080') + ';font-weight:bold;" width=50px>' + tx('Victory') + '</td><TD class=xtab>&nbsp;<INPUT id=togReportDefeat type=text size=7 maxlength=7 value="' + (Options.Colors.ReportDefeat || '#CC0000') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportDefeat || '#CC0000') + ';font-weight:bold;" width=50px>' + tx('Defeat') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
 		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
 		m += '</td></tr>';
@@ -21768,6 +21772,18 @@ Tabs.Options = {
 		}, false);
 		ById('togBoldMagenta').addEventListener('change', function () {
 			Options.Colors.BoldMagenta = ById('togBoldMagenta').value;
+			saveOptions();
+			t.PaintPBPOptions()
+			t.RestartReminder();
+		}, false);
+		ById('togReportVictory').addEventListener('change', function () {
+			Options.Colors.ReportVictory = ById('togReportVictory').value;
+			saveOptions();
+			t.PaintPBPOptions()
+			t.RestartReminder();
+		}, false);
+		ById('togReportDefeat').addEventListener('change', function () {
+			Options.Colors.ReportDefeat = ById('togReportDefeat').value;
 			saveOptions();
 			t.PaintPBPOptions()
 			t.RestartReminder();

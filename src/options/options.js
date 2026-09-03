@@ -18,6 +18,8 @@ var Options = {
 		BoldOrange: '#F80',
 		BoldGreen: '#080',
 		BoldMagenta: '#808',
+		ReportVictory: '#080',
+		ReportDefeat: '#CC0000',
 	},
 	ChatOptions: {
 		Colors: {
