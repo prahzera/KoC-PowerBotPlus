@@ -127,10 +127,10 @@ function PowerBotStartup() {
 		table.ptTab tr td {border:none; background:none; white-space:nowrap;}\
 		.whiteOnRed {padding-left:3px; padding-right:3px; background-color:#f00; color:white; font-weight:bold}\
 		.whiteOnGreen {padding-left:3px; padding-right:3px; background-color:#080; color:white; font-weight:bold}\
-		span.boldRed {color:#800; font-weight:bold}\
-		span.boldOrange {color:#F80; font-weight:bold}\
-		span.boldGreen {color:#080; font-weight:bold}\
-		span.boldMagenta {color:#808; font-weight:bold}\
+		span.boldRed {color:'+ (Options.Colors.BoldRed || '#800') + '; font-weight:bold}\
+		span.boldOrange {color:'+ (Options.Colors.BoldOrange || '#F80') + '; font-weight:bold}\
+		span.boldGreen {color:'+ (Options.Colors.BoldGreen || '#080') + '; font-weight:bold}\
+		span.boldMagenta {color:'+ (Options.Colors.BoldMagenta || '#808') + '; font-weight:bold}\
 		.kocHeader .timeAndDomain {margin: 13px 0px 0px -5px;}\
 		.kocmain .mod_maparea .mod_citylist .city_warning{background: url('+ URL_CASTLE_WARN + ') no-repeat; margin-top: 4px;}\
 		.btExpander {background:none; -moz-border-radius-bottomright: 20px; -moz-border-radius-topright: 20px; border-bottom-right-radius: 20px; border-top-right-radius: 20px;}\

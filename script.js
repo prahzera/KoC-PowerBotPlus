@@ -41,13 +41,13 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.86
+// @version			3.87
 // @releasenotes	        Re-enable Players tab
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
 
-var Version = '3.86';
+var Version = '3.87';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -470,6 +470,10 @@ var Options = {
 		PanelText: '#000000',
 		Highlight: '#FFFFCC',
 		HighlightText: '#000000',
+		BoldRed: '#800',
+		BoldOrange: '#F80',
+		BoldGreen: '#080',
+		BoldMagenta: '#808',
 	},
 	ChatOptions: {
 		Colors: {
@@ -904,10 +908,10 @@ function PowerBotStartup() {
 		table.ptTab tr td {border:none; background:none; white-space:nowrap;}\
 		.whiteOnRed {padding-left:3px; padding-right:3px; background-color:#f00; color:white; font-weight:bold}\
 		.whiteOnGreen {padding-left:3px; padding-right:3px; background-color:#080; color:white; font-weight:bold}\
-		span.boldRed {color:#800; font-weight:bold}\
-		span.boldOrange {color:#F80; font-weight:bold}\
-		span.boldGreen {color:#080; font-weight:bold}\
-		span.boldMagenta {color:#808; font-weight:bold}\
+		span.boldRed {color:'+ (Options.Colors.BoldRed || '#800') + '; font-weight:bold}\
+		span.boldOrange {color:'+ (Options.Colors.BoldOrange || '#F80') + '; font-weight:bold}\
+		span.boldGreen {color:'+ (Options.Colors.BoldGreen || '#080') + '; font-weight:bold}\
+		span.boldMagenta {color:'+ (Options.Colors.BoldMagenta || '#808') + '; font-weight:bold}\
 		.kocHeader .timeAndDomain {margin: 13px 0px 0px -5px;}\
 		.kocmain .mod_maparea .mod_citylist .city_warning{background: url('+ URL_CASTLE_WARN + ') no-repeat; margin-top: 4px;}\
 		.btExpander {background:none; -moz-border-radius-bottomright: 20px; -moz-border-radius-topright: 20px; border-bottom-right-radius: 20px; border-top-right-radius: 20px;}\
@@ -19549,7 +19553,7 @@ Tabs.Options = {
 				div#throneMainContainer div#advisorContainer{width:141px;height:240px;bottom:0pt;right:0pt;}\
 				div#throneMainContainer div#heroContainer{width:85px;height:150px;top:190px;left:585px;z-index:97;}',
 	Colors: {
-		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', },
+		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#800', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', },
 	},
 	ReportOptions: {
 		EnhanceAR: false,
@@ -21670,6 +21674,8 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=text size=7 maxlength=7 value="' + Options.Colors.DividerTop + '">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=text size=7 maxlength=7 value="' + Options.Colors.DividerBottom + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=text size=7 maxlength=7 value="' + Options.Colors.DividerText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=text size=7 maxlength=7 value="' + Options.Colors.Panel + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=text size=7 maxlength=7 value="' + Options.Colors.PanelText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=text size=7 maxlength=7 value="' + Options.Colors.Highlight + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=text size=7 maxlength=7 value="' + Options.Colors.HighlightText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#800') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#800') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=text size=7 maxlength=7 value="' + (Options.Colors.BoldGreen || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=text size=7 maxlength=7 value="' + (Options.Colors.BoldMagenta || '#808') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
 		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
 		m += '</td></tr>';
@@ -21738,6 +21744,30 @@ Tabs.Options = {
 		}, false);
 		ById('togHighlightText').addEventListener('change', function () {
 			Options.Colors.HighlightText = ById('togHighlightText').value;
+			saveOptions();
+			t.PaintPBPOptions()
+			t.RestartReminder();
+		}, false);
+		ById('togBoldRed').addEventListener('change', function () {
+			Options.Colors.BoldRed = ById('togBoldRed').value;
+			saveOptions();
+			t.PaintPBPOptions()
+			t.RestartReminder();
+		}, false);
+		ById('togBoldOrange').addEventListener('change', function () {
+			Options.Colors.BoldOrange = ById('togBoldOrange').value;
+			saveOptions();
+			t.PaintPBPOptions()
+			t.RestartReminder();
+		}, false);
+		ById('togBoldGreen').addEventListener('change', function () {
+			Options.Colors.BoldGreen = ById('togBoldGreen').value;
+			saveOptions();
+			t.PaintPBPOptions()
+			t.RestartReminder();
+		}, false);
+		ById('togBoldMagenta').addEventListener('change', function () {
+			Options.Colors.BoldMagenta = ById('togBoldMagenta').value;
 			saveOptions();
 			t.PaintPBPOptions()
 			t.RestartReminder();

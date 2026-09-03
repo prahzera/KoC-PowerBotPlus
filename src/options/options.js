@@ -14,6 +14,10 @@ var Options = {
 		PanelText: '#000000',
 		Highlight: '#FFFFCC',
 		HighlightText: '#000000',
+		BoldRed: '#800',
+		BoldOrange: '#F80',
+		BoldGreen: '#080',
+		BoldMagenta: '#808',
 	},
 	ChatOptions: {
 		Colors: {
