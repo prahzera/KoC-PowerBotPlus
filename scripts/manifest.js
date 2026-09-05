@@ -25,6 +25,9 @@ const MANIFEST = [
   // ─────────────────────────── meta ───────────────────────────
   'meta/header.js', // banner // ==UserScript== (1-48) + línea en blanco
 
+  // ─────────────────────────── portal (al inicio, no depende del juego) ───────────────────────────
+  'bootstrap/portal-layout.js', // InitPortalLayout — GCG portal: main 100%, footer oculto, header colapsable
+
   // ─────────────────────────── core (globals) ───────────────────────────
   'core/version.js', // Version(50), SourceName(51), GlobalOptionsUpdate(52), OptionsUpdate(54)
   'core/runtime.js', // JSON2, uW, Seed, CM, FFVersion, GMVersion, NoRegEx, http, EXTERNAL_RESOURCE, KOCMON_LOGO, KOCMON_ON, GameURL
@@ -59,7 +62,6 @@ const MANIFEST = [
   'bootstrap/instances.js', // FacebookInstance(1686)
   'bootstrap/standalone.js', // CheckStandAlone(1751), StandAloneInstance(1757)
   'bootstrap/watchdogs.js', // FacebookWatchdog(1805), KOCWatchdog(1819), PBPWatchdog(1833), KOCnotFound(1846), ReloadKOC(1879)
-  'bootstrap/portal-layout.js', // InitPortalLayout — GCG portal: main 100%, footer oculto, header colapsable
 
   // ─────────────────────────── auth (popups FB / tokens) ───────────────────────────
   'auth/alerts.js', // CheckRemoveAlert(1936), CheckDisableAds(1946)

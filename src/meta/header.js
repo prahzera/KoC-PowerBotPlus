@@ -9,6 +9,7 @@
 // @include			*.playgardencitygames.com/kingdomsofcamelot*
 // @match			https://*.playgardencitygames.com/kingdomsofcamelot*
 // @match			https://*.playgardencitygames.com/*
+// @include			file:///*Garden City Games Portal*.html
 // @include			*.rockyou.com/rya/*
 // @include			*facebook.com/*dialog/feed*
 // @include			*rycamelot.com/*acceptToken_src.php*
