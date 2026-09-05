@@ -72,6 +72,7 @@ if (typeof window.onurlchange === 'function') {
 	window.onurlchange = function () {
 		if (document.URL.search(/kingdomsofcamelot|kingdoms-of-camelot|playgardencitygames\.com/i) >= 0) {
 			if (typeof uW !== 'undefined') uW.btLoaded = false;
+			if (typeof InitPortalLayout === 'function') InitPortalLayout();
 			SetGameScreen();
 			LoadChecker(true);
 		}
