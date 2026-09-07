@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes	        Search: opción 'Todas las Provincias' para buscar todo el mapa en una sola búsqueda
+// @releasenotes	        Search: render throttled, paginación de resultados y optimización de cola de última conexión para búsquedas grandes
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

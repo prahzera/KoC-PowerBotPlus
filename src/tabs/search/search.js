@@ -6,6 +6,13 @@ Tabs.Search = {
 	myDiv: null,
 	MapAjax: new CMapAjax(),
 	MAX_SHOW_WHILE_RUNNING: 500,
+	pageSize: 250,
+	pageNum: 1,
+	renderTimer: null,
+	lastLoginIdx: {},
+	lastLoginEnqLen: 0,
+	lastLoginSaved: 0,
+	lastLoginSaveAt: 0,
 	PANEL_HEIGHT: 500,
 	FilterShow: true,
 	BlockList: [],
@@ -113,6 +120,9 @@ Tabs.Search = {
 		}
 
 		uWExportFunction('ptsearchClickSort', Tabs.Search.searchClickSort);
+		uWExportFunction('ptsearchPage', function (n) { var t = Tabs.Search; t.pageNum = Math.max(1, Math.min(parseIntNan(n), Math.ceil(t.dat.length / t.pageSize))); t.dispMapTable(); });
+		uWExportFunction('ptsearchPageRel', function (d) { var t = Tabs.Search; t.pageNum = Math.max(1, Math.min(t.pageNum + parseIntNan(d), Math.ceil(t.dat.length / t.pageSize))); t.dispMapTable(); });
+		uWExportFunction('ptsearchPageSize', function (n) { var t = Tabs.Search; n = parseIntNan(n); t.pageSize = (n == 100 || n == 250 || n == 500 || n == 1000) ? n : 250; t.pageNum = 1; t.dispMapTable(); });
 		uWExportFunction('searchquickmarch', Tabs.Search.searchquickmarch);
 		uWExportFunction('btShowHQMembers', Tabs.Search.ShowHQMembers);
 
@@ -251,6 +261,7 @@ Tabs.Search = {
 		e.className = 'buttonv2 std green';
 		if (newColNum == Options.SearchOptions.sortColNum) { Options.SearchOptions.sortDir *= -1; }
 		else { Options.SearchOptions.sortColNum = newColNum; }
+		t.pageNum = 1;
 		saveOptions();
 		t.dispMapTable();
 	},
@@ -381,7 +392,9 @@ Tabs.Search = {
 		if (Provinces[ById('pbSearchProvince').value]) { ById('pbSlicesSpan').style.display = ''; }
 		else { ById('pbSlicesSpan').style.display = 'none'; }
 
-		t.mapDat = t.LastSearch.mapDat.slice();
+		t.mapDat = t.LastSearch.mapDat ? t.LastSearch.mapDat.slice() : [];
+		t.lastLoginIdx = {};
+		t.lastLoginEnqLen = 0;
 		t.opt.startX = parseInt(t.LastSearch.opt.startX);
 		t.opt.startY = parseInt(t.LastSearch.opt.startY);
 		t.opt.maxDistance = parseInt(t.LastSearch.opt.maxDistance);
@@ -452,6 +465,7 @@ Tabs.Search = {
 		}
 
 		t.searchRunning = true;
+		t.pageNum = 1;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 
 		t.setupResultsPanel(false);
@@ -475,6 +489,8 @@ Tabs.Search = {
 		t.saveoldmists();
 
 		t.mapDat = [];
+		t.lastLoginIdx = {};
+		t.lastLoginEnqLen = 0;
 		if (t.opt.province == -1) { // whole map: cover the full 0..749 grid with 5x5 blocks
 			t.firstX = 0;
 			t.firstY = 0;
@@ -1141,7 +1157,7 @@ t.setupFilterDisplay();
 		t.enqueueLastLogins();
 
 		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
-		t.dispMapTable();
+		t.throttledRender();
 
 		var counter = t.BlockList.length;
 		if (counter == 0) {
@@ -1163,6 +1179,16 @@ t.setupFilterDisplay();
 		}
 		var blockString = t.Blocks.join("%2C");
 		t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(blockString, rslt); }) }, MAP_DELAY);
+	},
+
+	throttledRender: function () {
+		var t = Tabs.Search;
+		if (!t.searchRunning) { t.dispMapTable(); return; }
+		if (t.renderTimer) return;
+		t.renderTimer = setTimeout(function () {
+			t.renderTimer = null;
+			if (t.searchRunning) { t.dispMapTable(); }
+		}, 2000);
 	},
 
 	lastLoginUnit: function () {
@@ -1192,17 +1218,17 @@ t.setupFilterDisplay();
 	enqueueLastLogins: function () {
 		var t = Tabs.Search;
 		if (!Options.SearchOptions.ShowLastLogin) return;
-		for (var i = 0; i < t.mapDat.length; i++) {
+		for (var i = t.lastLoginEnqLen; i < t.mapDat.length; i++) {
 			var uid = t.mapDat[i][6];
 			if (!uid || uid == 0 || uid == "0") continue;
-			if (t.mapDat[i][12] == 1) continue;
-			if (t.lastLogin[uid]) continue;
-			if (t.lastLoginPending[uid]) continue;
-			if (t.lastLoginQueue.indexOf(uid) != -1) continue;
+			if (t.lastLoginIdx[uid]) { t.lastLoginIdx[uid].push(i); }
+			else { t.lastLoginIdx[uid] = [i]; }
+			if (t.mapDat[i][12] == 1 || t.lastLogin[uid] || t.lastLoginPending[uid]) continue;
 			t.lastLoginPending[uid] = true;
 			t.lastLoginQueue.push(uid);
 			t.lastLoginTotal++;
 		}
+		t.lastLoginEnqLen = t.mapDat.length;
 		if (t.lastLoginQueue.length != 0 && !t.lastLoginRunning) {
 			t.processLastLoginQueue();
 		}
@@ -1277,16 +1303,21 @@ t.setupFilterDisplay();
 				var dl = rslt.playerInfo.lastLogin;
 				t.lastLogin[uid] = dl;
 				t.lastLoginFetched++;
-				for (var k = 0; k < t.mapDat.length; k++) {
-					if (t.mapDat[k][6] == uid) t.mapDat[k][22] = dl;
-				}
-				for (var k = 0; k < t.dat.length; k++) {
-					if (t.dat[k][6] == uid) {
-						var d = ById('pll_' + t.dat[k][0] + '_' + t.dat[k][1]);
+				var ri = t.lastLoginIdx[uid];
+				if (ri) {
+					for (var k = 0; k < ri.length; k++) {
+						var row = t.mapDat[ri[k]];
+						if (!row) continue;
+						row[22] = dl;
+						var d = ById('pll_' + row[0] + '_' + row[1]);
 						if (d) { d.innerHTML = t.lastLoginText(dl); }
 					}
 				}
-				if ((t.lastLoginFetched % 5) == 0) { t.savelastlogins(); }
+				if (t.lastLoginFetched - t.lastLoginSaved >= 50 || unixTime() - t.lastLoginSaveAt > 60) {
+					t.lastLoginSaved = t.lastLoginFetched;
+					t.lastLoginSaveAt = unixTime();
+					t.savelastlogins();
+				}
 			}
 			if (ById('pbStatStatus') && !t.searchRunning) {
 				ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
@@ -1531,7 +1562,7 @@ t.setupFilterDisplay();
 		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
 		var m = '<center><br><br>' + tx('No tiles found matching search criteria') + '</center>';
 		if (t.dat.length != 0) {
-			t.dat.sort(sortFunc);
+			if (!t.searchRunning) { t.dat.sort(sortFunc); }
 
 			var dis = '';
 			if (t.searchRunning) { dis = 'disabled'; }
@@ -1557,12 +1588,32 @@ t.setupFilterDisplay();
 				ById('pbSearchMessages').innerHTML = '<FONT COLOR=#FF4D4D>' + tx('NOTE: Table only shows ') + t.MAX_SHOW_WHILE_RUNNING + ' of ' + t.dat.length + tx(' results until search is completed') + '.</font>';
 			}
 
+			var pageStart = 0;
+			var pageEnd = numRows;
+			if (!t.searchRunning && numRows > t.pageSize) {
+				var totalPages = Math.ceil(numRows / t.pageSize);
+				if (t.pageNum > totalPages) { t.pageNum = totalPages; }
+				pageStart = (t.pageNum - 1) * t.pageSize;
+				pageEnd = Math.min(pageStart + t.pageSize, numRows);
+				m += '<TR><TD colspan=10 align=center>' + tx('Page') + '&nbsp;' + t.pageNum + '/' + totalPages + '&nbsp;';
+				m += '<INPUT type=button class=btInput value="&lt;&lt;" onclick="ptsearchPage(1)">&nbsp;';
+				m += '<INPUT type=button class=btInput value="&lt;" onclick="ptsearchPageRel(-1)">&nbsp;';
+				m += '<INPUT type=button class=btInput value="&gt;" onclick="ptsearchPageRel(1)">&nbsp;';
+				m += '<INPUT type=button class=btInput value="&gt;&gt;" onclick="ptsearchPage(99999999)">&nbsp;&nbsp;';
+				m += tx('Per page') + ':&nbsp;<select id=pbPageSize onchange="ptsearchPageSize(this.value)">';
+				var pss = [100, 250, 500, 1000];
+				for (var ps = 0; ps < pss.length; ps++) {
+					m += '<option value="' + pss[ps] + '"' + ((t.pageSize == pss[ps]) ? ' selected' : '') + '>' + pss[ps] + '</option>';
+				}
+				m += '</select></TD></TR>';
+			}
+
 			var qsdelay = 0;
 			var r = 0;
 			var RowId = "";
 			var LLspan = Options.SearchOptions.ShowLastLogin ? 5 : 4;
 
-			for (var i = 0; i < numRows; i++) {
+			for (var i = pageStart; i < pageEnd; i++) {
 				RowId = 'search_' + t.dat[i][0].toString() + '_' + t.dat[i][1].toString();
 				var status = '<img title="Offline" style="vertical-align:bottom" src="' + OFFLINE + '"/>';
 				if (t.dat[i][12] == 1) { status = '<img title="Online" style="vertical-align:bottom" src="' + ONLINE + '"/>'; }
@@ -1715,17 +1766,24 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 
 		MAP_DELAY_WATCH = 0;
 		clearTimeout(t.SearchTimer);
+		if (t.renderTimer) { clearTimeout(t.renderTimer); t.renderTimer = null; }
 		t.searchRunning = false;
 		ById('pbStatStatus').innerHTML = msg;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 
+		var sNote = '';
 		if (savelast) {
 			t.clearlastsearch();
 			t.LastSearch.opt = t.opt;
 			t.LastSearch.time = unixTime();
-			t.LastSearch.mapDat = t.mapDat.slice();
+			if (t.mapDat.length > 5000) {
+				sNote = '<BR><FONT COLOR=#FF4D4D>' + tx('NOTE: Too many results to save as previous search') + '.</font>';
+			}
+			else {
+				t.LastSearch.mapDat = t.mapDat.slice();
+				t.displaylastsearch();
+			}
 			t.savelastsearch();
-			t.displaylastsearch();
 		}
 
 		var m = '<DIV align=right style="max-width:' + Number(GlobalOptions.btWinSize.x - 170) + 'px;overflow-x:auto;">';
@@ -1738,6 +1796,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		m += '&nbsp;</div>&nbsp;';
 
 		ById('pbSearchMessages').innerHTML = m;
+		if (sNote) { ById('pbSearchMessages').innerHTML += sNote; }
 		if (ById('pbScoutExport')) ById('pbScoutExport').addEventListener('click', t.ExportScoutList, false);
 		if (ById('pbBulkAttackExport')) ById('pbBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
 		if (ById('pbAttackExport')) ById('pbAttackExport').addEventListener('click', t.ExportAttack, false);
