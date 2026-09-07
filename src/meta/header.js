@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes	        Search: columna 'Última conexión' con filtro por días, indicador de conectados reales y botón 'Actualizar' que refresca últimos inicios de sesión y estado online
+// @releasenotes	        Search: opción 'Todas las Provincias' para buscar todo el mapa en una sola búsqueda
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.96
-// @releasenotes	        Search: columna 'Última conexión' con filtro por días, indicador de conectados reales y botón 'Actualizar' que refresca últimos inicios de sesión y estado online
+// @version			3.97
+// @releasenotes	        Search: opción 'Todas las Provincias' para buscar todo el mapa en una sola búsqueda
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '3.96';
+var Version = '3.97';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -29602,11 +29602,11 @@ Tabs.Search = {
 		m += '</td><td colspan=2 align=right id=pbsavedsearch>&nbsp;</td></tr><tr><TD align=right width=20%>' + tx('Search Coords') + ':&nbsp;</td><TD colspan=3>X:&nbsp;<INPUT id=pbSearchX type=text\> &nbsp;Y:&nbsp;<INPUT id=pbSearchY type=text\>';
 		m += '&nbsp;&nbsp;' + tx("Radius") + ':&nbsp;<INPUT id=pbSearchDist size=3 value=10 />';
 		m += '&nbsp;&nbsp;<SPAN id=pbSearchCitySpan></span></td></tr>';
-		m += '<TR><TD align=right>' + tx('Or Search') + ':&nbsp;</td><TD colspan=2><select id="pbSearchProvince"><option value=0>-- ' + uW.g_js_strings.commonstr.province + ' --</option>';
+		m += '<TR><TD align=right>' + tx('Or Search') + ':&nbsp;</td><TD colspan=2><select id="pbSearchProvince"><option value=0>-- ' + uW.g_js_strings.commonstr.province + ' --</option><option value=-1>-- ' + tx('All Provinces') + ' --</option>';
 		for (var i in Provinces) {
 			m += '<option value="' + i + '">' + uW.provincenames[i] + '</option>';
 		}
-		m += '</select>&nbsp;' + tx('Divide into') + ':&nbsp;' + htmlSelector({ 1: '1', 4: '4', 9: '9', 16: '16', 25: '25', 36: '36', 49: '49', 64: '64' }, 1, 'id=pbProvinceSlices') + '&nbsp;' + tx('squares') + '.&nbsp;&nbsp;&nbsp;' + tx('Your Square') + ':&nbsp;<select id="pbProvinceSlice"><option value=1 selected>1</option></select>&nbsp;' + tx('Detect new mists') + '<INPUT id=pbautoKM type=checkbox />';
+		m += '</select>&nbsp;<SPAN id=pbSlicesSpan style="display:none;">' + tx('Divide into') + ':&nbsp;' + htmlSelector({ 1: '1', 4: '4', 9: '9', 16: '16', 25: '25', 36: '36', 49: '49', 64: '64' }, 1, 'id=pbProvinceSlices') + '&nbsp;' + tx('squares') + '.&nbsp;&nbsp;&nbsp;' + tx('Your Square') + ':&nbsp;<select id="pbProvinceSlice"><option value=1 selected>1</option></select></SPAN>&nbsp;' + tx('Detect new mists') + '<INPUT id=pbautoKM type=checkbox />';
 		m += '&nbsp;<input style="display:none;" type=button class=btInput id=pbClearMistData value="' + tx('Reset saved mists') + '">';
 		m += '</td>';
 		m += '<td align=left width=30%><a id=pbSearchSubmit class="inlineButton btButton blue20"><span>' + tx('Start Search') + '</span></a></td></tr>';
@@ -29621,12 +29621,18 @@ Tabs.Search = {
 		t.ModelCity.bindToXYboxes(ById('pbSearchX'), ById('pbSearchY'));
 
 		ById('pbSearchProvince').addEventListener('click', function () {
-			if (this.value != 0) {
+			if (Provinces[this.value]) {
 				ById('pbSearchX').value = Provinces[this.value].x + 75;
 				ById('pbSearchY').value = Provinces[this.value].y + 75;
 				ById('pbSearchDist').value = '75';
+				ById('pbSlicesSpan').style.display = '';
 				t.setSlice();
 				Options.SearchOptions.SearchShape = 0; // square
+				saveOptions();
+			}
+			else {
+				ById('pbSlicesSpan').style.display = 'none';
+				Options.SearchOptions.SearchShape = 0; // whole map / all provinces uses square shape
 				saveOptions();
 			}
 		}, false);
@@ -29638,7 +29644,7 @@ Tabs.Search = {
 		ById('pbautoKM').addEventListener('change', function () {
 			if (t.mapDat.length != 0) {
 				t.setupFilterDisplay();
-				if (t.opt.province != 0 && ById('pbautoKM').checked) {
+				if (Provinces[t.opt.province] && ById('pbautoKM').checked) {
 					t.LookupMists(t.opt.province, t.dispMapTable);
 				}
 				else {
@@ -29733,12 +29739,13 @@ Tabs.Search = {
 
 	e_coordChange: function () {
 		ById('pbSearchProvince').selectedIndex = 0;
+		ById('pbSlicesSpan').style.display = 'none';
 	},
 
 	setSlice: function () {
 		var t = Tabs.Search;
 		var prov = ById('pbSearchProvince');
-		if (prov.value != 0) {
+		if (Provinces[prov.value]) {
 			var numslices = ById('pbProvinceSlices').value;
 			if (numslices == 1) {
 				ById('pbSearchX').value = Provinces[prov.value].x + 75;
@@ -29849,6 +29856,8 @@ Tabs.Search = {
 		ById('pbSearchProvince').value = t.LastSearch.opt.province;
 		ById('pbProvinceSlice').value = t.LastSearch.opt.provinceSlice;
 		ById('pbProvinceSlices').value = t.LastSearch.opt.provinceSlices;
+		if (Provinces[ById('pbSearchProvince').value]) { ById('pbSlicesSpan').style.display = ''; }
+		else { ById('pbSlicesSpan').style.display = 'none'; }
 
 		t.mapDat = t.LastSearch.mapDat.slice();
 		t.opt.startX = parseInt(t.LastSearch.opt.startX);
@@ -29876,6 +29885,8 @@ Tabs.Search = {
 		ById('pbSearchX').value = Seed.allianceHQ.hq_xcoord;
 		ById('pbSearchY').value = Seed.allianceHQ.hq_ycoord;
 		ById('pbSearchDist').value = Math.min(parseIntNan(Seed.allianceHQ.arcana[Seed.allianceHQ.buildings[3].buildingLevel].distance), 75);
+		ById('pbSearchProvince').selectedIndex = 0;
+		ById('pbSlicesSpan').style.display = 'none';
 		saveOptions();
 		t.clickedSearch();
 	},
@@ -29889,21 +29900,30 @@ Tabs.Search = {
 		}
 
 
-		t.opt.startX = parseInt(ById('pbSearchX').value);
-		t.opt.startY = parseInt(ById('pbSearchY').value);
-		t.opt.maxDistance = parseInt(ById('pbSearchDist').value);
 		t.opt.province = ById('pbSearchProvince').value;
 		t.opt.provinceSlice = ById('pbProvinceSlice').value;
 		t.opt.provinceSlices = ById('pbProvinceSlices').value;
 
 		errMsg = '';
 
-		if (isNaN(t.opt.startX) || t.opt.startX < 0 || t.opt.startX > 749)
-			errMsg = "X " + tx("co-ordinate must be between 0 and 749") + "<BR>";
-		if (isNaN(t.opt.startY) || t.opt.startY < 0 || t.opt.startY > 749)
-			errMsg += "Y " + tx("co-ordinate must be between 0 and 749") + "<BR>";
-		if (isNaN(t.opt.maxDistance) || t.opt.maxDistance < 1 || t.opt.maxDistance > 75)
-			errMsg += tx("Radius (distance) must be between") + " 1 " + tx("and") + " 75<BR>";
+		if (t.opt.province == -1) { // all provinces: search the whole map
+			t.opt.startX = 0;
+			t.opt.startY = 0;
+			t.opt.maxDistance = 0;
+			Options.SearchOptions.SearchShape = 0; // square
+		}
+		else {
+			t.opt.startX = parseInt(ById('pbSearchX').value);
+			t.opt.startY = parseInt(ById('pbSearchY').value);
+			t.opt.maxDistance = parseInt(ById('pbSearchDist').value);
+
+			if (isNaN(t.opt.startX) || t.opt.startX < 0 || t.opt.startX > 749)
+				errMsg = "X " + tx("co-ordinate must be between 0 and 749") + "<BR>";
+			if (isNaN(t.opt.startY) || t.opt.startY < 0 || t.opt.startY > 749)
+				errMsg += "Y " + tx("co-ordinate must be between 0 and 749") + "<BR>";
+			if (isNaN(t.opt.maxDistance) || t.opt.maxDistance < 1 || t.opt.maxDistance > 75)
+				errMsg += tx("Radius (distance) must be between") + " 1 " + tx("and") + " 75<BR>";
+		}
 		if (errMsg != '') {
 			ById('pbSearchResults').innerHTML = '<center><FONT COLOR=#FF4D4D>' + tx("ERROR") + ':</font><BR><BR>' + errMsg + '</center>';
 			return;
@@ -29914,7 +29934,7 @@ Tabs.Search = {
 
 		t.setupResultsPanel(false);
 
-		if (t.opt.province != 0 && ById('pbautoKM').checked) {
+		if (Provinces[t.opt.province] && ById('pbautoKM').checked) {
 			t.LookupMists(t.opt.province);
 		}
 
@@ -29933,17 +29953,31 @@ Tabs.Search = {
 		t.saveoldmists();
 
 		t.mapDat = [];
-		t.firstX = t.opt.startX - t.opt.maxDistance;
-		t.firstY = t.opt.startY - t.opt.maxDistance;
-		if (t.firstX < 0) { t.firstX += 750; }
-		if (t.firstY < 0) { t.firstY += 750; }
+		if (t.opt.province == -1) { // whole map: cover the full 0..749 grid with 5x5 blocks
+			t.firstX = 0;
+			t.firstY = 0;
+			t.lastX = 749;
+			t.lastY = 749;
+			t.BlockList = [];
+			for (var bx = 0; bx < 750; bx += 5) {
+				for (var by = 0; by < 750; by += 5) {
+					t.BlockList.push('bl_' + bx + '_bt_' + by);
+				}
+			}
+		}
+		else {
+			t.firstX = t.opt.startX - t.opt.maxDistance;
+			t.firstY = t.opt.startY - t.opt.maxDistance;
+			if (t.firstX < 0) { t.firstX += 750; }
+			if (t.firstY < 0) { t.firstY += 750; }
 
-		t.lastX = t.opt.startX + t.opt.maxDistance;
-		t.lastY = t.opt.startY + t.opt.maxDistance;
-		if (t.lastX >= 750) { t.lastX -= 750; }
-		if (t.lastY >= 750) { t.lastY -= 750; }
+			t.lastX = t.opt.startX + t.opt.maxDistance;
+			t.lastY = t.opt.startY + t.opt.maxDistance;
+			if (t.lastX >= 750) { t.lastX -= 750; }
+			if (t.lastY >= 750) { t.lastY -= 750; }
 
-		t.BlockList = t.MapAjax.generateBlockList(t.firstX, t.firstY, t.opt.maxDistance);
+			t.BlockList = t.MapAjax.generateBlockList(t.firstX, t.firstY, t.opt.maxDistance);
+		}
 
 		t.blocksTotal = t.BlockList.length;
 		t.blocksSearched = 0;
@@ -30517,7 +30551,7 @@ t.setupFilterDisplay();
 			if (t.firstY < t.lastY) { yOK = (map[k].yCoord >= t.firstY && map[k].yCoord <= t.lastY); }
 			else { yOK = (map[k].yCoord >= t.firstY || map[k].yCoord <= t.lastY); } // search over y boundary
 			var pOK = true;
-			if (t.opt.province != 0) {
+			if (Provinces[t.opt.province]) {
 				pOK = (map[k].tileProvinceId == t.opt.province.split("p")[1]);
 			}
 
