@@ -1418,7 +1418,7 @@ t.setupFilterDisplay();
 				if (LLuid && LLuid != 0 && t.mapDat[i][12] != 1) {
 					var Lldl = t.mapDat[i][22] || t.lastLogin[LLuid];
 					if (Lldl) {
-						var LLdays = (unixTime() - convertTime(new Date(Lldl.replace(' ', 'T') + 'Z'))) / 86400000;
+						var LLdays = (unixTime() - convertTime(new Date(Lldl.replace(' ', 'T') + 'Z'))) / 86400;
 						var LLmin = parseIntNan(Options.SearchOptions.LastLoginMinDays);
 						var LLmax = parseIntNan(Options.SearchOptions.LastLoginMaxDays);
 						if (LLmin != 0 && LLdays < LLmin) TileOK = false;
