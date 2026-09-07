@@ -268,7 +268,7 @@ Tabs.Notes = {
 			var fileInput = ById("ptnotesLoadFile");
 			var files = fileInput.files;
 			if (files.length == 0) {
-				ById('ptnotesMessages').innerHTML = '<span style="color:#800;">' + tx('Please select a saved notes file') + '</span>';
+				ById('ptnotesMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Please select a saved notes file') + '</span>';
 				return;
 			}
 			var file = files[0];

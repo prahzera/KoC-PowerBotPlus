@@ -707,7 +707,7 @@ var Dashboard = {
 								chkcol = "";
 								if (chkchamp.status == '10') {
 									defendingCity = tx('Marching From') + ' ' + defendingCity;
-									chkcol = 'color:#800;'
+									chkcol = 'color:#FF4D4D;'
 								}
 								else {
 									if (defendingCity != 'Unassigned') {

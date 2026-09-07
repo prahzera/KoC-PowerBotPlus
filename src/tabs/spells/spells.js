@@ -249,7 +249,7 @@ Tabs.Spells = {
 				SpellActivity = '<span style="' + spellstyle + '"><b>' + tx('Ready') + '!</b></span>';
 
 				if (spells.cooldownactive) {
-					spellstyle = 'color:#800;';
+					spellstyle = 'color:#FF4D4D;';
 					SpellActivity = '<b><span id=CoolTime style="' + spellstyle + '">' + spells.cooldown + '</span></b>';
 
 					var Speedups = '';

@@ -138,7 +138,7 @@ Tabs.Nomad = {
 				}
 				else {
 					if (div) {
-						div.innerHTML = '<span style="color:#800;">' + rslt.msg + '</span><br>' + div.innerHTML;
+						div.innerHTML = '<span style="color:#FF4D4D;">' + rslt.msg + '</span><br>' + div.innerHTML;
 						ById('pbNomadCancel').firstChild.innerHTML = uW.g_js_strings.commonstr.close;
 					}
 					else { actionLog('Auto-Trade Error: ' + rslt.msg, 'NOMAD'); }
@@ -149,7 +149,7 @@ Tabs.Nomad = {
 			},
 			onFailure: function () {
 				if (div) {
-					div.innerHTML = '<span style="color:#800;">' + tx('Server Error') + '!</span><br>' + div.innerHTML;
+					div.innerHTML = '<span style="color:#FF4D4D;">' + tx('Server Error') + '!</span><br>' + div.innerHTML;
 					ById('pbNomadCancel').firstChild.innerHTML = uW.g_js_strings.commonstr.close;
 				}
 				else { actionLog('AJAX Error!', 'NOMAD'); }

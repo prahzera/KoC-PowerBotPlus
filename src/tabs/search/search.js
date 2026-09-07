@@ -427,7 +427,7 @@ Tabs.Search = {
 		if (isNaN(t.opt.maxDistance) || t.opt.maxDistance < 1 || t.opt.maxDistance > 75)
 			errMsg += tx("Radius (distance) must be between") + " 1 " + tx("and") + " 75<BR>";
 		if (errMsg != '') {
-			ById('pbSearchResults').innerHTML = '<center><FONT COLOR=#800>' + tx("ERROR") + ':</font><BR><BR>' + errMsg + '</center>';
+			ById('pbSearchResults').innerHTML = '<center><FONT COLOR=#FF4D4D>' + tx("ERROR") + ':</font><BR><BR>' + errMsg + '</center>';
 			return;
 		}
 
@@ -903,7 +903,7 @@ t.setupFilterDisplay();
 		var list = ById('pbHostileModalList');
 		if (!list) return;
 		if (!Seed.allianceDiplomacies || !Seed.allianceDiplomacies.hostile) {
-			list.innerHTML = '<span style="color:#800;">' + tx('No hostile alliances') + '</span>';
+			list.innerHTML = '<span style="color:#FF4D4D;">' + tx('No hostile alliances') + '</span>';
 			return;
 		}
 		var search = ById('pbHostileSearch') ? ById('pbHostileSearch').value.toLowerCase() : '';
@@ -915,7 +915,7 @@ t.setupFilterDisplay();
 			var checked = !!(Options.SearchOptions.HostileAlliances && Options.SearchOptions.HostileAlliances[aid]);
 			m += '<div><INPUT id=pbModalHostileA_' + aid + ' type=checkbox ' + (checked ? 'CHECKED' : '') + '/> ' + name + '</div>';
 		}
-		if (m == '') { m = '<span style="color:#800;">' + tx('No matches') + '</span>'; }
+		if (m == '') { m = '<span style="color:#FF4D4D;">' + tx('No matches') + '</span>'; }
 		list.innerHTML = m;
 		for (var k in Seed.allianceDiplomacies.hostile) {
 			var aid = Seed.allianceDiplomacies.hostile[k].allianceId || k;
@@ -1461,7 +1461,7 @@ t.setupFilterDisplay();
 			var numRows = t.dat.length;
 			if (numRows > t.MAX_SHOW_WHILE_RUNNING && t.searchRunning) {
 				numRows = t.MAX_SHOW_WHILE_RUNNING;
-				ById('pbSearchMessages').innerHTML = '<FONT COLOR=#800>' + tx('NOTE: Table only shows ') + t.MAX_SHOW_WHILE_RUNNING + ' of ' + t.dat.length + tx(' results until search is completed') + '.</font>';
+				ById('pbSearchMessages').innerHTML = '<FONT COLOR=#FF4D4D>' + tx('NOTE: Table only shows ') + t.MAX_SHOW_WHILE_RUNNING + ' of ' + t.dat.length + tx(' results until search is completed') + '.</font>';
 			}
 
 			var qsdelay = 0;

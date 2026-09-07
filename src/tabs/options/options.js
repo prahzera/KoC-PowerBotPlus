@@ -21,7 +21,7 @@ Tabs.Options = {
 				div#throneMainContainer div#advisorContainer{width:141px;height:240px;bottom:0pt;right:0pt;}\
 				div#throneMainContainer div#heroContainer{width:85px;height:150px;top:190px;left:585px;z-index:97;}',
 	Colors: {
-		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#800', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', ReportVictory: '#080', ReportDefeat: '#CC0000', },
+		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#FF4D4D', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', ReportVictory: '#080', ReportDefeat: '#CC0000', },
 	},
 	ReportOptions: {
 		EnhanceAR: false,
@@ -664,7 +664,7 @@ Tabs.Options = {
 		m += '<div class="divHeader" align="center">' + tx("POWERBOT+ CONFIGURATION") + '</div>';
 		m += '<table width=98% align=center>';
 		m += '<TR><TD width=25% class=xtab><a id=btResetWindows class="inlineButton btButton brown11"><span>' + tx("Reset ALL window positions!") + '</span></a></td><td align=right class=xtab>' + uW.g_js_strings.commonstr.domain + ':</td><td class=xtab><b>' + getServerId() + '</b></td><td align=right class=xtab>' + tx("User Id") + ':</td><td class=xtab><b>' + uW.tvuid + '</b></td><td width=25% class=xtab align=right><a id=btResetAll class="inlineButton btButton red14"><span>' + tx("Reset ALL Settings!") + '</span></a></td></tr>';
-		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=4 align=center><span style="font-size:9px;color:#800;">(' + tx("options marked with * require a refresh") + ')</span></td><td class=xtab align=right>&nbsp;</td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=4 align=center><span style="font-size:9px;color:#FF4D4D;">(' + tx("options marked with * require a refresh") + ')</span></td><td class=xtab align=right>&nbsp;</td></tr>';
 		m += '</table>';
 
 		m += '<a id=btGeneralOptionLink class=divLink ><div class="divHeader" align="left"><img id=btGeneralOptionArrow height="10" src="' + RightArrow + '">&nbsp;' + tx("GENERAL SETTINGS (ALL DOMAINS)") + '</div></a>';
@@ -732,7 +732,7 @@ Tabs.Options = {
 			var fileInput = ById("btLoadSettingsFile");
 			var files = fileInput.files;
 			if (files.length == 0) {
-				ById('pbexport_messages').innerHTML = '<span style="color:#800;">' + tx('Please select a config file') + '</span>';
+				ById('pbexport_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Please select a config file') + '</span>';
 				return;
 			}
 			var file = files[0];
@@ -755,22 +755,22 @@ Tabs.Options = {
 			var NewServerID = parseIntNan(ById('pbexport_to').value);
 			var OldServerID = parseIntNan(ById('pbexport_from').value);
 			if (NewServerID == 0 || NewServerID == OldServerID) {
-				ById('pbexport_messages').innerHTML = '<span style="color:#800;">' + tx('Invalid destination domain number') + '</span>';
+				ById('pbexport_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Invalid destination domain number') + '</span>';
 				return;
 			}
 			if (OldServerID == 0) {
-				ById('pbexport_messages').innerHTML = '<span style="color:#800;">' + tx('Invalid source domain number') + '</span>';
+				ById('pbexport_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Invalid source domain number') + '</span>';
 				return;
 			}
 			var s = GM_getValue('Options_' + NewServerID + '_' + uW.tvuid);
 			if ((s || NewServerID == getServerId()) && !ById('pbexport_overwrite').checked) {
-				ById('pbexport_messages').innerHTML = '<span style="color:#800;">' + tx('Destination domain configuration already exists - use "Force Overwrite" indicator to overwrite settings') + '</span>';
+				ById('pbexport_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Destination domain configuration already exists - use "Force Overwrite" indicator to overwrite settings') + '</span>';
 				return;
 			}
 			if (OldServerID != getServerId()) {
 				s = GM_getValue('Options_' + OldServerID + '_' + uW.tvuid);
 				if (!s) {
-					ById('pbexport_messages').innerHTML = '<span style="color:#800;">' + tx('Source domain configuration does not exist') + '</span>';
+					ById('pbexport_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Source domain configuration does not exist') + '</span>';
 					return;
 				}
 				// export/import from s...
@@ -851,24 +851,24 @@ Tabs.Options = {
 		var t = Tabs.Options;
 
 		m = '<TABLE width="100%">';
-		m += '<TR><TD class=xtab><INPUT id=btWatchdog type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Refresh if KofC not loaded within 1 minute") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btNoMoreRy type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Send me away !") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btWatchdog type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Refresh if KofC not loaded within 1 minute") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btNoMoreRy type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Send me away !") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btTrackOpen type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Remember window open state on refresh") + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Widescreen Style:") + ' ' + htmlSelector({ normal: 'Normal (100%)', wide: 'Wide (1520px)', ultra: 'Ultra (1900px)' }, GlobalOptions.btWideScreenStyle, 'id=btWideScreenStyle') + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("PowerBot+ Window Size:") + ' ' + htmlSelector({ 750: '750 pixels', 1000: '1000 pixels', 1250: '1250 pixels' }, GlobalOptions.btWinSize.x, 'id=btWinSize') + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btShowPowerBar type=checkbox /></td><TD class=xtab>' + tx("Use Powerbar") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Widescreen Style:") + ' ' + htmlSelector({ normal: 'Normal (100%)', wide: 'Wide (1520px)', ultra: 'Ultra (1900px)' }, GlobalOptions.btWideScreenStyle, 'id=btWideScreenStyle') + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("PowerBot+ Window Size:") + ' ' + htmlSelector({ 750: '750 pixels', 1000: '1000 pixels', 1250: '1250 pixels' }, GlobalOptions.btWinSize.x, 'id=btWinSize') + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btShowPowerBar type=checkbox /></td><TD class=xtab>' + tx("Use Powerbar") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td>';
 		m += '<TD class=xtab><div id=btShowFloatingPowerBar><INPUT id=btFloatingPowerBar type=checkbox />&nbsp;' + tx("Power Bar floats above game screen") + '</div></td></tr>';
-		m += '<TR id=btShowPopupPowerBar><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=btPopupPowerBar type=checkbox />&nbsp;' + tx("Add Popup buttons to Power Bar") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btDashboardToggle type=checkbox /></td><TD class=xtab>' + tx("Dashboard toggle button on main screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td><TD class=xtab><INPUT id=btOverviewDashboardBtn type=checkbox />&nbsp;' + tx("Dashboard Button next to Overview Button") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btInOutToggle type=checkbox /></td><TD class=xtab>' + tx("Incoming/Outgoing toggle buttons on main screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td><TD class=xtab><INPUT id=btMarchPlusToggle type=checkbox />&nbsp;' + tx("March+ toggle button on main screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btBattleToggle type=checkbox /></td><TD class=xtab>' + tx("Battle toggle button on main screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td><TD class=xtab>&nbsp;</td></tr>';
+		m += '<TR id=btShowPopupPowerBar><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=btPopupPowerBar type=checkbox />&nbsp;' + tx("Add Popup buttons to Power Bar") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btDashboardToggle type=checkbox /></td><TD class=xtab>' + tx("Dashboard toggle button on main screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td><TD class=xtab><INPUT id=btOverviewDashboardBtn type=checkbox />&nbsp;' + tx("Dashboard Button next to Overview Button") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btInOutToggle type=checkbox /></td><TD class=xtab>' + tx("Incoming/Outgoing toggle buttons on main screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td><TD class=xtab><INPUT id=btMarchPlusToggle type=checkbox />&nbsp;' + tx("March+ toggle button on main screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btBattleToggle type=checkbox /></td><TD class=xtab>' + tx("Battle toggle button on main screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td><TD class=xtab>&nbsp;</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btChatOnRight type=checkbox /></td><TD class=xtab>' + tx("Put chat on right") + '</td>';
 		m += '<TD class=xtab><div id=btShowChatBeforeDash><INPUT id=btChatBeforeDash type=checkbox />&nbsp;' + tx("Put chat before dashboard") + '</div></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btWideMap type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Enable wide map expansion button on the map panel") + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
 		var UpdateLocations = { 0: "SourceForge", 1: "GreasyFork", 2: "GitHub", 3: "pbkplowplow.com" };
-		m += '<TR><td class=xtab><INPUT disabled id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
+		m += '<TR><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=ExtendedDebugChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Extended debug mode (Activates additional logging)") + '</td></tr>';
 		m += '</table>';
 
@@ -901,7 +901,7 @@ Tabs.Options = {
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
 		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
 
-		//		t.togGlobalOpt ('AutoUpdateChk', 'AutoUpdates');
+		t.togGlobalOpt('AutoUpdateChk', 'AutoUpdates');
 		t.togGlobalOpt('ExtendedDebugChk', 'ExtendedDebugMode', t.RestartReminder);
 
 		ById('btUpdateCheck').addEventListener('click', function () { AutoUpdater.call(true, true); }, false);
@@ -927,7 +927,7 @@ Tabs.Options = {
 		m += '<tr><td class=xtab><img src="' + BuildImage + '" width=30></td><td class=xtab colspan=4><input type=text id=btBuildLink size=100 class=btInput value="' + UserOptions.BuildLink + '" title="' + tx('Store link to ?page=accepttoken URL. Please note each link expires after about a month.') + '">&nbsp;<input class=btInput id=btCollectBuild type=button value="' + tx("Collect") + '">&nbsp;<span id=btBuildStatus>&nbsp;</span></td></tr>';
 		m += '<tr><td class=xtab><img src="' + ChestImage + '" width=30></td><td class=xtab colspan=4><input type=text id=btChestLink size=100 class=btInput value="" title="' + tx('Paste treasure chest link URL from Facebook') + '">&nbsp;<input class=btInput id=btCollectChest type=button value="' + tx("Collect") + '">&nbsp;<span id=btStoreChestSpan class=divHide><input class=btInput id=btStoreChest type=button value="' + tx("Store") + '">&nbsp;</span><span id=btChestStatus>&nbsp;</span></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=btTokenAuto type=checkbox ' + (UserOptions.TokenAuto ? 'CHECKED ' : '') + '/></td><TD colspan=2 class=xtab>' + tx("Enable automatic token collection during reload cycle") + '</td></tr>';
-		m += '<TR><td class=xtab>&nbsp;</td><TD class=xtab>' + tx("Override reload interval to") + ' <INPUT id=btOverrideRefresh type=text size=2 maxlength=3 value="' + UserOptions.OverrideRefresh + '" \> ' + tx("minutes") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><td class=xtab>&nbsp;</td><TD class=xtab>' + tx("Override reload interval to") + ' <INPUT id=btOverrideRefresh type=text size=2 maxlength=3 value="' + UserOptions.OverrideRefresh + '" \> ' + tx("minutes") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 
 		m += '<TR><td class=xtab colspan=5><B>' + tx("Treasure Chest Options") + '&nbsp;</b></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=btTreasureChest type=checkbox ' + (UserOptions.TreasureChest ? 'CHECKED ' : '') + '/></td><TD class=xtab colspan=2>' + tx("Auto-click found Treasure Chests") + '</td></tr>';
@@ -1108,11 +1108,11 @@ Tabs.Options = {
 		ById('btExportChests').addEventListener('click', function () {
 			var numchests = parseIntNan(ById('btExportChestsNumber').value);
 			if (numchests <= 0) {
-				ById('btuser_messages').innerHTML = '<span style="color:#800;">' + tx('Please enter number of links to export') + '</span>';
+				ById('btuser_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Please enter number of links to export') + '</span>';
 				return;
 			}
 			if (numchests > UserOptions.TreasureChestBank.length) {
-				ById('btuser_messages').innerHTML = '<span style="color:#800;">' + tx('Insufficient chests') + '!</span>';
+				ById('btuser_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Insufficient chests') + '!</span>';
 				return;
 			}
 			var Export = {};
@@ -1132,7 +1132,7 @@ Tabs.Options = {
 			var fileInput = ById("btImportChestsFile");
 			var files = fileInput.files;
 			if (files.length == 0) {
-				ById('btuser_messages').innerHTML = '<span style="color:#800;">' + tx('Please select a link file') + '</span>';
+				ById('btuser_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Please select a link file') + '</span>';
 				return;
 			}
 			var file = files[0];
@@ -1231,7 +1231,7 @@ Tabs.Options = {
 			saveUserOptions(uW.user_id);
 		}
 		else {
-			ById('btuser_messages').innerHTML = '<span style="color:#800;">' + tx('Invalid link file') + '</span>';
+			ById('btuser_messages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Invalid link file') + '</span>';
 		}
 	},
 
@@ -1422,7 +1422,7 @@ Tabs.Options = {
 		for (var cityId in Cities.byID) {
 			var wlevel = getUniqueCityBuilding(cityId, 14).maxLevel;
 			if (wlevel != 0) { wleveltext = 'Level ' + wlevel; }
-			else { wleveltext = '<span style="color:#800;"><b>None!</b></style>'; }
+			else { wleveltext = '<span style="color:#FF4D4D;"><b>None!</b></style>'; }
 			m += '<tr><TD><b>' + Cities.byID[cityId].name + '</b></td><td align=center><INPUT id=toweractive_' + cityId + ' name=' + cityId + ' type=checkbox ' + (Options.TowerOptions.towercityactive[cityId] ? 'CHECKED ' : '') + '"></TD><td align=left>' + wleveltext + '</td><td align=left><INPUT id=towertext_' + cityId + ' name=' + cityId + ' type=text style="width: 400px;" maxlength=120 value="' + (Options.TowerOptions.towercitytext[cityId] ? Options.TowerOptions.towercitytext[cityId] : "") + '"></td></tr>';
 		};
 
@@ -1572,7 +1572,7 @@ Tabs.Options = {
 		m = '<TABLE width="100%">';
 		m += '<TR><TD class=xtab><INPUT id=ptEnableMiniRefresh type=checkbox ' + (Options.MiniRefresh ? 'CHECKED ' : '') + '/></td><TD class=xtab>&nbsp;' + tx("Refresh Data/Marches every");
 		m += '<INPUT id=ptMiniRefreshInterval type=text size=3 value="' + Options.MiniRefreshInterval + '">&nbsp;' + tx("minutes") + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=togRemovePointless type=checkbox /></td><TD class=xtab>' + tx("Hide pointless items from Inventory views") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=togRemovePointless type=checkbox /></td><TD class=xtab>' + tx("Hide pointless items from Inventory views") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togChampLagFix type=checkbox /></td><TD class=xtab>' + tx("Fix delay when opening Castle, Rally Point and Boss Battle") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togTowerFix type=checkbox /></td><TD class=xtab>' + tx("Fix tower alert to show exact target (city or wild)") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togKnightSelect type=checkbox /></td><TD class=xtab>' + tx("Do not automatically select a knight when changing march type to Scout, Transport or Reassign") + '</td></tr>';
@@ -1586,8 +1586,8 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=togTRAetherCostFix type=checkbox /></td><TD class=xtab>' + tx("Fix display of aetherstones for throne room upgrade/enhance") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togMMBImageFix type=checkbox /></td><TD class=xtab>' + tx("Post correct image to facebook for Merlin Box") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togChatTimeFix type=checkbox /></td><TD class=xtab>' + tx("Always show local time on chat posts") + '</td></tr>';
-		m += '<TR><td class=xtab><INPUT id=togMoveFurniture type=checkbox /></td><td class=xtab>' + tx("Rearrange throne room furniture for better visibility") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><td class=xtab><INPUT id=togFixMightDisplay type=checkbox /></td><td class=xtab>' + tx("Fix might display on main screen") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><td class=xtab><INPUT id=togMoveFurniture type=checkbox /></td><td class=xtab>' + tx("Rearrange throne room furniture for better visibility") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><td class=xtab><INPUT id=togFixMightDisplay type=checkbox /></td><td class=xtab>' + tx("Fix might display on main screen") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=ptkillmusic type=checkbox /></td><TD class=xtab>' + tx("Kill music on startup") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=ptkillsounds type=checkbox /></td><TD class=xtab>' + tx("Kill sound effects on startup") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=ptdisableredx type=checkbox /></td><TD class=xtab>' + tx('Disable "Red X" failure animation') + '</td></tr>';
@@ -1635,7 +1635,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=ptalertignorescouts type=checkbox ' + (Options.ReportOptions.IgnoreScouts ? 'CHECKED ' : '') + '/>' + tx("Ignore incoming scouts") + '</td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=ptwhisperar type=checkbox ' + (Options.ReportOptions.WhisperAR ? 'CHECKED ' : '') + '/>' + tx("Whisper incoming attack reports to yourself and the following players (separated by commas)") + '</td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab width=50>&nbsp;</td><td class=xtab><INPUT id=ptwhisperarlist type=text size=70 value="' + Options.ReportOptions.WhisperARList + '"></td></tr>';
-		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=ptnoduplicatereports type=checkbox ' + (Options.ReportOptions.NoDuplicateReports ? 'CHECKED ' : '') + '/>' + tx("Do not post reports already posted by another alliance member") + '&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#800;"><b>(WORK IN PROGRESS)</b></span></td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=ptnoduplicatereports type=checkbox ' + (Options.ReportOptions.NoDuplicateReports ? 'CHECKED ' : '') + '/>' + tx("Do not post reports already posted by another alliance member") + '&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#FF4D4D;"><b>(WORK IN PROGRESS)</b></span></td></tr>';
 		m += '<TR><TD class=xtab colspan=3><INPUT id=ptwhisperoutgoing type=checkbox ' + (Options.ReportOptions.WhisperOutgoing ? 'CHECKED ' : '') + '/>' + tx("Whisper your own outgoing attack reports to yourself") + '</td></tr></table></td></tr>';
 
 		m += '<TR><TD class=xtab colspan=2><B>' + tx('Automatic Report Deletion') + ':</b></td></tr>';
@@ -1695,7 +1695,7 @@ Tabs.Options = {
 		m = '<TABLE width="100%">';
 		m += '<TR><TD class=xtab><INPUT id=btShowDashboard type=checkbox /></td><TD class=xtab>' + tx("Show Dashboard") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btFloatingDashboard type=checkbox /></td><TD class=xtab>' + tx("Floating Dashboard") + '</td></tr>';
-		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Dashboard Width:") + ' ' + htmlSelector({ 480: '480 pixels', 540: '540 pixels', 600: '600 pixels' }, Options.DashboardOptions.DashWidth, 'id=btDashWidth') + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Dashboard Width:") + ' ' + htmlSelector({ 480: '480 pixels', 540: '540 pixels', 600: '600 pixels' }, Options.DashboardOptions.DashWidth, 'id=btDashWidth') + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><td class=xtab width=30><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab width=300>' + tx("Overview defend button") + '</td><td class=xtab width=30><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>' + tx("Troops defend button") + '</td></tr>';
 		m += '<TR><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td colspan="3" class=xtab>' + tx("Show throne room preset changer") + '</td></tr>';
 		m += '<TR id=btPresetByNameOpts class="divHide"><td class=xtab><INPUT id=TRPresetByNameChk type=checkbox /></td><td colspan="3" class=xtab>' + tx("Select presets by name") + '</td></tr>';
@@ -2031,8 +2031,8 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=togAllMembers type=checkbox /></td><TD class=xtab colspan=2>' + tx("Enhanced Alliance Members View") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togRptClick type=checkbox /></td><TD class=xtab colspan=2>' + tx("Alliance and Messages buttons open on Report View") + '</td></tr>';
 
-		m += '<TR><TD class=xtab><INPUT id=togResetRaids type=checkbox /></td><TD class=xtab>' + tx("Automatically restart raid timer") + '</td><td class=xtab><INPUT id=togAutoRaidToggle type=checkbox />&nbsp;' + tx("Auto-raid restart toggle on screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=togRaidButtons type=checkbox /></td><TD class=xtab>' + tx("Raid Stop/Resume buttons on screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td><td class=xtab><INPUT id=togRaidDeleteButton type=checkbox />&nbsp;' + tx("Raid delete button on screen header") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=togResetRaids type=checkbox /></td><TD class=xtab>' + tx("Automatically restart raid timer") + '</td><td class=xtab><INPUT id=togAutoRaidToggle type=checkbox />&nbsp;' + tx("Auto-raid restart toggle on screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=togRaidButtons type=checkbox /></td><TD class=xtab>' + tx("Raid Stop/Resume buttons on screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td><td class=xtab><INPUT id=togRaidDeleteButton type=checkbox />&nbsp;' + tx("Raid delete button on screen header") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbGoldEnable type=checkbox /></td><TD class=xtab colspan=2>' + tx("Automatically collect gold when happiness reaches") + ' <INPUT id=pbGoldLimit type=text size=2 maxlength=3 \>%</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbFoodToggle type=checkbox /></td><TD class=xtab colspan=2>' + tx("Display food alert in alliance chat when less than") + ' <INPUT id=pbFoodAlertInt type=text size=2 maxlength=3 \> ' + tx("hours of food remaining (checked every 15 min)") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togBatRounds type=checkbox /></td><TD class=xtab colspan=2>' + tx("Display Number of Rounds in Battle Reports") + '</td></tr>';
@@ -2048,7 +2048,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=MapLevel type=checkbox /></td><TD class=xtab colspan=2>' + tx("Show Tile Level in map") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togCV type=checkbox /></td><TD class=xtab colspan=2>' + tx("Enhanced city buttons") + '</td></tr>';
 		m += '<TR id=ptcvoptions1 class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=togDbClkDef type=checkbox />' + tx("Hide/Defend by Double-Clicking City Icon") + '</td></tr>';
-		m += '<TR id=ptcvoptions2 class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=togColrCty type=checkbox />' + tx("Enable Colour Icon for City Faction") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR id=ptcvoptions2 class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=togColrCty type=checkbox />' + tx("Enable Colour Icon for City Faction") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR id=ptcvoptions3 class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><INPUT id=ptWarnAscension type=checkbox ' + (Options.WarnAscension ? 'CHECKED ' : '') + '/>' + tx("Highlight when Ascension Protection will Expire within") + ' ';
 		m += '<INPUT id=ptWarnAscensionInterval type=text size=3 value="' + Options.WarnAscensionInterval + '"> ' + tx("Hours") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbmaintoggle type=checkbox /></td><TD class=xtab colspan=2>' + tx("Auto-select city on startup");
@@ -2124,25 +2124,25 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab>&nbsp;<TD class=xtab colspan=2>' + tx("Use") + '&nbsp;' + htmlSelector(ScoutTroops, Options.QuickScoutTroops, ' id=btquickscouttroops class=btInput') + '&nbsp;' + tx("for Quick Scout") + '</td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;<TD class=xtab colspan=2>' + tx("Automatic march functions should ALWAYS keep") + ' <INPUT id=btfreerallyslots type=text size=2 maxlength=2 value="' + Options.FreeRallySlots + '"\> ' + tx("free rally slots") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=ptHideOnGoto type=checkbox /></td><TD class=xtab>' + tx("Hide PowerBot+ when clicking on Map Coordinates") + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=ptOneClickAttack type=checkbox /></td><TD class=xtab>' + tx("Enable one-click attack from the map") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btDraggableCoords type=checkbox /></td><TD class=xtab>' + tx("Enable draggable map co-ordinates box") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btGreenCastles type=checkbox /></td><TD class=xtab>' + tx("Display selected castle in green on city selection widgets") + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=ptOneClickAttack type=checkbox /></td><TD class=xtab>' + tx("Enable one-click attack from the map") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btDraggableCoords type=checkbox /></td><TD class=xtab>' + tx("Enable draggable map co-ordinates box") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btGreenCastles type=checkbox /></td><TD class=xtab>' + tx("Display selected castle in green on city selection widgets") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=ptFetchMarchInfo type=checkbox /></td><TD class=xtab>' + tx("Fetch additional march information from server") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=ptAlertOverrideChk type=checkbox /></td><TD class=xtab>' + tx("Replace gem containers with incoming attack alert timer") + '</td></tr>';
 		m += '<TR><td class=xtab><INPUT id=AlternateSortOrderChk type=checkbox /></td><td class=xtab>' + tx('Display throne room stats in alternate sort order') + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btWidgetCheck type=checkbox /></td><TD class=xtab>' + tx("Enable main screen throne room widget") + '</td><td class=xtab><INPUT id=btDraggableWidget type=checkbox />&nbsp;' + tx("Draggable") + '&nbsp;<span style="font-size:14px;color:#800;">*</span>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=btThroneHUD type=checkbox />&nbsp;' + tx("Display widget as Throne HUD") + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btWidgetCheck type=checkbox /></td><TD class=xtab>' + tx("Enable main screen throne room widget") + '</td><td class=xtab><INPUT id=btDraggableWidget type=checkbox />&nbsp;' + tx("Draggable") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=btThroneHUD type=checkbox />&nbsp;' + tx("Display widget as Throne HUD") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=TRFixPresetWidth type=checkbox /></td><td class=xtab>' + tx('Fix throne room preset changer width to 8 per row') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btGloryMight type=checkbox /></td><td class=xtab>' + tx('Display Glory Might') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btMarchMight type=checkbox /></td><td class=xtab>' + tx('Display Defending/Marching Troop Might') + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btTrafficOpt type=checkbox /></td><td class=xtab>' + tx('Display Server Traffic Monitor') + '&nbsp;<span style="font-size:14px;color:#800;">*</span></td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btTrafficOpt type=checkbox /></td><td class=xtab>' + tx('Display Server Traffic Monitor') + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>' + tx("Detect AFK when mouse and keyboard idle for") + ' <INPUT id=btafktimeout type=text size=2 maxlength=3 \> ' + tx("minutes") + '</td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>' + tx("Map lookup request interval") + ' <INPUT id=btmapinterval type=text size=2 maxlength=2 value="' + Options.MapInterval + '"\> ' + tx("seconds") + '</td></tr>';
-		m += '<TABLE><TR><TD class=xtab colspan=3><B>' + tx("PowerBot+ Colours") + '&nbsp;<span style="font-size:16px;color:#800;">*</span></b></td></tr>';
+		m += '<TABLE><TR><TD class=xtab colspan=3><B>' + tx("PowerBot+ Colours") + '&nbsp;<span style="font-size:16px;color:#FF4D4D;">*</span></b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Title Background") + ': </td><TD class=xtab><INPUT id=togTitleBack type=text size=7 maxlength=7 value="' + Options.Colors.Title + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togTitleText type=text size=7 maxlength=7 value="' + Options.Colors.TitleText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Title + ';color:' + Options.Colors.TitleText + ';"><b>' + tx('Title') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=text size=7 maxlength=7 value="' + Options.Colors.DividerTop + '">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=text size=7 maxlength=7 value="' + Options.Colors.DividerBottom + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=text size=7 maxlength=7 value="' + Options.Colors.DividerText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=text size=7 maxlength=7 value="' + Options.Colors.Panel + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=text size=7 maxlength=7 value="' + Options.Colors.PanelText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=text size=7 maxlength=7 value="' + Options.Colors.Highlight + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=text size=7 maxlength=7 value="' + Options.Colors.HighlightText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#800') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#800') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#FF4D4D') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#FF4D4D') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=text size=7 maxlength=7 value="' + (Options.Colors.BoldGreen || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=text size=7 maxlength=7 value="' + (Options.Colors.BoldMagenta || '#808') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Report Result Colours") + ': </td><TD class=xtab><INPUT id=togReportVictory type=text size=7 maxlength=7 value="' + (Options.Colors.ReportVictory || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportVictory || '#080') + ';font-weight:bold;" width=50px>' + tx('Victory') + '</td><TD class=xtab>&nbsp;<INPUT id=togReportDefeat type=text size=7 maxlength=7 value="' + (Options.Colors.ReportDefeat || '#CC0000') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportDefeat || '#CC0000') + ';font-weight:bold;" width=50px>' + tx('Defeat') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';

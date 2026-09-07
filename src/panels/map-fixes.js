@@ -168,9 +168,9 @@ var mapinfoFix = {
 			if (citychamp.championId) {
 				champ = true;
 				if (citychamp.status != "10") { QAPreset += '<div align=center style="font-size:10px;color:#080"><b>' + tx('Champion Ready') + '!</b></div>'; }
-				else { QAPreset += '<div align=center style="font-size:10px;color:#800"><b>Champion Unavailable!</b></div>'; }
+				else { QAPreset += '<div align=center style="font-size:10px;color:#FF4D4D"><b>Champion Unavailable!</b></div>'; }
 			}
-			if (!champ) { QAPreset += '<div align=center style="font-size:10px;color:#800"><b>' + uW.g_js_strings.champ.no_champ + '!</b></div>'; }
+			if (!champ) { QAPreset += '<div align=center style="font-size:10px;color:#FF4D4D"><b>' + uW.g_js_strings.champ.no_champ + '!</b></div>'; }
 		}
 		if (Options.QuickMarchOptions.AutoSpell) {
 			var faction = '';

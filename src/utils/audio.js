@@ -73,7 +73,7 @@ function AudioMan() {
 			if (t.alertdiv) {
 				if (!t.hasFlash) {
 					logit(tx('SWF Disabled or not Installed'));
-					t.alertdiv.innerHTML = '<b style=\'color:#800; font-size: 9px;\'>' + tx('SWF Disabled or not Installed') + '</b>';
+					t.alertdiv.innerHTML = '<b style=\'color:#FF4D4D; font-size: 9px;\'>' + tx('SWF Disabled or not Installed') + '</b>';
 				}
 				else {
 					t.alertdiv.innerHTML = t.source;

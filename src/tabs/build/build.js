@@ -2213,7 +2213,7 @@ Tabs.Build = {
 			var fileInput = ById("btBldPresetImportFile");
 			var files = fileInput.files;
 			if (files.length == 0) {
-				ById('btBldPresetImportMessages').innerHTML = '<span style="color:#800;">' + tx('Please select a city layout file') + '</span>';
+				ById('btBldPresetImportMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Please select a city layout file') + '</span>';
 				return;
 			}
 			var file = files[0];

@@ -14,7 +14,7 @@ var Options = {
 		PanelText: '#000000',
 		Highlight: '#FFFFCC',
 		HighlightText: '#000000',
-		BoldRed: '#800',
+		BoldRed: '#FF4D4D',
 		BoldOrange: '#F80',
 		BoldGreen: '#080',
 		BoldMagenta: '#808',

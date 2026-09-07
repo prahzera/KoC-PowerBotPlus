@@ -245,7 +245,7 @@ Tabs.Fort = {
 
 		if (t.isBusy) {
 			t.isBusy = false;
-			ById('btDefMessages').innerHTML = '<span style="color:#800;">' + tx('Cancelled') + '!</span>';
+			ById('btDefMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Cancelled') + '!</span>';
 			ById('btDefButton').value = uW.g_js_strings.modal_openWalls.builddefenses;
 			return;
 		}
@@ -260,11 +260,11 @@ Tabs.Fort = {
 		if (numSlots < 1) { return; }
 
 		if (perSlot * numSlots > t.MaxDefTrain) {
-			ById('btDefMessages').innerHTML = '<span style="color:#800;">' + uW.g_js_strings.modal_attack.maxtroops + ': ' + t.MaxDefTrain + '</span>';
+			ById('btDefMessages').innerHTML = '<span style="color:#FF4D4D;">' + uW.g_js_strings.modal_attack.maxtroops + ': ' + t.MaxDefTrain + '</span>';
 			return;
 		}
 		if (numSlots > t.wall.wallLevel - t.wall.Queued) {
-			ById('btDefMessages').innerHTML = '<span style="color:#800;">' + tx('Maximum number of slots exceeded') + '!</span>';
+			ById('btDefMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Maximum number of slots exceeded') + '!</span>';
 			return;
 		}
 
@@ -303,10 +303,10 @@ Tabs.Fort = {
 				}
 				else {
 					if (rslt.msg) {
-						ById('btDefMessages').innerHTML = '<span style="color:#800;">' + rslt.msg + '</span>';
+						ById('btDefMessages').innerHTML = '<span style="color:#FF4D4D;">' + rslt.msg + '</span>';
 					}
 					else {
-						ById('btDefMessages').innerHTML = '<span style="color:#800;">' + tx('Error setting defences (') + rslt.error_code + ')</span>';
+						ById('btDefMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Error setting defences (') + rslt.error_code + ')</span>';
 					}
 					ById('btDefButton').value = uW.g_js_strings.modal_openWalls.builddefenses;
 					t.isBusy = false;
@@ -822,7 +822,7 @@ Tabs.Fort = {
 				var blvl = Buildings[bid].maxLevel;
 				var linestyle = '<span>';
 				if (blvl < reqlevel) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 					m += linestyle + 'Level ' + reqlevel + ' ' + uW.buildingcost['bdg' + bid][0] + '</b></span><br>';
 				}
 			}
@@ -835,7 +835,7 @@ Tabs.Fort = {
 				var rlvl = Seed.tech['tch' + rid];
 				var linestyle = '<span>';
 				if (rlvl < reqlevel) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 					m += linestyle + 'Level ' + reqlevel + ' ' + uW.techcost['tch' + rid][0] + '</b></span><br>';
 				}
 			}
@@ -860,7 +860,7 @@ Tabs.Fort = {
 				var rlvl = parseIntNan(Seed.resources['city' + cityId]['rec' + r][0] / 3600);
 				var linestyle = '<span>';
 				if ((rlvl <= reqlevel) || (t.limitingFactor == uW.resourceinfo['rec' + r])) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 				}
 				m += '</td><td>' + linestyle + addCommas(reqlevel) + ' / ' + addCommas(rlvl) + '</b></span></td></tr>';
 			}
@@ -873,7 +873,7 @@ Tabs.Fort = {
 				var ilvl = parseIntNan(Seed.items['i' + iid]);
 				var linestyle = '<span>';
 				if ((ilvl <= reqlevel) || (iid == 34002 && t.limitingFactor == "median")) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 				}
 				m += '<tr><td>' + ResourceImage(getItemImageURL(iid), uW.itemlist['i' + iid].name) + '</td><td>';
 				m += linestyle + reqlevel + ' / ' + ilvl + '</b></span></td></tr>';

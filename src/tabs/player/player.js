@@ -745,7 +745,7 @@ Tabs.Player = {
 			n += ' <tr><TD>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ':&nbsp;</td><TD colspan=2><b>' + t.getLastLogDuration(u.lastLogin) + '</b></td></tr>';
 		}
 		else {
-			n += ' <tr><TD>' + tx('Last login') + ':&nbsp;</td><TD colspan=2><b><span style="color:#800">' + tx('ONLINE') + '</span></b></td></tr>';
+			n += ' <tr><TD>' + tx('Last login') + ':&nbsp;</td><TD colspan=2><b><span style="color:#FF4D4D">' + tx('ONLINE') + '</span></b></td></tr>';
 		}
 		if (u.misted)
 			n += '<tr><TD>' + tx('Misted') + ':&nbsp;</td><TD colspan=2><b>' + Tabs.Monitor.getDuration(u.fogExpireTimestamp) + '</b></td></tr>';
@@ -1209,7 +1209,7 @@ Tabs.Player = {
 		if (Interval >= 0) {
 			return uW.timestr(Interval);
 		} else
-			return '<span style="color:#800;">' + tx('Expired') + ' ' + uW.timestr(Interval * (-1)) + ' ' + tx('Ago') + '</span>';
+			return '<span style="color:#FF4D4D;">' + tx('Expired') + ' ' + uW.timestr(Interval * (-1)) + ' ' + tx('Ago') + '</span>';
 	},
 
 	clickedSendInvite: function (span, uid) {
@@ -1309,7 +1309,7 @@ Tabs.Player = {
 			if (allianceleader) {
 				t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="ptSetDiplomacy(' + aid + ',1,\'' + elem + '\');" type=submit value="' + tx('F') + '" />';
 				t.neutralbtn = '<INPUT style="font-size:9px" onclick="ptSetDiplomacy(' + aid + ',0,\'' + elem + '\');" type=submit value="' + tx('N') + '" />';
-				t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="ptSetDiplomacy(' + aid + ',2,\'' + elem + '\');" type=submit value="' + tx('H') + '" />';
+				t.hostilebtn = '<INPUT style="color:#FF4D4D;font-size:9px" onclick="ptSetDiplomacy(' + aid + ',2,\'' + elem + '\');" type=submit value="' + tx('H') + '" />';
 			}
 
 			if (dip == 1) {
@@ -1317,7 +1317,7 @@ Tabs.Player = {
 			}
 			else {
 				if (dip == 2) {
-					dip = '<span style="color:#800;"><b>' + uW.g_js_strings.commonstr.hostile + '</b></span>&nbsp;' + t.friendbtn + '&nbsp;' + t.neutralbtn;
+					dip = '<span style="color:#FF4D4D;"><b>' + uW.g_js_strings.commonstr.hostile + '</b></span>&nbsp;' + t.friendbtn + '&nbsp;' + t.neutralbtn;
 				}
 				else {
 					if (getMyAlliance()[0] != aid) {
@@ -1532,17 +1532,17 @@ Tabs.Player = {
 								} else {
 									if (LightBringerCount >= 5) {
 										gottroops = true;
-										m += '<tr><td class=xtab><span style="color:#800;">' + uW.g_js_strings.champ.lightbringersBonus + ': ' + uW.g_js_strings.champ.attack + '</span></td><td class=xtab><span style="color:#080;">' + CM.CHAMPION.getLightbringersRangeSetBonus().replace('+', '') + '</span></td></tr>';
+										m += '<tr><td class=xtab><span style="color:#FF4D4D;">' + uW.g_js_strings.champ.lightbringersBonus + ': ' + uW.g_js_strings.champ.attack + '</span></td><td class=xtab><span style="color:#080;">' + CM.CHAMPION.getLightbringersRangeSetBonus().replace('+', '') + '</span></td></tr>';
 									}
 									else {
 										if (WildHideCount >= 5) {
 											gottroops = true;
-											m += '<tr><td class=xtab><span style="color:#800;">' + uW.g_js_strings.champ.wildhideBonus + ': ' + uW.g_js_strings.champ.attack + '</span></td><td class=xtab><span style="color:#080;">' + CM.CHAMPION.getWildhideAttackSetBonus().replace('+', '') + '</span></td></tr>';
+											m += '<tr><td class=xtab><span style="color:#FF4D4D;">' + uW.g_js_strings.champ.wildhideBonus + ': ' + uW.g_js_strings.champ.attack + '</span></td><td class=xtab><span style="color:#080;">' + CM.CHAMPION.getWildhideAttackSetBonus().replace('+', '') + '</span></td></tr>';
 										}
 										else {
 											if (SilverCount >= 5) {
 												gottroops = true;
-												m += '<tr><td class=xtab><span style="color:#800;">' + uW.g_js_strings.champ.silver + ': ' + uW.g_js_strings.champ.silverKnightBonus + '</span></td><td class=xtab><span style="color:#080;">' + CM.CHAMPION.getSilverknightSpeedDefenceSetBonus().replace('+', '') + '</span></td></tr>';
+												m += '<tr><td class=xtab><span style="color:#FF4D4D;">' + uW.g_js_strings.champ.silver + ': ' + uW.g_js_strings.champ.silverKnightBonus + '</span></td><td class=xtab><span style="color:#080;">' + CM.CHAMPION.getSilverknightSpeedDefenceSetBonus().replace('+', '') + '</span></td></tr>';
 											}
 										}
 									}

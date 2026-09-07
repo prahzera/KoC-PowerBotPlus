@@ -98,7 +98,7 @@ function getTREffectStyle(i) {
 	ret.LineStyle = '<span style="color:#888;">';
 	ret.EndStyle = '</span>';
 	if (AttackEffects.indexOf(parseInt(i)) > -1)
-		ret.LineStyle = '<span style="color:#800;">';
+		ret.LineStyle = '<span style="color:#FF4D4D;">';
 	if (DefenceEffects.indexOf(parseInt(i)) > -1)
 		ret.LineStyle = '<span style="color:#008;">';
 	if (LifeEffects.indexOf(parseInt(i)) > -1)

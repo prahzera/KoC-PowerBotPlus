@@ -238,7 +238,7 @@ Tabs.Reference = {
 			var csty = '<span>';
 			var ui = i.split("tch")[1];
 			if (Seed.tech[i] == uW.Research.Methods.maxLevel(ui, 1)) csty = '<span style="color:#080">';
-			if (Seed.tech[i] == 0) csty = '<span style="color:#800">';
+			if (Seed.tech[i] == 0) csty = '<span style="color:#FF4D4D">';
 			m += '<tr class="' + rsty + '"><TD style="width:150px;" title="' + uW.techcost[i][10] + '">' + uW.techcost[i][0] + '</td><TD align=center style="width:50px; max-width:150px;">' + csty + Seed.tech[i] + '</span></td><TD align=right style="width:50px; max-width:150px;">' + csty + (t.TechBoosts[ui] != 0 ? parseInt(parseIntNan(Seed.tech[i]) * t.TechBoosts[ui] * 100) + '%' : '') + '</span></td></tr>';
 		}
 		m += '</table></td>';
@@ -250,7 +250,7 @@ Tabs.Reference = {
 			var csty = '<span>';
 			var ui = i.split("tch")[1];
 			if (Seed.tech2[i] == uW.Research.Methods.maxLevel(ui, 2)) csty = '<span style="color:#080">';
-			if (Seed.tech2[i] == 0) csty = '<span style="color:#800">';
+			if (Seed.tech2[i] == 0) csty = '<span style="color:#FF4D4D">';
 			m += '<tr class="' + rsty + '"><TD style="width:150px;" title="' + uW.techcost2[i][10] + '">' + uW.techcost2[i][0] + '</td><TD align=center style="width:50px; max-width:150px;">' + csty + Seed.tech2[i] + '</span></td><TD align=right style="width:50px; max-width:150px;">' + csty + (t.BritonTechBoosts[ui] != 0 ? parseInt(parseIntNan(Seed.tech2[i]) * t.BritonTechBoosts[ui] * 100) + '%' : '') + '</span></td></tr>';
 			m += '</td></tr>';
 		}

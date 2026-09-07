@@ -1,17 +1,31 @@
 var AutoUpdater = {
 	id: 999999,
+	homepage: 'https://github.com/prahzera/KoC-PowerBotPlus',
+	SourceForgeURL: 'sourceforge.net/p/koc-battle-console/code/HEAD/tree/trunk/KoCPowerBotPlus.user.js',
 	GreasyForkURL: 'greasyfork.org/scripts/399012-koc-power-bot-plus/code/KoC%20Power%20Bot%20Plus.user.js',
+	MirrorURL: 'github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js',
+	LukeURL: '',
+	CodeSphereURL: '',
 	name: 'KoC Power Bot Plus',
 	version: Version,
 	secure: true,
+	getCheckURL: function () {
+		if (GlobalOptions.UpdateLocation == 2 && this.MirrorURL) { return this.MirrorURL; }
+		if (GlobalOptions.UpdateLocation == 1 && this.GreasyForkURL) { return this.GreasyForkURL; }
+		if (GlobalOptions.UpdateLocation == 0 && this.SourceForgeURL) { return this.SourceForgeURL; }
+		return this.GreasyForkURL;
+	},
+
+	getDownloadURL: function () {
+		if (GlobalOptions.UpdateLocation == 2) { return 'github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js'; }
+		if (GlobalOptions.UpdateLocation == 0 && this.SourceForgeURL) { return this.SourceForgeURL; }
+		return this.GreasyForkURL;
+	},
+
 	call: function (secure, response) {
 		logit("Checking for " + tx(this.name) + " Update!" + (secure ? ' (SSL)' : ' (plain)'));
 		this.secure = secure;
-		var CheckURL = this.SourceForgeURL;
-		if (GlobalOptions.UpdateLocation == 1) { CheckURL = this.GreasyForkURL; }
-		if (GlobalOptions.UpdateLocation == 2) { CheckURL = this.MirrorURL; }
-		if (GlobalOptions.UpdateLocation == 3) { CheckURL = this.LukeURL; }
-		if (GlobalOptions.UpdateLocation == 4) { CheckURL = this.CodeSphereURL; }
+		var CheckURL = this.getCheckURL();
 		try {
 			GM_xmlhttpRequest({
 				method: 'GET',
@@ -23,16 +37,15 @@ var AutoUpdater = {
 	},
 
 	compareVersion: function (r_version, l_version) {
-		var r_parts = r_version.split(''),
-			l_parts = l_version.split(''),
-			r_len = r_parts.length,
-			l_len = l_parts.length,
-			r = l = 0;
-		for (var i = 0, len = (r_len > l_len ? r_len : l_len); i < len && r == l; ++i) {
-			r = +(parseIntNan(r_parts[i] || 0));
-			l = +(parseIntNan(l_parts[i] || 0));
+		var r_parts = String(r_version).split('.'),
+			l_parts = String(l_version).split('.');
+		for (var i = 0, len = (r_parts.length > l_parts.length ? r_parts.length : l_parts.length); i < len; i++) {
+			var r = parseIntNan(r_parts[i]),
+				l = parseIntNan(l_parts[i]);
+			if (r > l) { return true; }
+			if (r < l) { return false; }
 		}
-		return (r !== l) ? r > l : false;
+		return false;
 	},
 
 	compare: function (xpr, response) {
@@ -54,10 +67,9 @@ var AutoUpdater = {
 			if (this.xrelnotes)
 				body += '<BR><div align="center" style="border:0;width:470px;height:120px;max-height:120px;overflow:auto"><b>' + tx('New Features!') + '</b><p>' + this.xrelnotes + '</p></div><BR>';
 
-			var DownloadURL = AutoUpdater.SourceForgeURL;
-			if (GlobalOptions.UpdateLocation == 1) { DownloadURL = AutoUpdater.GreasyForkURL; }
+			var DownloadURL = AutoUpdater.getDownloadURL();
 
-			body += '<BR><DIV align=center><a href="http' + (AutoUpdater.secure ? 's' : '') + '://' + DownloadURL + '" target="_blank" class="gemButtonv2 green" id="doBotUpdate">Update</a></div>';
+			body += '<BR><DIV align=center><a href="http' + (AutoUpdater.secure ? 's' : '') + '://' + DownloadURL + '" target="_blank" class="gemButtonv2 green" id="doBotUpdate">' + tx('Update') + '</a></div>';
 			this.ShowUpdate(body);
 		}
 		else {

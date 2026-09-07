@@ -1325,7 +1325,7 @@ var QuickMarch = {
 		var OldName = "";
 		if (!PN.value || (PN.value == 0)) {
 			if (NewName == "") {
-				ById('btMarchMessages').innerHTML = "<FONT COLOR=#800>" + tx('Please enter a name for the march preset') + "</font>";
+				ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D>" + tx('Please enter a name for the march preset') + "</font>";
 				return false;
 			}
 			SavePN = t.NextPresetNumber;
@@ -1434,7 +1434,7 @@ var QuickMarch = {
 		if (totalunit > t.MaxTroops) { errMsg += tx("You can only send") + " " + t.MaxTroops + " " + tx("units") + ".<br>"; }
 
 		if (errMsg != "") {
-			ById('btMarchMessages').innerHTML = "<FONT COLOR=#800>" + errMsg + "</font>";
+			ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D>" + errMsg + "</font>";
 			return;
 		}
 
@@ -1526,9 +1526,9 @@ var QuickMarch = {
 				t.RefreshItemCounts();
 			} else {
 				if (rslt.msg) {
-					ById('btMarchMessages').innerHTML = "<FONT COLOR=#800><b>" + rslt.msg + "</b></font>";
+					ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D><b>" + rslt.msg + "</b></font>";
 				} else {
-					ById('btMarchMessages').innerHTML = "<FONT COLOR=#800><b>" + tx('Error sending march') + "!</b></font>";
+					ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D><b>" + tx('Error sending march') + "!</b></font>";
 				}
 			}
 			t.DisableButtons(false);
@@ -1562,7 +1562,7 @@ var QuickMarch = {
 		if (totalunit > t.MaxTroops) { errMsg += tx("You can only send") + " " + t.MaxTroops + " " + tx("units") + ".<br>"; }
 
 		if (errMsg != "") {
-			ById('btMarchMessages').innerHTML = "<FONT COLOR=#800>" + errMsg + "</font>";
+			ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D>" + errMsg + "</font>";
 			return;
 		}
 
@@ -1598,16 +1598,16 @@ var QuickMarch = {
 					t.FromCityClick(t.SourceCity, true); // force update
 				} else {
 					if (rslt.msg) {
-						ById('btMarchMessages').innerHTML = "<FONT COLOR=#800><b>" + rslt.msg + "</b></font>";
+						ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D><b>" + rslt.msg + "</b></font>";
 					} else {
-						ById('btMarchMessages').innerHTML = "<FONT COLOR=#800><b>" + tx("Error setting raid") + "!</b></font>";
+						ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D><b>" + tx("Error setting raid") + "!</b></font>";
 					}
 				}
 				t.DisableButtons(false);
 			},
 			onFailure: function () {
 				var t = QuickMarch;
-				ById('btMarchMessages').innerHTML = "<FONT COLOR=#800><b>" + tx("Error communicating with server") + "!</b></font>";
+				ById('btMarchMessages').innerHTML = "<FONT COLOR=#FF4D4D><b>" + tx("Error communicating with server") + "!</b></font>";
 				t.DisableButtons(false);
 			}
 		}, true);

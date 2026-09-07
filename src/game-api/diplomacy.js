@@ -4,7 +4,7 @@ function FormatDiplomacy(aid) {
 	if (Seed.allianceDiplomacies.friendly && Seed.allianceDiplomacies.friendly['a' + aid] != null)
 		return ' <span style="color:#080;">(' + uW.g_js_strings.commonstr.friendly + ')</span>';
 	if (Seed.allianceDiplomacies.hostile && Seed.allianceDiplomacies.hostile['a' + aid] != null)
-		return ' <span style="color:#800;">(' + uW.g_js_strings.commonstr.hostile + ')</span>'
+		return ' <span style="color:#FF4D4D;">(' + uW.g_js_strings.commonstr.hostile + ')</span>'
 	if (aid == Seed.allianceDiplomacies.allianceId)
 		return ' <span style="color:#088;">(' + uW.g_js_strings.commonstr.yours + ')</span>';
 	return ' (' + uW.g_js_strings.commonstr.neutral + ')';
@@ -28,7 +28,7 @@ function DiplomacyColours(aid) {
 	if (Seed.allianceDiplomacies.friendly && Seed.allianceDiplomacies.friendly['a' + aid] != null)
 		return "color:#080;";
 	if (Seed.allianceDiplomacies.hostile && Seed.allianceDiplomacies.hostile['a' + aid] != null)
-		return "color:#800;font-weight:bold;";
+		return "color:#FF4D4D;font-weight:bold;";
 	if (aid == Seed.allianceDiplomacies.allianceId)
 		return "color:#088;";
 	return "";

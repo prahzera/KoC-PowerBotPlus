@@ -66,14 +66,14 @@ Tabs.GloryFarm = {
 
 		t.opt.radius = parseInt(ById('pbGloryRadius').value);
 		if (isNaN(t.opt.radius) || t.opt.radius < 1) {
-			ById('pbGloryResults').innerHTML = '<center><FONT COLOR=#800>' + tx('ERROR') + ':</font><BR><BR>' + tx('Radius must be greater than or equal to 1') + '</center>';
+			ById('pbGloryResults').innerHTML = '<center><FONT COLOR=#FF4D4D>' + tx('ERROR') + ':</font><BR><BR>' + tx('Radius must be greater than or equal to 1') + '</center>';
 			return;
 		}
 
 		var startX = parseInt(ById('pbGloryX').value);
 		var startY = parseInt(ById('pbGloryY').value);
 		if (isNaN(startX) || isNaN(startY)) {
-			ById('pbGloryResults').innerHTML = '<center><FONT COLOR=#800>' + tx('ERROR') + ':</font><BR><BR>Selected city coordinates are invalid</center>';
+			ById('pbGloryResults').innerHTML = '<center><FONT COLOR=#FF4D4D>' + tx('ERROR') + ':</font><BR><BR>Selected city coordinates are invalid</center>';
 			return;
 		}
 		t.opt.startX = startX;

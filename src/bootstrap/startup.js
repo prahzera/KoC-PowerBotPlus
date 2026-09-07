@@ -127,7 +127,7 @@ function PowerBotStartup() {
 		table.ptTab tr td {border:none; background:none; white-space:nowrap;}\
 		.whiteOnRed {padding-left:3px; padding-right:3px; background-color:#f00; color:white; font-weight:bold}\
 		.whiteOnGreen {padding-left:3px; padding-right:3px; background-color:#080; color:white; font-weight:bold}\
-		span.boldRed {color:'+ (Options.Colors.BoldRed || '#800') + '; font-weight:bold}\
+		span.boldRed {color:'+ (Options.Colors.BoldRed || '#FF4D4D') + '; font-weight:bold}\
 		span.boldOrange {color:'+ (Options.Colors.BoldOrange || '#F80') + '; font-weight:bold}\
 		span.boldGreen {color:'+ (Options.Colors.BoldGreen || '#080') + '; font-weight:bold}\
 		span.boldMagenta {color:'+ (Options.Colors.BoldMagenta || '#808') + '; font-weight:bold}\
@@ -325,7 +325,7 @@ function PowerBotStartup() {
 
 	// Set to check for updates in 15 seconds
 
-	//	if (GlobalOptions.AutoUpdates) setTimeout(function(){AutoUpdater.check();},15000);
+	if (GlobalOptions.AutoUpdates) { setTimeout(function () { AutoUpdater.check(); }, 15000); }
 
 	// start main looper
 

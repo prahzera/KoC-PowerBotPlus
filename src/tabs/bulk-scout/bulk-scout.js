@@ -336,7 +336,7 @@ Tabs.BulkScout = {
 		}
 
 		if (CoordError) {
-			msg = '<span style="color:#800;">' + tx('Invalid format') + '!</span>';
+			msg = '<span style="color:#FF4D4D;">' + tx('Invalid format') + '!</span>';
 		}
 		else {
 			for (var a = 0; a < CleanedCoordList.length; a++) {
@@ -651,7 +651,7 @@ Tabs.BulkScout = {
 								if (Tabs.Search.mapDat[i][0] == x && Tabs.Search.mapDat[i][1] == y) {
 									if (Tabs.Search.mapDat[i][13]) {
 										Tabs.Search.mapDat[i][6] = 0;
-										Tabs.Search.mapDat[i][8] = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Target is truced - Cannot scout') + '!</span>';
+										Tabs.Search.mapDat[i][8] = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Target is truced - Cannot scout') + '!</span>';
 										Tabs.Search.scouted++;
 										Tabs.Search.updateMistProgress();
 									}

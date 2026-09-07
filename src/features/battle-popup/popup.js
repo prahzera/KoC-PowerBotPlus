@@ -335,7 +335,7 @@ var Battle = {
 			n += ' <tr><TD>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ':&nbsp;</td><TD colspan=2><b>' + Tabs.Player.getLastLogDuration(u.lastLogin) + '</b></td></tr>';
 		}
 		else {
-			n += ' <tr><TD>' + tx('Last login') + ':&nbsp;</td><TD colspan=2><b><span style="color:#800">' + tx('ONLINE') + '</span></b></td></tr>';
+			n += ' <tr><TD>' + tx('Last login') + ':&nbsp;</td><TD colspan=2><b><span style="color:#FF4D4D">' + tx('ONLINE') + '</span></b></td></tr>';
 		}
 		if (u.misted)
 			n += '<tr><TD>' + tx('Misted') + ':&nbsp;</td><TD colspan=2><b>' + Tabs.Monitor.getDuration(u.fogExpireTimestamp) + '</b></td></tr>';

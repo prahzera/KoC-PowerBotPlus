@@ -505,7 +505,7 @@ Tabs.Train = {
 
 		if (t.isBusy) {
 			t.isBusy = false;
-			ById('btTrnMessages').innerHTML = '<span style="color:#800;">' + tx('Cancelled') + '!</span>';
+			ById('btTrnMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Cancelled') + '!</span>';
 			ById('btTrnButtonLabel').innerHTML = uW.g_js_strings.modal_openBarracks.trainttl;
 			jQuery('#btTrnButton').removeClass("red14");
 			jQuery('#btTrnButton').addClass("blue14");
@@ -523,14 +523,14 @@ Tabs.Train = {
 		if (numSlots < 1) { return; }
 
 		if (perSlot * numSlots > t.MaxTroopTrain) {
-			ById('btTrnMessages').innerHTML = '<span style="color:#800;">' + uW.g_js_strings.modal_attack.maxtroops + ': ' + t.MaxTroopTrain + '</span>';
+			ById('btTrnMessages').innerHTML = '<span style="color:#FF4D4D;">' + uW.g_js_strings.modal_attack.maxtroops + ': ' + t.MaxTroopTrain + '</span>';
 			return;
 		}
 
 		var MaxSlots = t.TotalSlots - t.Queued;
 		if (!CM.BarracksUnitsTypeMap.isUnitType(ById('btTrnType').value, "normal")) { MaxSlots = t.TotalSlotsAscension - t.QueuedAscension; }
 		if (numSlots > MaxSlots) {
-			ById('btTrnMessages').innerHTML = '<span style="color:#800;">' + tx('Maximum number of slots exceeded') + '!</span>';
+			ById('btTrnMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Maximum number of slots exceeded') + '!</span>';
 			return;
 		}
 
@@ -573,10 +573,10 @@ Tabs.Train = {
 				}
 				else {
 					if (rslt.msg) {
-						ById('btTrnMessages').innerHTML = '<span style="color:#800;">' + rslt.msg + '</span>';
+						ById('btTrnMessages').innerHTML = '<span style="color:#FF4D4D;">' + rslt.msg + '</span>';
 					}
 					else {
-						ById('btTrnMessages').innerHTML = '<span style="color:#800;">' + tx('Error training troops') + ' (' + rslt.error_code + ')</span>';
+						ById('btTrnMessages').innerHTML = '<span style="color:#FF4D4D;">' + tx('Error training troops') + ' (' + rslt.error_code + ')</span>';
 					}
 					ById('btTrnButtonLabel').innerHTML = uW.g_js_strings.modal_openBarracks.trainttl;
 					jQuery('#btTrnButton').removeClass("red14");
@@ -1834,7 +1834,7 @@ Tabs.Train = {
 				var blvl = Buildings[bid].maxLevel;
 				var linestyle = '<span>';
 				if (blvl < reqlevel) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 					m += linestyle + 'Level ' + reqlevel + ' ' + uW.buildingcost['bdg' + bid][0] + '</b></span><br>';
 				}
 			}
@@ -1847,7 +1847,7 @@ Tabs.Train = {
 				var rlvl = Seed.tech['tch' + rid];
 				var linestyle = '<span>';
 				if (rlvl < reqlevel) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 					m += linestyle + 'Level ' + reqlevel + ' ' + uW.techcost['tch' + rid][0] + '</b></span><br>';
 				}
 			}
@@ -1867,7 +1867,7 @@ Tabs.Train = {
 			}
 			var linestyle = '<span>';
 			if ((plvl <= reqlevel) || (t.limitingFactor == "pop")) {
-				linestyle = '<span style="color:#800;"><b>';
+				linestyle = '<span style="color:#FF4D4D;"><b>';
 			}
 			m += '</td><td>' + linestyle + addCommas(reqlevel) + ' / ' + addCommas(plvl) + '</b></span></td></tr>';
 		}
@@ -1893,7 +1893,7 @@ Tabs.Train = {
 				var rlvl = parseIntNan(Seed.resources['city' + cityId]['rec' + r][0] / 3600);
 				var linestyle = '<span>';
 				if ((rlvl <= reqlevel) || (t.limitingFactor == uW.resourceinfo['rec' + r])) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 				}
 				m += '</td><td>' + linestyle + addCommas(reqlevel) + ' / ' + addCommas(rlvl) + '</b></span></td></tr>';
 			}
@@ -1906,7 +1906,7 @@ Tabs.Train = {
 				var ilvl = parseIntNan(Seed.items['i' + iid]);
 				var linestyle = '<span>';
 				if ((ilvl <= reqlevel) || (iid == 34001 && t.limitingFactor == "yew") || (iid == 34003 && t.limitingFactor == "corrupter")) {
-					linestyle = '<span style="color:#800;"><b>';
+					linestyle = '<span style="color:#FF4D4D;"><b>';
 				}
 				m += '<tr><td>' + ResourceImage(getItemImageURL(iid), uW.itemlist['i' + iid].name) + '</td><td>';
 				m += linestyle + addCommas(reqlevel) + ' / ' + addCommas(ilvl) + '</b></span></td></tr>';

@@ -101,7 +101,7 @@ QuickScout = {
 					if ((marches + keepfree) >= maxmarches) {
 						divid = 'pbsrch_' + x + '_' + y;
 						if (ById(divid)) {
-							msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span>';
+							msg = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span>';
 							ById(divid).innerHTML = msg;
 						}
 						if (Tabs.Search) { Tabs.Search.QSMarching[x + '_' + y] = 0; }
@@ -134,13 +134,13 @@ QuickScout = {
 					else {
 						divid = 'pbsrch_' + x + '_' + y;
 						if (!ById(divid)) return;
-						var msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Error Code') + ' - ' + rslt.error_code + '</span>&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span>';
+						var msg = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Error Code') + ' - ' + rslt.error_code + '</span>&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span>';
 						if (rslt.error_code == 208 || rslt.error_code == 207) { // errors that mean you can never scout
 							if (rslt.error_code == 208) {
-								msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Target is truced - Cannot scout') + '!</span>';
+								msg = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Target is truced - Cannot scout') + '!</span>';
 							}
 							else {
-								msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('You are truced - Cannot scout another player') + '!</span>';
+								msg = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('You are truced - Cannot scout another player') + '!</span>';
 							}
 							// update search results .. find correct row
 							var t = Tabs.Search;
@@ -155,7 +155,7 @@ QuickScout = {
 							}
 						}
 						if (rslt.error_code == 210) { // errors that mean you may be able to scout in a bit!
-							msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span>';
+							msg = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span>';
 						}
 						ById(divid).innerHTML = msg;
 						if (Tabs.Search) {
@@ -246,7 +246,7 @@ QuickScout = {
 					if ((marches + keepfree) >= maxmarches) {
 						var divid = 'pbsrch_' + x + '_' + y;
 						if (ById(divid)) {
-							var msg = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickattacksearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickAttack") + '</a></span>';
+							var msg = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Rally Point Full') + '!</span>&nbsp;&nbsp;<SPAN onclick="quickattacksearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickAttack") + '</a></span>';
 							ById(divid).innerHTML = msg;
 						}
 						if (Tabs.Search) { Tabs.Search.QAMarching[x + '_' + y] = 0; }
@@ -316,10 +316,10 @@ QuickScout = {
 						if (ById(sd)) {
 							if (rslt.error_code == 208 || rslt.error_code == 207) {
 								var msgt = (rslt.error_code == 208) ? tx('Target is truced - Cannot attack') : tx('You are truced - Cannot attack another player');
-								ById(sd).innerHTML = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + msgt + '!</span>';
+								ById(sd).innerHTML = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + msgt + '!</span>';
 							}
 							else {
-								ById(sd).innerHTML = '<span style="color:#800;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Error Code') + ' - ' + rslt.error_code + '</span>&nbsp;&nbsp;<SPAN onclick="quickattacksearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickAttack") + '</a></span>';
+								ById(sd).innerHTML = '<span style="color:#FF4D4D;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + tx('Error Code') + ' - ' + rslt.error_code + '</span>&nbsp;&nbsp;<SPAN onclick="quickattacksearch(' + x + ',' + y + ',' + cid + ');return false;"><A class=xlink>' + tx("QuickAttack") + '</a></span>';
 							}
 						}
 					}

@@ -665,7 +665,7 @@ Tabs.Messages = {
 						}
 					}
 					if (rpt.marchName == tx('Anti-Scout') || rpt.marchName == uW.g_js_strings.commonstr.defend)
-						style = ' style="color:#800;"';
+						style = ' style="color:#FF4D4D;"';
 					else if (rpt.marchName == uW.g_js_strings.commonstr.reinforce)
 						style = ' style="color:#080;"';
 					else

@@ -349,7 +349,7 @@ Tabs.Gift = {
 					if (Options.GiftOptions.people[h][6] && Options.GiftOptions.people[h][6] != 0) {
 						sentdate = formatDate(Options.GiftOptions.people[h][6]);
 					}
-					var StatusText = '<span style="color:#800;">' + tx('Player unavailable') + '</span>';
+					var StatusText = '<span style="color:#FF4D4D;">' + tx('Player unavailable') + '</span>';
 					if (sentdate == formatDate(unixTime())) {
 						StatusText = '<span style="color:#080;">' + tx('Gift sent today') + '</span>';
 					}
