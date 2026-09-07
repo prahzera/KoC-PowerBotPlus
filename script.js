@@ -42,7 +42,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.90
+// @version			3.91
 // @releasenotes	        GCG Portal: main a pantalla completa, footer oculto y header colapsable
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '3.90';
+var Version = '3.91';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30018,8 +30018,8 @@ Tabs.Search = {
 		m += '<tr id=pbspname1><td colspan=2 align=center style="padding-top:5px;">' + tx('Player Name') + ':</td></tr>';
 		m += '<tr id=pbspname2><td colspan=2 align=center><INPUT id=pbSearchPlayerName class=btInput size=8 value=' + Options.SearchOptions.PlayerName + '></td></tr>';
 		m += '<tr id=pbslastlogin1><td colspan=2 align=center><INPUT id=pbSearchShowLastLogin type=checkbox ' + (Options.SearchOptions.ShowLastLogin ? 'CHECKED' : '') + '/>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</td></tr>';
-		m += '<tr id=pbslastlogin2><td colspan=2 align=center>' + tx('Greater than') + ':&nbsp;<INPUT id=pbSearchLastLoginMinDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMinDays + '>&nbsp;' + tx('Days') + '</td></tr>';
-		m += '<tr id=pbslastlogin3><td colspan=2 align=center>' + tx('Less than') + ':&nbsp;<INPUT id=pbSearchLastLoginMaxDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMaxDays + '>&nbsp;' + tx('Days') + '</td></tr>';
+		m += '<tr id=pbslastlogin2><td colspan=2 align=center style="padding-top:5px;">' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ' (' + t.lastLoginUnit() + '):</td></tr>';
+		m += '<tr id=pbslastlogin3><td colspan=2 align=center><INPUT id=pbSearchLastLoginMinDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMinDays + '>&nbsp;-&nbsp;<INPUT id=pbSearchLastLoginMaxDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMaxDays + '></td></tr>';
 		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Shape') + ':</td></tr>';
 		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx("Square"), 1: tx("Circle") }, Options.SearchOptions.SearchShape, 'id=pbSearchShape class=btInput') + '</td></tr>';
 		m += '</table>';
@@ -30587,6 +30587,11 @@ t.setupFilterDisplay();
 		t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(blockString, rslt); }) }, MAP_DELAY);
 	},
 
+	lastLoginUnit: function () {
+		if (uW.g_js_strings && uW.g_js_strings.timestr && uW.g_js_strings.timestr.timedays) { return uW.g_js_strings.timestr.timedays; }
+		return 'd';
+	},
+
 	lastLoginText: function (dl) {
 		var t = Tabs.Search;
 		if (!dl) return '&mdash;';
@@ -30635,7 +30640,7 @@ t.setupFilterDisplay();
 			if (ById('pbStatStatus') && !t.searchRunning) {
 				ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
 			}
-			if (Options.SearchOptions.sortColNum == 22) { t.dispMapTable(); }
+			if (Options.SearchOptions.sortColNum == 22 || parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0) { t.dispMapTable(); }
 			return;
 		}
 		var uid = t.lastLoginQueue.shift();
