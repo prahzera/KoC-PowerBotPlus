@@ -42,7 +42,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.94
+// @version			3.95
 // @releasenotes	        GCG Portal: main a pantalla completa, footer oculto y header colapsable
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '3.94';
+var Version = '3.95';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30942,8 +30942,11 @@ t.setupFilterDisplay();
 						var LLdays = (unixTime() - convertTime(new Date(Lldl.replace(' ', 'T') + 'Z'))) / 86400;
 						var LLmin = parseIntNan(Options.SearchOptions.LastLoginMinDays);
 						var LLmax = parseIntNan(Options.SearchOptions.LastLoginMaxDays);
-						if (LLmin != 0 && LLdays < LLmin) TileOK = false;
-						if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
+						if (LLdays < 1) { TileOK = true; } // recently active / connected - always shown
+						else {
+							if (LLmin != 0 && LLdays < LLmin) TileOK = false;
+							if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
+						}
 					}
 				}
 			}

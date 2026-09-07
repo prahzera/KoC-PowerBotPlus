@@ -1464,8 +1464,11 @@ t.setupFilterDisplay();
 						var LLdays = (unixTime() - convertTime(new Date(Lldl.replace(' ', 'T') + 'Z'))) / 86400;
 						var LLmin = parseIntNan(Options.SearchOptions.LastLoginMinDays);
 						var LLmax = parseIntNan(Options.SearchOptions.LastLoginMaxDays);
-						if (LLmin != 0 && LLdays < LLmin) TileOK = false;
-						if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
+						if (LLdays < 1) { TileOK = true; } // recently active / connected - always shown
+						else {
+							if (LLmin != 0 && LLdays < LLmin) TileOK = false;
+							if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
+						}
 					}
 				}
 			}
