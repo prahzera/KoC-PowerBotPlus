@@ -512,7 +512,8 @@ Tabs.Search = {
 		var HEIGHT3 = t.PANEL_HEIGHT - 20;
 		m = '<DIV class=divHeader><TABLE width=100% cellspacing=0><TR><TD class=xtab width=125><DIV id=pbStatSearched></div></td>';
 		m += '<TD class=xtab align=center><SPAN style="white-space:normal" id=pbStatStatus></span></td>';
-		m += '<TD class=xtab align=right width=125><DIV id=pbStatFound></div></td></tr></table></div>';
+		m += '<TD class=xtab align=right width=125><DIV id=pbStatFound></div></td>';
+		m += '<TD id=pbslastloginrefresh class=xtab align=center width=50 style="padding-left:2px;padding-right:2px;">' + strButton20(tx('Refresh'), 'id=pbRefreshLastLogin') + '</td></tr></table></div>';
 		m += '<TABLE class=xtab style="width:100%" cellpadding=0 cellspacing=0 align=left><TR valign=top>';
 		m += '<TD id=pbSearchFilterContainer style="padding-right:5px;width:130px;height:' + HEIGHT1 + 'px;padding:5px;border:1px solid;display:' + FilterDisp + '"><DIV id=pbSearchFilters></div></td>';
 		m += '<td id=pbSearchOpener valign=middle style="padding-right:5px;width:20px;background:none;border:none;height:' + HEIGHT2 + 'px;"><a><div class="btExpander buttonv2 blue" style="width:20px;height:' + HEIGHT2 + 'px;"><span style="display:inline-block;height:100%;vertical-align:middle;"></span><img id=pbSearchOpenerImage style="margin-left:-4px;vertical-align:middle;" height="10" src="' + FilterArrow + '"></div></a></td>';
@@ -521,6 +522,7 @@ Tabs.Search = {
 
 		ById('pbSearchResults').innerHTML = m;
 		ById('pbSearchOpener').addEventListener('click', t.ToggleSearchFilters, false);
+		ById('pbRefreshLastLogin').addEventListener('click', t.RefreshLastLogins, false);
 
 		/* paint filter panel */
 
@@ -849,6 +851,14 @@ t.setupFilterDisplay();
 					jQuery('#pbslastlogin3').addClass('divHide');
 				}
 			}
+			if (ById('pbslastloginrefresh')) {
+				if (Options.SearchOptions.ShowLastLogin) {
+					jQuery('#pbslastloginrefresh').removeClass('divHide');
+				}
+				else {
+					jQuery('#pbslastloginrefresh').addClass('divHide');
+				}
+			}
 		}
 		catch (e) { logerr(e); }
 
@@ -1162,6 +1172,39 @@ t.setupFilterDisplay();
 		if (t.lastLoginQueue.length != 0 && !t.lastLoginRunning) {
 			t.processLastLoginQueue();
 		}
+	},
+
+	RefreshLastLogins: function () {
+		var t = Tabs.Search;
+		if (!Options.SearchOptions.ShowLastLogin) return;
+		var queue = [];
+		for (var k = 0; k < t.dat.length; k++) {
+			var uid = t.dat[k][6];
+			if (!uid || uid == 0 || uid == "0") continue;
+			if (t.dat[k][12] == 1) continue; // online - no refresh needed
+			if (queue.indexOf(uid) != -1) continue;
+			delete t.lastLogin[uid];
+			delete t.lastLoginPending[uid];
+			var qi = t.lastLoginQueue.indexOf(uid);
+			if (qi != -1) { t.lastLoginQueue.splice(qi, 1); }
+			for (var m = 0; m < t.mapDat.length; m++) {
+				if (t.mapDat[m][6] == uid) { t.mapDat[m][22] = ''; }
+			}
+			queue.push(uid);
+		}
+		t.savelastlogins();
+		t.lastLoginTotal = 0;
+		t.lastLoginFetched = 0;
+		for (var i = 0; i < queue.length; i++) {
+			t.lastLoginPending[queue[i]] = true;
+			t.lastLoginQueue.push(queue[i]);
+			t.lastLoginTotal++;
+		}
+		if (t.lastLoginQueue.length != 0 && !t.lastLoginRunning) { t.processLastLoginQueue(); }
+		if (ById('pbStatStatus') && !t.searchRunning) {
+			ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
+		}
+		t.dispMapTable();
 	},
 
 	processLastLoginQueue: function () {
