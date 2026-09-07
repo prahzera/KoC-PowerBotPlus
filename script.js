@@ -42,7 +42,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.95
+// @version			3.96
 // @releasenotes	        GCG Portal: main a pantalla completa, footer oculto y header colapsable
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '3.95';
+var Version = '3.96';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30682,6 +30682,22 @@ t.setupFilterDisplay();
 		if (ById('pbStatStatus') && !t.searchRunning) {
 			ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
 		}
+		var uids = [];
+		for (var k = 0; k < t.dat.length; k++) {
+			var u = t.dat[k][6];
+			if (u && u != 0 && uids.indexOf(u) == -1) { uids.push(u); }
+		}
+		if (uids.length != 0) { // refresh real online status (getOnline) for the table players
+			getOnline(uids, function (list) {
+				if (list && list.data) {
+					for (var m = 0; m < t.mapDat.length; m++) {
+						var uid = t.mapDat[m][6];
+						if (uid && uid != 0) { t.mapDat[m][12] = list.data[uid] ? 1 : 0; }
+					}
+					t.dispMapTable();
+				}
+			});
+		}
 		t.dispMapTable();
 	},
 
@@ -30942,11 +30958,8 @@ t.setupFilterDisplay();
 						var LLdays = (unixTime() - convertTime(new Date(Lldl.replace(' ', 'T') + 'Z'))) / 86400;
 						var LLmin = parseIntNan(Options.SearchOptions.LastLoginMinDays);
 						var LLmax = parseIntNan(Options.SearchOptions.LastLoginMaxDays);
-						if (LLdays < 1) { TileOK = true; } // recently active / connected - always shown
-						else {
-							if (LLmin != 0 && LLdays < LLmin) TileOK = false;
-							if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
-						}
+						if (LLmin != 0 && LLdays < LLmin) TileOK = false;
+						if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
 					}
 				}
 			}
