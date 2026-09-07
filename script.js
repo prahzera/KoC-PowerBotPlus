@@ -42,7 +42,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.89
+// @version			3.90
 // @releasenotes	        GCG Portal: main a pantalla completa, footer oculto y header colapsable
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '3.89';
+var Version = '3.90';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -29501,6 +29501,13 @@ Tabs.Search = {
 	scouted: 0,
 	SearchTimer: null,
 	LoopCounter: 1,
+	lastLogin: {},
+	lastLoginPending: {},
+	lastLoginQueue: [],
+	lastLoginFetched: 0,
+	lastLoginTotal: 0,
+	lastLoginRunning: false,
+	lastLoginTimer: null,
 
 	Options: {
 		SearchType: 0, // 0 - city, 1 - barb camp, 2 - wild, 3 - dark forest, 4 - merc camp, 5 - nomad camp, 6 - alliance HQ - anything greater than 1, treat like wild!
@@ -29522,6 +29529,9 @@ Tabs.Search = {
 		RankType: '',
 		AllianceName: '',
 		PlayerName: '',
+		ShowLastLogin: false,
+		LastLoginMinDays: '',
+		LastLoginMaxDays: '',
 		sortColNum: 2,
 		sortDir: 1,
 	},
@@ -29549,6 +29559,7 @@ Tabs.Search = {
 	// 19 - Defending
 	// 20 - map[k].premiumTile
 	// 21 - map[k].allianceHq.hqId
+	// 22 - lastLogin
 	//
 	// t.dat = filtered subset of above
 
@@ -29663,6 +29674,8 @@ Tabs.Search = {
 			});
 		}, 0);
 
+		t.readlastlogins();
+
 		//		window.addEventListener('unload', t.onUnload, false);
 		//		setTimeout (t.readoldmists, 0);
 	},
@@ -29680,6 +29693,7 @@ Tabs.Search = {
 			}
 		}
 		t.saveoldmists();
+		t.savelastlogins();
 	},
 
 	EverySecond: function () {
@@ -29766,6 +29780,20 @@ Tabs.Search = {
 		if (notify) { notify(); }
 	},
 
+	savelastlogins: function () {
+		var t = Tabs.Search;
+		var serverID = getServerId();
+		setTimeout(function () { GM_setValue('SearchLastLogin_' + serverID + '_' + uW.tvuid, JSON2.stringify(t.lastLogin)); }, 0);
+	},
+
+	readlastlogins: function () {
+		var t = Tabs.Search;
+		var l = JSON2.parse(GM_getValue('SearchLastLogin_' + getServerId() + '_' + uW.tvuid, '{}'));
+		if (matTypeof(l) == 'object') {
+			for (var k in l) { t.lastLogin[k] = l[k]; }
+		}
+	},
+
 	clearoldmists: function () {
 		var t = Tabs.Search;
 		t.OldMists = [];
@@ -29819,6 +29847,7 @@ Tabs.Search = {
 		t.opt.provinceSlices = ById('pbProvinceSlices').value;
 		t.setupResultsPanel(true);
 		t.stopSearch('Previous Search');
+		if (Options.SearchOptions.ShowLastLogin && t.mapDat.length != 0) { t.enqueueLastLogins(); }
 	},
 
 	displaylastsearch: function () {
@@ -29908,6 +29937,13 @@ Tabs.Search = {
 		t.blocksSearched = 0;
 		t.tilesFound = 0;
 
+		clearTimeout(t.lastLoginTimer);
+		t.lastLoginRunning = false;
+		t.lastLoginQueue = [];
+		t.lastLoginPending = {};
+		t.lastLoginFetched = 0;
+		t.lastLoginTotal = 0;
+
 		var counter = t.BlockList.length;
 		if (counter > MAX_BLOCKS) { counter = MAX_BLOCKS; }
 
@@ -29981,6 +30017,9 @@ Tabs.Search = {
 		m += '<tr id=pbsaname2><td colspan=2 align=center><INPUT id=pbSearchAllName class=btInput size=8 value=' + Options.SearchOptions.AllianceName + '></td></tr>';
 		m += '<tr id=pbspname1><td colspan=2 align=center style="padding-top:5px;">' + tx('Player Name') + ':</td></tr>';
 		m += '<tr id=pbspname2><td colspan=2 align=center><INPUT id=pbSearchPlayerName class=btInput size=8 value=' + Options.SearchOptions.PlayerName + '></td></tr>';
+		m += '<tr id=pbslastlogin1><td colspan=2 align=center><INPUT id=pbSearchShowLastLogin type=checkbox ' + (Options.SearchOptions.ShowLastLogin ? 'CHECKED' : '') + '/>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</td></tr>';
+		m += '<tr id=pbslastlogin2><td colspan=2 align=center>' + tx('Greater than') + ':&nbsp;<INPUT id=pbSearchLastLoginMinDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMinDays + '>&nbsp;' + tx('Days') + '</td></tr>';
+		m += '<tr id=pbslastlogin3><td colspan=2 align=center>' + tx('Less than') + ':&nbsp;<INPUT id=pbSearchLastLoginMaxDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMaxDays + '>&nbsp;' + tx('Days') + '</td></tr>';
 		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Shape') + ':</td></tr>';
 		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx("Square"), 1: tx("Circle") }, Options.SearchOptions.SearchShape, 'id=pbSearchShape class=btInput') + '</td></tr>';
 		m += '</table>';
@@ -30022,8 +30061,9 @@ Tabs.Search = {
 			saveOptions();
 			t.AllianceRankings(Options.SearchOptions.Rank, Options.SearchOptions.RankType, function (e) {
 				t.Rankings = e;
-				t.dispMapTable();
-			});
+t.setupFilterDisplay();
+			t.dispMapTable();
+		});
 		}, false);
 
 		ById('pbSearchAllName').addEventListener('change', t.SearchAllNameChange, false);
@@ -30031,6 +30071,12 @@ Tabs.Search = {
 
 		ById('pbSearchPlayerName').addEventListener('change', t.SearchPlayerNameChange, false);
 		ById('pbSearchPlayerName').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.SearchPlayerNameChange); }, false);
+
+		ById('pbSearchLastLoginMinDays').addEventListener('change', t.LastLoginMinDaysChange, false);
+		ById('pbSearchLastLoginMinDays').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.LastLoginMinDaysChange); }, false);
+
+		ById('pbSearchLastLoginMaxDays').addEventListener('change', t.LastLoginMaxDaysChange, false);
+		ById('pbSearchLastLoginMaxDays').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.LastLoginMaxDaysChange); }, false);
 
 		ToggleOption('SearchOptions', 'pbSearchUnowned', 'Unowned', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchMisted', 'Misted', function () { t.setupFilterDisplay(); t.dispMapTable(); });
@@ -30040,6 +30086,21 @@ Tabs.Search = {
 		ToggleOption('SearchOptions', 'pbSearchHostile', 'Hostile', function () { t.setupFilterDisplay(); t.dispMapTable(); });
 		ToggleOption('SearchOptions', 'pbSearchNeutral', 'Neutral', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchUnallied', 'Unallied', t.dispMapTable);
+		ToggleOption('SearchOptions', 'pbSearchShowLastLogin', 'ShowLastLogin', function () {
+			var t = Tabs.Search;
+			if (Options.SearchOptions.ShowLastLogin) {
+				if (t.mapDat.length != 0) { t.enqueueLastLogins(); }
+			}
+			else {
+				clearTimeout(t.lastLoginTimer);
+				t.lastLoginRunning = false;
+				t.lastLoginQueue = [];
+				t.lastLoginPending = {};
+				t.lastLoginTotal = 0;
+				t.lastLoginFetched = 0;
+			}
+			t.dispMapTable();
+		});
 
 		if (ById('pbSearchHostileOpen')) {
 			ById('pbSearchHostileOpen').addEventListener('click', t.openHostileFilter, false);
@@ -30089,6 +30150,26 @@ Tabs.Search = {
 		var e = ById('pbSearchMaxMight');
 		if (isNaN(e.value)) { e.value = ''; }
 		Options.SearchOptions.MaxMight = e.value;
+		saveOptions();
+		t.dispMapTable();
+	},
+
+	LastLoginMinDaysChange: function () {
+		var t = Tabs.Search;
+		if (KeyTimer) { clearTimeout(KeyTimer); }
+		var e = ById('pbSearchLastLoginMinDays');
+		if (isNaN(e.value)) { e.value = ''; }
+		Options.SearchOptions.LastLoginMinDays = e.value;
+		saveOptions();
+		t.dispMapTable();
+	},
+
+	LastLoginMaxDaysChange: function () {
+		var t = Tabs.Search;
+		if (KeyTimer) { clearTimeout(KeyTimer); }
+		var e = ById('pbSearchLastLoginMaxDays');
+		if (isNaN(e.value)) { e.value = ''; }
+		Options.SearchOptions.LastLoginMaxDays = e.value;
 		saveOptions();
 		t.dispMapTable();
 	},
@@ -30218,6 +30299,20 @@ Tabs.Search = {
 				}
 				else {
 					jQuery('#pbshostilefilter').addClass('divHide');
+				}
+			}
+		}
+		catch (e) { logerr(e); }
+
+		try {
+			if (ById('pbslastlogin2')) {
+				if (Options.SearchOptions.ShowLastLogin) {
+					jQuery('#pbslastlogin2').removeClass('divHide');
+					jQuery('#pbslastlogin3').removeClass('divHide');
+				}
+				else {
+					jQuery('#pbslastlogin2').addClass('divHide');
+					jQuery('#pbslastlogin3').addClass('divHide');
 				}
 			}
 		}
@@ -30448,6 +30543,7 @@ Tabs.Search = {
 				}
 
 				var hqId = 0;
+				var lastLoginStr = t.lastLogin[u] || '';
 				if (map[k].allianceHq) {
 					if (misted) { // fill in alliance info from HQ fields
 						alli = map[k].allianceHq.allianceName;
@@ -30458,11 +30554,13 @@ Tabs.Search = {
 				}
 
 
-				t.mapDat.push([map[k].xCoord, map[k].yCoord, dist, map[k].tileType, parseIntNan(map[k].tileLevel), map[k].tileCityId, u, city, name, might, alli, aID, uList.data[u] ? 1 : 0, misted, map[k].isPrestige, map[k].prestigeLevel, map[k].prestigeType, map[k].tileId, map[k].tileProvinceId, false, map[k].premiumTile, hqId]);
+				t.mapDat.push([map[k].xCoord, map[k].yCoord, dist, map[k].tileType, parseIntNan(map[k].tileLevel), map[k].tileCityId, u, city, name, might, alli, aID, uList.data[u] ? 1 : 0, misted, map[k].isPrestige, map[k].prestigeLevel, map[k].prestigeType, map[k].tileId, map[k].tileProvinceId, false, map[k].premiumTile, hqId, lastLoginStr]);
 				++t.tilesFound;
 			}
 		}
 
+
+		t.enqueueLastLogins();
 
 		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
 		t.dispMapTable();
@@ -30487,6 +30585,82 @@ Tabs.Search = {
 		}
 		var blockString = t.Blocks.join("%2C");
 		t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(blockString, rslt); }) }, MAP_DELAY);
+	},
+
+	lastLoginText: function (dl) {
+		var t = Tabs.Search;
+		if (!dl) return '&mdash;';
+		if (Tabs.Player && Tabs.Player.getLastLogDuration) {
+			var s = Tabs.Player.getLastLogDuration(dl);
+			if (s) return s;
+		}
+		var Interval = convertTime(new Date(dl.replace(' ', 'T') + 'Z')) - unixTime();
+		if (Interval < 0) return uW.timestr(Interval * (-1)) + ' ago';
+		return 'minutes ago';
+	},
+
+	sortLastLoginVal: function (r) {
+		var t = Tabs.Search;
+		var dl = t.lastLogin[r[6]] || r[22];
+		if (!dl) return 0;
+		return convertTime(new Date(dl.replace(' ', 'T') + 'Z'));
+	},
+
+	enqueueLastLogins: function () {
+		var t = Tabs.Search;
+		if (!Options.SearchOptions.ShowLastLogin) return;
+		for (var i = 0; i < t.mapDat.length; i++) {
+			var uid = t.mapDat[i][6];
+			if (!uid || uid == 0 || uid == "0") continue;
+			if (t.mapDat[i][12] == 1) continue;
+			if (t.lastLogin[uid]) continue;
+			if (t.lastLoginPending[uid]) continue;
+			if (t.lastLoginQueue.indexOf(uid) != -1) continue;
+			t.lastLoginPending[uid] = true;
+			t.lastLoginQueue.push(uid);
+			t.lastLoginTotal++;
+		}
+		if (t.lastLoginQueue.length != 0 && !t.lastLoginRunning) {
+			t.processLastLoginQueue();
+		}
+	},
+
+	processLastLoginQueue: function () {
+		var t = Tabs.Search;
+		if (!Options.SearchOptions.ShowLastLogin) { t.lastLoginRunning = false; return; }
+		if (t.lastLoginQueue.length == 0) {
+			t.lastLoginRunning = false;
+			t.lastLoginPending = {};
+			t.savelastlogins();
+			if (ById('pbStatStatus') && !t.searchRunning) {
+				ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
+			}
+			if (Options.SearchOptions.sortColNum == 22) { t.dispMapTable(); }
+			return;
+		}
+		var uid = t.lastLoginQueue.shift();
+		t.lastLoginRunning = true;
+		fetchPlayerCourt(uid, function (rslt) {
+			if (rslt && rslt.ok && rslt.playerInfo && rslt.playerInfo.lastLogin) {
+				var dl = rslt.playerInfo.lastLogin;
+				t.lastLogin[uid] = dl;
+				t.lastLoginFetched++;
+				for (var k = 0; k < t.mapDat.length; k++) {
+					if (t.mapDat[k][6] == uid) t.mapDat[k][22] = dl;
+				}
+				for (var k = 0; k < t.dat.length; k++) {
+					if (t.dat[k][6] == uid) {
+						var d = ById('pll_' + t.dat[k][0] + '_' + t.dat[k][1]);
+						if (d) { d.innerHTML = t.lastLoginText(dl); }
+					}
+				}
+				if ((t.lastLoginFetched % 5) == 0) { t.savelastlogins(); }
+			}
+			if (ById('pbStatStatus') && !t.searchRunning) {
+				ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
+			}
+			t.lastLoginTimer = setTimeout(t.processLastLoginQueue, 350);
+		});
 	},
 
 	LookupMists: function (prov, notify) {
@@ -30545,18 +30719,31 @@ Tabs.Search = {
 
 		function sortFunc(a, b) {
 			var t = Tabs.Search;
-			if (typeof (a[Options.SearchOptions.sortColNum]) == 'number') {
+			var ci = Options.SearchOptions.sortColNum;
+			if (ci == 22) {
+				var aOn = (a[12] == 1) ? 1 : 0;
+				var bOn = (b[12] == 1) ? 1 : 0;
+				if (Options.SearchOptions.sortDir > 0) {
+					if (aOn != bOn) return bOn - aOn;
+					return t.sortLastLoginVal(b) - t.sortLastLoginVal(a);
+				}
+				else {
+					if (aOn != bOn) return aOn - bOn;
+					return t.sortLastLoginVal(a) - t.sortLastLoginVal(b);
+				}
+			}
+			if (typeof (a[ci]) == 'number') {
 				if (Options.SearchOptions.sortDir > 0)
-					return a[Options.SearchOptions.sortColNum] - b[Options.SearchOptions.sortColNum];
+					return a[ci] - b[ci];
 				else
-					return b[Options.SearchOptions.sortColNum] - a[Options.SearchOptions.sortColNum];
-			} else if (typeof (a[Options.SearchOptions.sortColNum]) == 'boolean') {
+					return b[ci] - a[ci];
+			} else if (typeof (a[ci]) == 'boolean') {
 				return 0;
 			} else {
 				if (Options.SearchOptions.sortDir > 0)
-					return a[Options.SearchOptions.sortColNum].localeCompare(b[Options.SearchOptions.sortColNum]);
+					return a[ci].localeCompare(b[ci]);
 				else
-					return b[Options.SearchOptions.sortColNum].localeCompare(a[Options.SearchOptions.sortColNum]);
+					return b[ci].localeCompare(a[ci]);
 			}
 		}
 
@@ -30687,6 +30874,20 @@ Tabs.Search = {
 				}
 			}
 
+			if (TileOK && Options.SearchOptions.ShowLastLogin && (parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0)) {
+				var LLuid = t.mapDat[i][6];
+				if (LLuid && LLuid != 0 && t.mapDat[i][12] != 1) {
+					var Lldl = t.mapDat[i][22] || t.lastLogin[LLuid];
+					if (Lldl) {
+						var LLdays = (unixTime() - convertTime(new Date(Lldl.replace(' ', 'T') + 'Z'))) / 86400000;
+						var LLmin = parseIntNan(Options.SearchOptions.LastLoginMinDays);
+						var LLmax = parseIntNan(Options.SearchOptions.LastLoginMaxDays);
+						if (LLmin != 0 && LLdays < LLmin) TileOK = false;
+						if (TileOK && LLmax != 0 && LLdays > LLmax) TileOK = false;
+					}
+				}
+			}
+
 			if (TileOK) {
 				t.dat.push(t.mapDat[i]);
 			}
@@ -30704,15 +30905,19 @@ Tabs.Search = {
 			if (t.searchRunning) { dis = 'disabled'; }
 
 			var m = '<table align=center width=99% cellspacing=0 cellpadding=0>';
-			m += '<TR><td width=30>&nbsp;</td><TD nowrap><A id=SearchCol4 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Lvl') + '&nbsp;</span></a></td>\
-				<TD nowrap><a class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="padding-right:10px;vertical-align:middle;display:inline-block;width:100%;"><INPUT id=ToggleSearchScoutCheckbox type=checkbox '+ dis + '></span></a></td>\
-				<TD nowrap><A id=SearchCol0 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;'+ tx('Co-ords') + '&nbsp;</span></a></td>\
-				<TD nowrap><A id=SearchCol2 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;'+ tx('Distance') + '&nbsp;</span></a></td>\
-				<TD nowrap><A id=SearchCol8 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;'+ tx('Player') + '&nbsp;</span></a></td>\
-				<TD nowrap><A id=SearchCol7 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;'+ tx('City') + '&nbsp;</span></a></td>\
-				<TD nowrap><A id=SearchCol9 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;'+ tx('Might') + '&nbsp;</span></a></td>\
-				<TD nowrap><A id=SearchCol10 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;'+ uW.g_js_strings.commonstr.alliance + '&nbsp;</span></a></td>\
-				</tr>';
+			m += '<TR><td width=30>&nbsp;</td>';
+			m += '<TD nowrap><A id=SearchCol4 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Lvl') + '&nbsp;</span></a></td>';
+			m += '<TD nowrap><a class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="padding-right:10px;vertical-align:middle;display:inline-block;width:100%;"><INPUT id=ToggleSearchScoutCheckbox type=checkbox ' + dis + '></span></a></td>';
+			m += '<TD nowrap><A id=SearchCol0 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Co-ords') + '&nbsp;</span></a></td>';
+			m += '<TD nowrap><A id=SearchCol2 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Distance') + '&nbsp;</span></a></td>';
+			m += '<TD nowrap><A id=SearchCol8 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Player') + '&nbsp;</span></a></td>';
+			m += '<TD nowrap><A id=SearchCol7 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('City') + '&nbsp;</span></a></td>';
+			m += '<TD nowrap><A id=SearchCol9 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Might') + '&nbsp;</span></a></td>';
+			if (Options.SearchOptions.ShowLastLogin) {
+				m += '<TD nowrap><A id=SearchCol22 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '&nbsp;</span></a></td>';
+			}
+			m += '<TD nowrap><A id=SearchCol10 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + uW.g_js_strings.commonstr.alliance + '&nbsp;</span></a></td>';
+			m += '</tr>';
 
 			var numRows = t.dat.length;
 			if (numRows > t.MAX_SHOW_WHILE_RUNNING && t.searchRunning) {
@@ -30723,6 +30928,7 @@ Tabs.Search = {
 			var qsdelay = 0;
 			var r = 0;
 			var RowId = "";
+			var LLspan = Options.SearchOptions.ShowLastLogin ? 5 : 4;
 
 			for (var i = 0; i < numRows; i++) {
 				RowId = 'search_' + t.dat[i][0].toString() + '_' + t.dat[i][1].toString();
@@ -30779,7 +30985,7 @@ Tabs.Search = {
 
 				if (t.dat[i][13] && !HQ && parseIntNan(t.dat[i][6]) == 0) { // still misted
 					if (playername == '') {
-						m += '<TD ' + rowStyle + ' class=xtab nowrap colspan=4 id=pbsrch_' + t.dat[i][0] + '_' + t.dat[i][1] + '><center>*** ' + mistedtext + ' ***&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + t.dat[i][0] + ',' + t.dat[i][1] + ',' + t.ModelCityId + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span></center></td>';
+						m += '<TD ' + rowStyle + ' class=xtab nowrap colspan=' + LLspan + ' id=pbsrch_' + t.dat[i][0] + '_' + t.dat[i][1] + '><center>*** ' + mistedtext + ' ***&nbsp;&nbsp;<SPAN onclick="quickscoutsearch(' + t.dat[i][0] + ',' + t.dat[i][1] + ',' + t.ModelCityId + ');return false;"><A class=xlink>' + tx("QuickScout") + '</a></span></center></td>';
 						if (ById('pbAutoQS')) {
 							if (ById('pbAutoQS').checked) {
 								if (!Tabs.Search.QSMarching[t.dat[i][0] + '_' + t.dat[i][1]] || Tabs.Search.QSMarching[t.dat[i][0] + '_' + t.dat[i][1]] == 0) {
@@ -30791,14 +30997,22 @@ Tabs.Search = {
 						}
 					}
 					else {
-						m += '<TD ' + rowStyle + ' class=xtab nowrap colspan=4 id=pbsrch_' + t.dat[i][0] + '_' + t.dat[i][1] + '>' + playername + '</td>'; // messages from quickscout stored in playername
+						m += '<TD ' + rowStyle + ' class=xtab nowrap colspan=' + LLspan + ' id=pbsrch_' + t.dat[i][0] + '_' + t.dat[i][1] + '>' + playername + '</td>'; // messages from quickscout stored in playername
 					}
 				}
 				else {
-					m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0) ? status + PlayerLink(t.dat[i][6], playername) : playername) + '</td>';
-					m += '<td ' + rowStyle + ' class=xtab>' + cityname + '</td>';
-					m += '<td ' + rowStyle + ' class=xtab align=right>' + might + '</td>';
-					m += '<td ' + rowStyle + ' class=xtab><span style=' + DiplomacyColours(t.dat[i][11]) + '>' + t.dat[i][10] + '</span></td>';
+m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0) ? status + PlayerLink(t.dat[i][6], playername) : playername) + '</td>';
+				m += '<td ' + rowStyle + ' class=xtab>' + cityname + '</td>';
+				m += '<td ' + rowStyle + ' class=xtab align=right>' + might + '</td>';
+				if (Options.SearchOptions.ShowLastLogin) {
+					var lld = '&mdash;';
+					if (t.dat[i][12] == 1) { lld = '<span style="color:#080;"><b>' + uW.g_js_strings.commonstr.online.toUpperCase() + '</b></span>'; }
+					else if (t.dat[i][22]) { lld = t.lastLoginText(t.dat[i][22]); }
+					else if (t.lastLogin[t.dat[i][6]]) { lld = t.lastLoginText(t.lastLogin[t.dat[i][6]]); }
+					else if (t.lastLoginPending[t.dat[i][6]]) { lld = '&hellip;'; }
+					m += '<td ' + rowStyle + ' class=xtab nowrap align=center id=pll_' + t.dat[i][0] + '_' + t.dat[i][1] + '>' + lld + '</td>';
+				}
+				m += '<td ' + rowStyle + ' class=xtab><span style=' + DiplomacyColours(t.dat[i][11]) + '>' + t.dat[i][10] + '</span></td>';
 				}
 
 				m += '</tr>';
@@ -30808,7 +31022,8 @@ Tabs.Search = {
 
 		ById('pbResultsPanel').innerHTML = m;
 		if (t.dat.length != 0) {
-			ById('SearchCol' + Options.SearchOptions.sortColNum).className = 'buttonv2 std green';
+			var hcol = ById('SearchCol' + Options.SearchOptions.sortColNum);
+			if (hcol) { hcol.className = 'buttonv2 std green'; }
 			ById('ToggleSearchScoutCheckbox').addEventListener('change', t.doSelectall, false);
 		}
 		t.updateMistProgress();
