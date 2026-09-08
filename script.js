@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.10
-// @releasenotes        Mejora visual y UX: animaciones en botones/ventanas/pestañas, tema oscuro (Opciones > Colores > Tema), indicador de carga en reportes y nueva sección 'Apariencia' (velocidad de animación, animar pop-ups, reducir movimiento)
+// @version			4.11
+// @releasenotes        Rediseño moderno de las ventanas del bot: bordes redondeados, sombras suaves, barra de título degradada, botones e inputs modernos, y selector 'Estilo de ventana' (Moderno/Clásico) en Opciones > General > Apariencia
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.10';
+var Version = '4.11';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -461,6 +461,7 @@ var GlobalOptions = {
 	btAnimSpeed: 'normal', // Velocidad de animación UI: 'normal' | 'smooth' | 'off'
 	btAnimatePopups: true, // Animar apertura/cierre de ventanas emergentes
 	btReduceMotion: false, // Forzar reducción de movimiento (independiente del SO)
+	btWindowStyle: 'modern', // Estilo de ventanas: 'modern' | 'classic'
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,
@@ -3406,15 +3407,23 @@ function BotVisualCSS() {
 
 function ApplyBotVisuals() {
 	GM_addStyle(BotVisualCSS());
+	GM_addStyle(BotModernCSS());
 	var speed = GlobalOptions.btAnimSpeed || 'normal';
 	document.body.setAttribute('data-bt-anim', speed);
 	document.body.setAttribute('data-bt-reduce', GlobalOptions.btReduceMotion ? '1' : '0');
+	if (GlobalOptions.btWindowStyle == 'classic') { document.body.classList.remove('btModern'); }
+	else { document.body.classList.add('btModern'); }
 	if (Options.Theme == 'Dark') { document.body.classList.add('btDarkTheme'); }
 	else { document.body.classList.remove('btDarkTheme'); }
 }
 
 function SetAnimSpeed(speed) {
 	document.body.setAttribute('data-bt-anim', speed || 'normal');
+}
+
+function SetWindowStyle(style) {
+	if (style == 'classic') { document.body.classList.remove('btModern'); }
+	else { document.body.classList.add('btModern'); }
 }
 
 function btAnimMs() {
@@ -3434,6 +3443,98 @@ function btReducedMotion() {
 function btRaf(cb) {
 	var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || function (f) { return setTimeout(f, 16); };
 	return raf.call(window, cb);
+}
+
+function btShade(hex, amt) { // amt -1..1: negativo = más oscuro, positivo = más claro
+	if (!hex) { return hex; }
+	var c = HEXtoRGB(hex);
+	if (!c) { return hex; }
+	function to(x) {
+		x = Math.round(x);
+		if (x < 0) x = 0;
+		if (x > 255) x = 255;
+		var s = x.toString(16);
+		return s.length == 1 ? '0' + s : s;
+	}
+	return '#' + to(c.r + (255 - c.r) * Math.max(amt, 0) + c.r * Math.min(amt, 0)) + to(c.g + (255 - c.g) * Math.max(amt, 0) + c.g * Math.min(amt, 0)) + to(c.b + (255 - c.b) * Math.max(amt, 0) + c.b * Math.min(amt, 0));
+}
+
+function BotModernCSS() {
+	var Panel = Options.Colors.Panel || '#F7F3E6';
+	var Title = Options.Colors.Title || '#342819';
+	var TitleDark = btShade(Title, -0.12);
+	return '\
+		/* === PowerBot+ modern window design === */\
+		body.btModern .btPopup {\
+			background: ' + Panel + ';\
+			border: 1px solid rgba(0,0,0,0.18);\
+			border-radius: 12px;\
+			box-shadow: 0 10px 30px rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.12);\
+			font-family: \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;\
+		}\
+		body.btModern .btPopMain { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }\
+		body.btModern tr.btPopupTop td {\
+			background: linear-gradient(180deg, ' + Title + ', ' + TitleDark + ') !important;\
+			border: none !important;\
+			border-bottom: 1px solid rgba(0,0,0,0.25) !important;\
+			height: 26px !important;\
+			font-weight: 600 !important;\
+			font-size: 12px !important;\
+			letter-spacing: 0.3px;\
+		}\
+		body.btModern tr.btPopupTop td:first-child { border-top-left-radius: 12px !important; }\
+		body.btModern tr.btPopupTop td:last-child { border-top-right-radius: 12px !important; }\
+		body.btModern td[id$="_X"] {\
+			background: rgba(0,0,0,0.16) !important;\
+			border: none !important;\
+			border-radius: 7px !important;\
+			width: 15px !important;\
+			height: 15px !important;\
+			margin: 3px !important;\
+			font-size: 12px !important;\
+			line-height: 15px !important;\
+		}\
+		body.btModern td[id$="_X"]:hover { background: #c0392b !important; }\
+		body.btModern a.inlineButton.btButton {\
+			background-image: none !important;\
+			background-color: #2f63b8 !important;\
+			border-radius: 5px;\
+			box-shadow: 0 1px 2px rgba(0,0,0,0.28);\
+			padding: 2px 9px;\
+			font-weight: 600;\
+			text-shadow: none;\
+			color: #fff;\
+		}\
+		body.btModern a.inlineButton.btButton > span { background: none !important; color: inherit !important; text-shadow: none !important; }\
+		body.btModern a.inlineButton.btButton:hover { background-color: #3b74cd !important; filter: brightness(1.05); }\
+		body.btModern a.inlineButton.btButton.brown8 { background-color: #8a5a2b !important; }\
+		body.btModern a.inlineButton.btButton.brown8:hover { background-color: #a06a35 !important; }\
+		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
+			border-radius: 6px;\
+			box-shadow: 0 1px 2px rgba(0,0,0,0.2);\
+		}\
+		body.btModern a[id^="bttc"].buttonv2.green, body.btModern div[id^="bttc"].buttonv2.green {\
+			box-shadow: inset 0 0 0 2px rgba(0,60,0,0.4), 0 1px 2px rgba(0,0,0,0.25);\
+		}\
+		body.btModern a.buttonv2.std { border-radius: 6px; text-shadow: 0 1px 1px rgba(0,0,0,0.25); }\
+		body.btModern .divHeader { border-radius: 8px; letter-spacing: 0.3px; font-weight: 700; padding-left: 8px; }\
+		body.btModern table.xtab td.xtabHD, body.btModern table.xtab td.xtabHDDef { background: rgba(0,0,0,0.045); border-radius: 4px; }\
+		body.btModern select, body.btModern input.btInput, body.btModern input[type=text], body.btModern input[type=number] {\
+			border: 1px solid rgba(0,0,0,0.22);\
+			border-radius: 4px;\
+			padding: 1px 3px;\
+			background: #fff;\
+			color: #222;\
+		}\
+		body.btModern select:focus, body.btModern input:focus { outline: 2px solid rgba(47,99,184,0.35); border-color: #2f63b8; }\
+		body.btModern input[type=checkbox] { accent-color: #2f63b8; }\
+		body.btModern #bot_comm_input { border-radius: 6px; padding: 2px 6px; }\
+		body.btModern .ui-tabs .ui-tabs-panel { font-family: inherit; }\
+		body.btModern.btDarkTheme select, body.btModern.btDarkTheme input.btInput, body.btModern.btDarkTheme input[type=text], body.btModern.btDarkTheme input[type=number] {\
+			background: #2b2d35;\
+			color: #E3E1D6;\
+			border-color: rgba(255,255,255,0.18);\
+		}';
 }
 function CheckForIncoming() {
 	var atype = "";
@@ -20605,6 +20706,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
 		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Window Style") + ': ' + htmlSelector({ modern: tx('Modern'), classic: tx('Classic') }, GlobalOptions.btWindowStyle, 'id=btWindowStyle') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
@@ -20641,6 +20743,7 @@ Tabs.Options = {
 		t.togGlobalOpt('btTrackOpen', 'btTrackOpen');
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
 		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
+		t.changeGlobalOpt('btWindowStyle', 'btWindowStyle', SetWindowStyle);
 		t.changeGlobalOpt('btAnimSpeed', 'btAnimSpeed', SetAnimSpeed);
 		t.togGlobalOpt('btAnimatePopups', 'btAnimatePopups');
 		t.togGlobalOpt('btReduceMotion', 'btReduceMotion', function (on) { document.body.setAttribute('data-bt-reduce', on ? '1' : '0'); });

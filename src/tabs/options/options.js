@@ -869,6 +869,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
 		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Window Style") + ': ' + htmlSelector({ modern: tx('Modern'), classic: tx('Classic') }, GlobalOptions.btWindowStyle, 'id=btWindowStyle') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
@@ -905,6 +906,7 @@ Tabs.Options = {
 		t.togGlobalOpt('btTrackOpen', 'btTrackOpen');
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
 		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
+		t.changeGlobalOpt('btWindowStyle', 'btWindowStyle', SetWindowStyle);
 		t.changeGlobalOpt('btAnimSpeed', 'btAnimSpeed', SetAnimSpeed);
 		t.togGlobalOpt('btAnimatePopups', 'btAnimatePopups');
 		t.togGlobalOpt('btReduceMotion', 'btReduceMotion', function (on) { document.body.setAttribute('data-bt-reduce', on ? '1' : '0'); });
