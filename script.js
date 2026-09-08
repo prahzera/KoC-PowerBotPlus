@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.11
-// @releasenotes        Rediseño moderno de las ventanas del bot: bordes redondeados, sombras suaves, barra de título degradada, botones e inputs modernos, y selector 'Estilo de ventana' (Moderno/Clásico) en Opciones > General > Apariencia
+// @version			4.12
+// @releasenotes        Rediseño de las pestañas (píldoras con esquinas redondeadas), botón de cerrar minimalista y nuevo panel 'Apariencia' en Opciones con color de acento personalizable (azul, verde, púrpura, naranja, rojo, según el tema o color a medida) y bloque de colores movido a ese panel
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.11';
+var Version = '4.12';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -462,6 +462,7 @@ var GlobalOptions = {
 	btAnimatePopups: true, // Animar apertura/cierre de ventanas emergentes
 	btReduceMotion: false, // Forzar reducción de movimiento (independiente del SO)
 	btWindowStyle: 'modern', // Estilo de ventanas: 'modern' | 'classic'
+	btAccent: 'blue', // Color de acento UI: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'theme' | <hex>
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,
@@ -3445,6 +3446,25 @@ function btRaf(cb) {
 	return raf.call(window, cb);
 }
 
+function btAccentHex() {
+	if (!GlobalOptions.btAccent) return '#2f63b8';
+	if (GlobalOptions.btAccent == 'theme') return (Options.Colors.Title || '#342819');
+	if (GlobalOptions.btAccent.charAt(0) === '#') return GlobalOptions.btAccent;
+	switch (GlobalOptions.btAccent) {
+		case 'green': return '#2e8540';
+		case 'purple': return '#6f42c1';
+		case 'orange': return '#c2550a';
+		case 'red': return '#c0392b';
+		case 'blue':
+		default: return '#2f63b8';
+	}
+}
+
+function SetAccent() {
+	// Re-inyecta los estilos modernos para aplicar el nuevo acento en vivo
+	GM_addStyle(BotModernCSS());
+}
+
 function btShade(hex, amt) { // amt -1..1: negativo = más oscuro, positivo = más claro
 	if (!hex) { return hex; }
 	var c = HEXtoRGB(hex);
@@ -3463,6 +3483,9 @@ function BotModernCSS() {
 	var Panel = Options.Colors.Panel || '#F7F3E6';
 	var Title = Options.Colors.Title || '#342819';
 	var TitleDark = btShade(Title, -0.12);
+	var Accent = btAccentHex();
+	var AccentDark = btShade(Accent, -0.12);
+	var AccentBorder = btShade(Accent, 0.35);
 	return '\
 		/* === PowerBot+ modern window design === */\
 		body.btModern .btPopup {\
@@ -3485,19 +3508,24 @@ function BotModernCSS() {
 		body.btModern tr.btPopupTop td:first-child { border-top-left-radius: 12px !important; }\
 		body.btModern tr.btPopupTop td:last-child { border-top-right-radius: 12px !important; }\
 		body.btModern td[id$="_X"] {\
-			background: rgba(0,0,0,0.16) !important;\
+			background: transparent !important;\
 			border: none !important;\
-			border-radius: 7px !important;\
-			width: 15px !important;\
-			height: 15px !important;\
-			margin: 3px !important;\
-			font-size: 12px !important;\
-			line-height: 15px !important;\
+			border-radius: 0 !important;\
+			box-shadow: none !important;\
+			width: 14px !important;\
+			height: 14px !important;\
+			margin: 0 4px !important;\
+			color: rgba(255,255,255,0.85) !important;\
+			font-size: 15px !important;\
+			font-weight: 400 !important;\
+			line-height: 14px !important;\
+			text-shadow: none !important;\
+			transition: color .12s ease, transform .08s ease !important;\
 		}\
-		body.btModern td[id$="_X"]:hover { background: #c0392b !important; }\
+		body.btModern td[id$="_X"]:hover { color: #ff6b6b !important; transform: scale(1.3); background: transparent !important; }\
 		body.btModern a.inlineButton.btButton {\
 			background-image: none !important;\
-			background-color: #2f63b8 !important;\
+			background-color: ' + Accent + ' !important;\
 			border-radius: 5px;\
 			box-shadow: 0 1px 2px rgba(0,0,0,0.28);\
 			padding: 2px 9px;\
@@ -3506,15 +3534,35 @@ function BotModernCSS() {
 			color: #fff;\
 		}\
 		body.btModern a.inlineButton.btButton > span { background: none !important; color: inherit !important; text-shadow: none !important; }\
-		body.btModern a.inlineButton.btButton:hover { background-color: #3b74cd !important; filter: brightness(1.05); }\
+		body.btModern a.inlineButton.btButton:hover { background-color: ' + AccentDark + ' !important; filter: brightness(1.05); }\
 		body.btModern a.inlineButton.btButton.brown8 { background-color: #8a5a2b !important; }\
 		body.btModern a.inlineButton.btButton.brown8:hover { background-color: #a06a35 !important; }\
 		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
-			border-radius: 6px;\
-			box-shadow: 0 1px 2px rgba(0,0,0,0.2);\
+			background-image: none !important;\
+			background-color: rgba(0,0,0,0.06) !important;\
+			border: 1px solid rgba(0,0,0,0.10) !important;\
+			border-radius: 999px !important;\
+			box-shadow: none !important;\
+			width: auto !important;\
+			height: 24px !important;\
+			padding: 2px 14px !important;\
+			display: inline-block;\
+			color: #3a3a3a !important;\
+			font-weight: 600;\
+			text-shadow: none !important;\
+			transition: background-color .12s ease, color .12s ease, transform .08s ease;\
 		}\
+		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; white-space: nowrap !important; }\
+		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { background-color: rgba(0,0,0,0.10) !important; filter: none; }\
+		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.10) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"]:hover, body.btModern.btDarkTheme div[id^="bttc"]:hover { background-color: rgba(255,255,255,0.16) !important; }\
 		body.btModern a[id^="bttc"].buttonv2.green, body.btModern div[id^="bttc"].buttonv2.green {\
-			box-shadow: inset 0 0 0 2px rgba(0,60,0,0.4), 0 1px 2px rgba(0,0,0,0.25);\
+			background-image: linear-gradient(180deg, ' + Accent + ', ' + AccentDark + ') !important;\
+			background-color: ' + Accent + ' !important;\
+			border-color: ' + AccentBorder + ' !important;\
+			color: #fff !important;\
+			box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;\
+			text-shadow: none !important;\
 		}\
 		body.btModern a.buttonv2.std { border-radius: 6px; text-shadow: 0 1px 1px rgba(0,0,0,0.25); }\
 		body.btModern .divHeader { border-radius: 8px; letter-spacing: 0.3px; font-weight: 700; padding-left: 8px; }\
@@ -3526,8 +3574,8 @@ function BotModernCSS() {
 			background: #fff;\
 			color: #222;\
 		}\
-		body.btModern select:focus, body.btModern input:focus { outline: 2px solid rgba(47,99,184,0.35); border-color: #2f63b8; }\
-		body.btModern input[type=checkbox] { accent-color: #2f63b8; }\
+		body.btModern select:focus, body.btModern input:focus { outline: 2px solid ' + btShade(Accent, 0.4) + '; border-color: ' + Accent + '; }\
+		body.btModern input[type=checkbox] { accent-color: ' + Accent + '; }\
 		body.btModern #bot_comm_input { border-radius: 6px; padding: 2px 6px; }\
 		body.btModern .ui-tabs .ui-tabs-panel { font-family: inherit; }\
 		body.btModern.btDarkTheme select, body.btModern.btDarkTheme input.btInput, body.btModern.btDarkTheme input[type=text], body.btModern.btDarkTheme input[type=number] {\
@@ -20508,6 +20556,9 @@ Tabs.Options = {
 		m += '<a id=btGeneralOptionLink class=divLink ><div class="divHeader" align="left"><img id=btGeneralOptionArrow height="10" src="' + RightArrow + '">&nbsp;' + tx("GENERAL SETTINGS (ALL DOMAINS)") + '</div></a>';
 		m += '<div id=btGeneralOption class=divHide></div>';
 
+		m += '<a id=btAppearanceOptionLink class=divLink ><div class="divHeader" align="left"><img id=btAppearanceOptionArrow height="10" src="' + RightArrow + '">&nbsp;' + tx("APPEARANCE") + '</div></a>';
+		m += '<div id=btAppearanceOption class=divHide></div>';
+
 		m += '<a id=btUserOptionLink class=divLink ><div class="divHeader" align="left"><img id=btUserOptionArrow height="10" src="' + RightArrow + '">&nbsp;' + tx("USER SETTINGS") + '</div></a>';
 		m += '<div id=btUserOption class=divHide></div>';
 
@@ -20638,6 +20689,7 @@ Tabs.Options = {
 		ById('btResetSettings').addEventListener('click', function () { t.ResetSettings(); }, false);
 
 		ById('btGeneralOptionLink').addEventListener('click', function () { ToggleMainDivDisplay("Options", 100, GlobalOptions.btWinSize.x, "btGeneralOption", true, "OpenSettingsDiv") }, false);
+		ById('btAppearanceOptionLink').addEventListener('click', function () { ToggleMainDivDisplay("Options", 100, GlobalOptions.btWinSize.x, "btAppearanceOption", true, "OpenSettingsDiv") }, false);
 		ById('btUserOptionLink').addEventListener('click', function () { ToggleMainDivDisplay("Options", 100, GlobalOptions.btWinSize.x, "btUserOption", true, "OpenSettingsDiv") }, false);
 		ById('btTowerOptionLink').addEventListener('click', function () { ToggleMainDivDisplay("Options", 100, GlobalOptions.btWinSize.x, "btTowerOption", true, "OpenSettingsDiv") }, false);
 		ById('btDashOptionLink').addEventListener('click', function () { ToggleMainDivDisplay("Options", 100, GlobalOptions.btWinSize.x, "btDashOption", true, "OpenSettingsDiv") }, false);
@@ -20652,6 +20704,7 @@ Tabs.Options = {
 		ById('btExportLink').addEventListener('click', function () { ToggleMainDivDisplay("Options", 100, GlobalOptions.btWinSize.x, "btExport", true, "OpenSettingsDiv") }, false);
 
 		t.PaintGeneralOptions();
+		t.PaintAppearanceOptions();
 		t.PaintUserOptions();
 		t.PaintTowerOptions();
 		t.PaintPBPOptions();
@@ -20705,11 +20758,6 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btWideMap type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Enable wide map expansion button on the map panel") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
-		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Window Style") + ': ' + htmlSelector({ modern: tx('Modern'), classic: tx('Classic') }, GlobalOptions.btWindowStyle, 'id=btWindowStyle') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
-		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
 		var UpdateLocations = { 0: "SourceForge", 1: "GreasyFork", 2: "GitHub", 3: "pbkplowplow.com" };
 		m += '<TR><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=ExtendedDebugChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Extended debug mode (Activates additional logging)") + '</td></tr>';
@@ -20743,16 +20791,168 @@ Tabs.Options = {
 		t.togGlobalOpt('btTrackOpen', 'btTrackOpen');
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
 		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
-		t.changeGlobalOpt('btWindowStyle', 'btWindowStyle', SetWindowStyle);
-		t.changeGlobalOpt('btAnimSpeed', 'btAnimSpeed', SetAnimSpeed);
-		t.togGlobalOpt('btAnimatePopups', 'btAnimatePopups');
-		t.togGlobalOpt('btReduceMotion', 'btReduceMotion', function (on) { document.body.setAttribute('data-bt-reduce', on ? '1' : '0'); });
 
 		t.togGlobalOpt('AutoUpdateChk', 'AutoUpdates');
 		t.togGlobalOpt('ExtendedDebugChk', 'ExtendedDebugMode', t.RestartReminder);
 
 		ById('btUpdateCheck').addEventListener('click', function () { AutoUpdater.call(true, true); }, false);
 		t.changeGlobalOpt('btUpdateLocation', 'UpdateLocation');
+	},
+
+	PaintAppearanceOptions: function () {
+		var t = Tabs.Options;
+		var AccentColors = {
+			blue: tx('Blue'), green: tx('Green'), purple: tx('Purple'),
+			orange: tx('Orange'), red: tx('Red'), theme: tx('Theme'), custom: tx('Custom')
+		};
+		var AccentVal = (GlobalOptions.btAccent || 'blue');
+		if (AccentVal.length === 7 && AccentVal.charAt(0) === '#') AccentVal = 'custom';
+		var Themes = {};
+		for (var a in t.Colors) Themes[a] = tx(a);
+
+		m = '<TABLE width="100%">';
+		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Window Style") + ': ' + htmlSelector({ modern: tx('Modern'), classic: tx('Classic') }, GlobalOptions.btWindowStyle, 'id=btWindowStyle') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Accent Color") + ': ' + htmlSelector(AccentColors, AccentVal, 'id=btAccent') + '</td></tr>';
+		m += '<TR id=btAccentHexRow><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Custom") + ': <INPUT id=btAccentHex type=text size=7 maxlength=7 value="' + (GlobalOptions.btAccent && GlobalOptions.btAccent.charAt(0) === '#' ? GlobalOptions.btAccent : '#2f63b8') + '"></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
+		m += '<TR><TD class=xtab colspan=3><B>' + tx("PowerBot+ Colours") + '&nbsp;<span style="font-size:16px;color:#FF4D4D;">*</span></b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Title Background") + ': </td><TD class=xtab><INPUT id=togTitleBack type=text size=7 maxlength=7 value="' + Options.Colors.Title + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togTitleText type=text size=7 maxlength=7 value="' + Options.Colors.TitleText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Title + ';color:' + Options.Colors.TitleText + ';"><b>' + tx('Title') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=text size=7 maxlength=7 value="' + Options.Colors.DividerTop + '">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=text size=7 maxlength=7 value="' + Options.Colors.DividerBottom + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=text size=7 maxlength=7 value="' + Options.Colors.DividerText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=text size=7 maxlength=7 value="' + Options.Colors.Panel + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=text size=7 maxlength=7 value="' + Options.Colors.PanelText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=text size=7 maxlength=7 value="' + Options.Colors.Highlight + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=text size=7 maxlength=7 value="' + Options.Colors.HighlightText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#FF4D4D') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#FF4D4D') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=text size=7 maxlength=7 value="' + (Options.Colors.BoldGreen || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=text size=7 maxlength=7 value="' + (Options.Colors.BoldMagenta || '#808') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Report Result Colours") + ': </td><TD class=xtab><INPUT id=togReportVictory type=text size=7 maxlength=7 value="' + (Options.Colors.ReportVictory || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportVictory || '#080') + ';font-weight:bold;" width=50px>' + tx('Victory') + '</td><TD class=xtab>&nbsp;<INPUT id=togReportDefeat type=text size=7 maxlength=7 value="' + (Options.Colors.ReportDefeat || '#CC0000') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportDefeat || '#CC0000') + ';font-weight:bold;" width=50px>' + tx('Defeat') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
+		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
+		m += '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab><span style="opacity:0.7;">' + tx('Tip: use the Dark theme for a dark window interface') + '</span></td></tr>';
+		m += '</table>';
+
+		ById('btAppearanceOption').innerHTML = m;
+
+		ById('btAccentHexRow').style.display = (AccentVal === 'custom') ? '' : 'none';
+		t.changeGlobalOpt('btWindowStyle', 'btWindowStyle', SetWindowStyle);
+		t.changeGlobalOpt('btAnimSpeed', 'btAnimSpeed', SetAnimSpeed);
+		t.togGlobalOpt('btAnimatePopups', 'btAnimatePopups');
+		t.togGlobalOpt('btReduceMotion', 'btReduceMotion', function (on) { document.body.setAttribute('data-bt-reduce', on ? '1' : '0'); });
+
+		ById('btAccent').addEventListener('change', function () {
+			var v = ById('btAccent').value;
+			GlobalOptions.btAccent = v;
+			saveGlobalOptions();
+			ById('btAccentHexRow').style.display = (v === 'custom') ? '' : 'none';
+			SetAccent();
+		}, false);
+		ById('btAccentHex').addEventListener('change', function () {
+			GlobalOptions.btAccent = ById('btAccentHex').value;
+			saveGlobalOptions();
+			SetAccent();
+		}, false);
+
+		ById('togTitleBack').addEventListener('change', function () {
+			Options.Colors.Title = ById('togTitleBack').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togTitleText').addEventListener('change', function () {
+			Options.Colors.TitleText = ById('togTitleText').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togDividerTop').addEventListener('change', function () {
+			Options.Colors.DividerTop = ById('togDividerTop').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togDividerBottom').addEventListener('change', function () {
+			Options.Colors.DividerBottom = ById('togDividerBottom').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togDividerText').addEventListener('change', function () {
+			Options.Colors.DividerText = ById('togDividerText').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togPanelBack').addEventListener('change', function () {
+			Options.Colors.Panel = ById('togPanelBack').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togPanelText').addEventListener('change', function () {
+			Options.Colors.PanelText = ById('togPanelText').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togHighlightBack').addEventListener('change', function () {
+			Options.Colors.Highlight = ById('togHighlightBack').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togHighlightText').addEventListener('change', function () {
+			Options.Colors.HighlightText = ById('togHighlightText').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togBoldRed').addEventListener('change', function () {
+			Options.Colors.BoldRed = ById('togBoldRed').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togBoldOrange').addEventListener('change', function () {
+			Options.Colors.BoldOrange = ById('togBoldOrange').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togBoldGreen').addEventListener('change', function () {
+			Options.Colors.BoldGreen = ById('togBoldGreen').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togBoldMagenta').addEventListener('change', function () {
+			Options.Colors.BoldMagenta = ById('togBoldMagenta').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togReportVictory').addEventListener('change', function () {
+			Options.Colors.ReportVictory = ById('togReportVictory').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('togReportDefeat').addEventListener('change', function () {
+			Options.Colors.ReportDefeat = ById('togReportDefeat').value;
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ById('btResetColors').addEventListener('click', function () {
+			var Theme = ById('btTheme').value;
+			for (var p in Tabs.Options.Colors[Theme]) {
+				Options.Colors[p] = Tabs.Options.Colors[Theme][p];
+			}
+			saveOptions();
+			t.PaintAppearanceOptions();
+			t.RestartReminder();
+		}, false);
+		ChangeOption('', 'btTheme', 'Theme');
 	},
 
 	PaintUserOptions: function () {
@@ -21961,9 +22161,6 @@ Tabs.Options = {
 	PaintPBPOptions: function () {
 		var t = Tabs.Options;
 
-		var Themes = {};
-		for (var a in t.Colors) Themes[a] = tx(a);
-
 		m = '<TABLE width="100%">';
 		m += '<TR><TD class=xtab><INPUT id=btEveryEnable type=checkbox /></td><TD class=xtab>' + tx("Refresh KofC every") + ' <INPUT id=btEveryMins type=text size=2 maxlength=3 \> ' + tx("minutes") + '</td><TD class=xtab><INPUT id=btdetafk type=checkbox ' + (Options.detAFK ? 'CHECKED ' : '') + '/>&nbsp;' + tx("Only when AFK") + '&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=btEveryToggle type=checkbox ' + (Options.btEveryToggle ? 'CHECKED ' : '') + '/>&nbsp;' + tx("Add Toggle Button") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btAutoMist type=checkbox /></td><td class=xtab>' + tx('Automatically apply Potion of Mist when AFK') + '</td></tr>';
@@ -21984,18 +22181,6 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btTrafficOpt type=checkbox /></td><td class=xtab>' + tx('Display Server Traffic Monitor') + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>' + tx("Detect AFK when mouse and keyboard idle for") + ' <INPUT id=btafktimeout type=text size=2 maxlength=3 \> ' + tx("minutes") + '</td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>' + tx("Map lookup request interval") + ' <INPUT id=btmapinterval type=text size=2 maxlength=2 value="' + Options.MapInterval + '"\> ' + tx("seconds") + '</td></tr>';
-		m += '<TABLE><TR><TD class=xtab colspan=3><B>' + tx("PowerBot+ Colours") + '&nbsp;<span style="font-size:16px;color:#FF4D4D;">*</span></b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Title Background") + ': </td><TD class=xtab><INPUT id=togTitleBack type=text size=7 maxlength=7 value="' + Options.Colors.Title + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togTitleText type=text size=7 maxlength=7 value="' + Options.Colors.TitleText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Title + ';color:' + Options.Colors.TitleText + ';"><b>' + tx('Title') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=text size=7 maxlength=7 value="' + Options.Colors.DividerTop + '">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=text size=7 maxlength=7 value="' + Options.Colors.DividerBottom + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=text size=7 maxlength=7 value="' + Options.Colors.DividerText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=text size=7 maxlength=7 value="' + Options.Colors.Panel + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=text size=7 maxlength=7 value="' + Options.Colors.PanelText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=text size=7 maxlength=7 value="' + Options.Colors.Highlight + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=text size=7 maxlength=7 value="' + Options.Colors.HighlightText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#FF4D4D') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#FF4D4D') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=text size=7 maxlength=7 value="' + (Options.Colors.BoldGreen || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=text size=7 maxlength=7 value="' + (Options.Colors.BoldMagenta || '#808') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Report Result Colours") + ': </td><TD class=xtab><INPUT id=togReportVictory type=text size=7 maxlength=7 value="' + (Options.Colors.ReportVictory || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportVictory || '#080') + ';font-weight:bold;" width=50px>' + tx('Victory') + '</td><TD class=xtab>&nbsp;<INPUT id=togReportDefeat type=text size=7 maxlength=7 value="' + (Options.Colors.ReportDefeat || '#CC0000') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportDefeat || '#CC0000') + ';font-weight:bold;" width=50px>' + tx('Defeat') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
-		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
-		m += '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab><span style="opacity:0.7;">' + tx('Tip: use the Dark theme for a dark window interface') + '</span></td></tr>';
 
 		m += '</table>';
 
@@ -22011,113 +22196,12 @@ Tabs.Options = {
 		ToggleOption('', 'btAutoMistMarch', 'AutoMistMarch');
 		ToggleOption('', 'btdetafk', 'detAFK');
 
-		ById('togTitleBack').addEventListener('change', function () {
-			Options.Colors.Title = ById('togTitleBack').value;
-			saveOptions();
-			t.PaintPBPOptions();
-			t.RestartReminder();
-		}, false);
-		ById('togTitleText').addEventListener('change', function () {
-			Options.Colors.TitleText = ById('togTitleText').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togDividerTop').addEventListener('change', function () {
-			Options.Colors.DividerTop = ById('togDividerTop').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togDividerBottom').addEventListener('change', function () {
-			Options.Colors.DividerBottom = ById('togDividerBottom').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togDividerText').addEventListener('change', function () {
-			Options.Colors.DividerText = ById('togDividerText').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togPanelBack').addEventListener('change', function () {
-			Options.Colors.Panel = ById('togPanelBack').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togPanelText').addEventListener('change', function () {
-			Options.Colors.PanelText = ById('togPanelText').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togHighlightBack').addEventListener('change', function () {
-			Options.Colors.Highlight = ById('togHighlightBack').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togHighlightText').addEventListener('change', function () {
-			Options.Colors.HighlightText = ById('togHighlightText').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togBoldRed').addEventListener('change', function () {
-			Options.Colors.BoldRed = ById('togBoldRed').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togBoldOrange').addEventListener('change', function () {
-			Options.Colors.BoldOrange = ById('togBoldOrange').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togBoldGreen').addEventListener('change', function () {
-			Options.Colors.BoldGreen = ById('togBoldGreen').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togBoldMagenta').addEventListener('change', function () {
-			Options.Colors.BoldMagenta = ById('togBoldMagenta').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togReportVictory').addEventListener('change', function () {
-			Options.Colors.ReportVictory = ById('togReportVictory').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('togReportDefeat').addEventListener('change', function () {
-			Options.Colors.ReportDefeat = ById('togReportDefeat').value;
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-		ById('btResetColors').addEventListener('click', function () {
-			var Theme = ById('btTheme').value;
-			for (var p in Tabs.Options.Colors[Theme]) {
-				Options.Colors[p] = Tabs.Options.Colors[Theme][p];
-			}
-			saveOptions();
-			t.PaintPBPOptions()
-			t.RestartReminder();
-		}, false);
-
 		ToggleOption('', 'ptOneClickAttack', 'OneClickAttack', t.RestartReminder);
 		ToggleOption('', 'btDraggableCoords', 'DraggableCoords', t.RestartReminder);
 		ToggleOption('', 'btGreenCastles', 'GreenCastles', t.RestartReminder);
 		ToggleOption('', 'ptHideOnGoto', 'hideOnGoto');
 		ToggleOption('', 'ptFetchMarchInfo', 'FetchMarchInfo');
 		ToggleOption('', 'ptAlertOverrideChk', 'OverrideAttackAlert');
-		ChangeOption('', 'btTheme', 'Theme');
 		ChangeOption('', 'btafktimeout', 'AFKTimeout', afkdetector.reset);
 
 		ById('btquickscouttroops').addEventListener('change', function () {

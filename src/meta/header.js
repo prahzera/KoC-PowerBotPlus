@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Rediseño moderno de las ventanas del bot: bordes redondeados, sombras suaves, barra de título degradada, botones e inputs modernos, y selector 'Estilo de ventana' (Moderno/Clásico) en Opciones > General > Apariencia
+// @releasenotes        Rediseño de las pestañas (píldoras con esquinas redondeadas), botón de cerrar minimalista y nuevo panel 'Apariencia' en Opciones con color de acento personalizable (azul, verde, púrpura, naranja, rojo, según el tema o color a medida) y bloque de colores movido a ese panel
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

@@ -86,6 +86,25 @@ function btRaf(cb) {
 	return raf.call(window, cb);
 }
 
+function btAccentHex() {
+	if (!GlobalOptions.btAccent) return '#2f63b8';
+	if (GlobalOptions.btAccent == 'theme') return (Options.Colors.Title || '#342819');
+	if (GlobalOptions.btAccent.charAt(0) === '#') return GlobalOptions.btAccent;
+	switch (GlobalOptions.btAccent) {
+		case 'green': return '#2e8540';
+		case 'purple': return '#6f42c1';
+		case 'orange': return '#c2550a';
+		case 'red': return '#c0392b';
+		case 'blue':
+		default: return '#2f63b8';
+	}
+}
+
+function SetAccent() {
+	// Re-inyecta los estilos modernos para aplicar el nuevo acento en vivo
+	GM_addStyle(BotModernCSS());
+}
+
 function btShade(hex, amt) { // amt -1..1: negativo = más oscuro, positivo = más claro
 	if (!hex) { return hex; }
 	var c = HEXtoRGB(hex);
@@ -104,6 +123,9 @@ function BotModernCSS() {
 	var Panel = Options.Colors.Panel || '#F7F3E6';
 	var Title = Options.Colors.Title || '#342819';
 	var TitleDark = btShade(Title, -0.12);
+	var Accent = btAccentHex();
+	var AccentDark = btShade(Accent, -0.12);
+	var AccentBorder = btShade(Accent, 0.35);
 	return '\
 		/* === PowerBot+ modern window design === */\
 		body.btModern .btPopup {\
@@ -126,19 +148,24 @@ function BotModernCSS() {
 		body.btModern tr.btPopupTop td:first-child { border-top-left-radius: 12px !important; }\
 		body.btModern tr.btPopupTop td:last-child { border-top-right-radius: 12px !important; }\
 		body.btModern td[id$="_X"] {\
-			background: rgba(0,0,0,0.16) !important;\
+			background: transparent !important;\
 			border: none !important;\
-			border-radius: 7px !important;\
-			width: 15px !important;\
-			height: 15px !important;\
-			margin: 3px !important;\
-			font-size: 12px !important;\
-			line-height: 15px !important;\
+			border-radius: 0 !important;\
+			box-shadow: none !important;\
+			width: 14px !important;\
+			height: 14px !important;\
+			margin: 0 4px !important;\
+			color: rgba(255,255,255,0.85) !important;\
+			font-size: 15px !important;\
+			font-weight: 400 !important;\
+			line-height: 14px !important;\
+			text-shadow: none !important;\
+			transition: color .12s ease, transform .08s ease !important;\
 		}\
-		body.btModern td[id$="_X"]:hover { background: #c0392b !important; }\
+		body.btModern td[id$="_X"]:hover { color: #ff6b6b !important; transform: scale(1.3); background: transparent !important; }\
 		body.btModern a.inlineButton.btButton {\
 			background-image: none !important;\
-			background-color: #2f63b8 !important;\
+			background-color: ' + Accent + ' !important;\
 			border-radius: 5px;\
 			box-shadow: 0 1px 2px rgba(0,0,0,0.28);\
 			padding: 2px 9px;\
@@ -147,15 +174,35 @@ function BotModernCSS() {
 			color: #fff;\
 		}\
 		body.btModern a.inlineButton.btButton > span { background: none !important; color: inherit !important; text-shadow: none !important; }\
-		body.btModern a.inlineButton.btButton:hover { background-color: #3b74cd !important; filter: brightness(1.05); }\
+		body.btModern a.inlineButton.btButton:hover { background-color: ' + AccentDark + ' !important; filter: brightness(1.05); }\
 		body.btModern a.inlineButton.btButton.brown8 { background-color: #8a5a2b !important; }\
 		body.btModern a.inlineButton.btButton.brown8:hover { background-color: #a06a35 !important; }\
 		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
-			border-radius: 6px;\
-			box-shadow: 0 1px 2px rgba(0,0,0,0.2);\
+			background-image: none !important;\
+			background-color: rgba(0,0,0,0.06) !important;\
+			border: 1px solid rgba(0,0,0,0.10) !important;\
+			border-radius: 999px !important;\
+			box-shadow: none !important;\
+			width: auto !important;\
+			height: 24px !important;\
+			padding: 2px 14px !important;\
+			display: inline-block;\
+			color: #3a3a3a !important;\
+			font-weight: 600;\
+			text-shadow: none !important;\
+			transition: background-color .12s ease, color .12s ease, transform .08s ease;\
 		}\
+		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; white-space: nowrap !important; }\
+		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { background-color: rgba(0,0,0,0.10) !important; filter: none; }\
+		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.10) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"]:hover, body.btModern.btDarkTheme div[id^="bttc"]:hover { background-color: rgba(255,255,255,0.16) !important; }\
 		body.btModern a[id^="bttc"].buttonv2.green, body.btModern div[id^="bttc"].buttonv2.green {\
-			box-shadow: inset 0 0 0 2px rgba(0,60,0,0.4), 0 1px 2px rgba(0,0,0,0.25);\
+			background-image: linear-gradient(180deg, ' + Accent + ', ' + AccentDark + ') !important;\
+			background-color: ' + Accent + ' !important;\
+			border-color: ' + AccentBorder + ' !important;\
+			color: #fff !important;\
+			box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;\
+			text-shadow: none !important;\
 		}\
 		body.btModern a.buttonv2.std { border-radius: 6px; text-shadow: 0 1px 1px rgba(0,0,0,0.25); }\
 		body.btModern .divHeader { border-radius: 8px; letter-spacing: 0.3px; font-weight: 700; padding-left: 8px; }\
@@ -167,8 +214,8 @@ function BotModernCSS() {
 			background: #fff;\
 			color: #222;\
 		}\
-		body.btModern select:focus, body.btModern input:focus { outline: 2px solid rgba(47,99,184,0.35); border-color: #2f63b8; }\
-		body.btModern input[type=checkbox] { accent-color: #2f63b8; }\
+		body.btModern select:focus, body.btModern input:focus { outline: 2px solid ' + btShade(Accent, 0.4) + '; border-color: ' + Accent + '; }\
+		body.btModern input[type=checkbox] { accent-color: ' + Accent + '; }\
 		body.btModern #bot_comm_input { border-radius: 6px; padding: 2px 6px; }\
 		body.btModern .ui-tabs .ui-tabs-panel { font-family: inherit; }\
 		body.btModern.btDarkTheme select, body.btModern.btDarkTheme input.btInput, body.btModern.btDarkTheme input[type=text], body.btModern.btDarkTheme input[type=number] {\

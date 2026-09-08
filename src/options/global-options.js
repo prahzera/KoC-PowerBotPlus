@@ -19,6 +19,7 @@ var GlobalOptions = {
 	btAnimatePopups: true, // Animar apertura/cierre de ventanas emergentes
 	btReduceMotion: false, // Forzar reducción de movimiento (independiente del SO)
 	btWindowStyle: 'modern', // Estilo de ventanas: 'modern' | 'classic'
+	btAccent: 'blue', // Color de acento UI: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'theme' | <hex>
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,
