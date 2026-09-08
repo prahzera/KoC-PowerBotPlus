@@ -42,7 +42,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.13
+// @version			4.14
 // @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada y acento personalizable en todo el bot
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.13';
+var Version = '4.14';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
