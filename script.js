@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			4.13
-// @releasenotes        Pestañas con iconos SVG coloreadas según tipo (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada y acento personalizable en todo el bot
+// @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada y acento personalizable en todo el bot
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -3635,20 +3635,25 @@ function BotModernCSS() {
 			border: 1px solid rgba(0,0,0,0.12) !important;\
 			border-radius: 999px !important;\
 			box-shadow: none !important;\
-			width: auto !important;\
-			min-width: 62px;\
-			height: 22px !important;\
-			padding: 1px 12px !important;\
-			display: inline-block;\
+			height: 20px !important;\
+			padding: 0 10px !important;\
+			display: inline-flex;\
+			align-items: center;\
+			justify-content: center;\
+			gap: 5px;\
+			box-sizing: border-box !important;\
 			text-align: center;\
 			color: #3a3a3a !important;\
+			font-size: 11px;\
 			font-weight: 600;\
+			line-height: 1;\
 			text-shadow: none !important;\
 			transition: background-color .12s ease, color .12s ease, transform .08s ease;\
 		}\
 		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; height: auto !important; white-space: nowrap !important; }\
-		body.btModern span.btTabIcon { display: inline-block; margin-right: 5px; vertical-align: -2px; }\
-		body.btModern span.btTabIcon svg { display: block; }\
+		body.btModern span.btTabIcon { flex: 0 0 auto; line-height: 0; }\
+		body.btModern span.btTabIcon svg { width: 12px; height: 12px; display: block; }\
+		body.btModern span.btTabText { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: normal; }\
 		body.btModern a[id^="bttc"].brown, body.btModern div[id^="bttc"].brown { background-color: rgba(154,96,40,0.12) !important; border-color: rgba(154,96,40,0.30) !important; color: #7d4d1f !important; }\
 		body.btModern a[id^="bttc"].brown:hover, body.btModern div[id^="bttc"].brown:hover { background-color: rgba(154,96,40,0.20) !important; filter: none; }\
 		body.btModern a[id^="bttc"].red, body.btModern div[id^="bttc"].red { background-color: rgba(192,57,43,0.10) !important; border-color: rgba(192,57,43,0.30) !important; color: #a83227 !important; }\
@@ -4768,6 +4773,20 @@ function tabLabelWithIcon(name, label) {
 	return (icon ? '<span class=btTabIcon><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></span>' : '') + '<span class=btTabText>' + label + '</span>';
 }
 
+function btMeasureText(text) {
+	var r = ById('btTextRuler');
+	if (!r) {
+		r = document.createElement('span');
+		r.id = 'btTextRuler';
+		r.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;';
+		document.body.appendChild(r);
+	}
+	r.style.fontSize = '11px';
+	r.style.fontWeight = '600';
+	r.textContent = text;
+	return r.offsetWidth;
+}
+
 var tabManager = {
 	tabList: {}, // {name, obj, div}
 	currentTab: null,
@@ -4776,8 +4795,6 @@ var tabManager = {
 		var t = tabManager;
 		var sorter = [];
 		var LineBreak = 10;
-		if (GlobalOptions.btWinSize.x == 750) { LineBreak = 8; }
-		if (GlobalOptions.btWinSize.x == 1250) { LineBreak = 12; }
 
 		for (var k in Tabs) {
 			if (!Tabs[k].tabDisabled) {
@@ -4800,6 +4817,18 @@ var tabManager = {
 		}
 
 		sorter.sort(function (a, b) { return a[0] - b[0] });
+
+		var pillW = 90;
+		var maxW = 0;
+		for (var k in t.tabList) {
+			var tw = btMeasureText(t.tabList[k].label);
+			if (tw > maxW) maxW = tw;
+		}
+		pillW = Math.max(70, Math.min(140, maxW + 12 + 5 + 20 + 2));
+		var avail = GlobalOptions.btWinSize.x || 800;
+		if (avail == 750) { LineBreak = 8; } else if (avail == 1250) { LineBreak = 12; } else { LineBreak = 10; }
+		LineBreak = Math.max(5, Math.floor((avail - 16) / pillW));
+
 		var m = '<div align="center" title="PowerBot+ (Version ' + Version + ')"><b>' + btLogoIcon() + '&nbsp;PowerBot+</b>&nbsp;<span style="font-weight:400;font-size:10px;opacity:0.75;">' + Version + '</span></div>';
 
 		if (!GlobalOptions.btPowerBar) {
@@ -4826,6 +4855,7 @@ var tabManager = {
 		for (var k in t.tabList) {
 			if (t.tabList[k].name == Options.currentTab)
 				t.currentTab = t.tabList[k];
+			ById('bttc' + k).style.width = pillW + 'px';
 			ById('bttc' + k).addEventListener('click', this.e_clickedTab, false);
 			var div = t.tabList[k].div;
 			div.style.display = 'none';

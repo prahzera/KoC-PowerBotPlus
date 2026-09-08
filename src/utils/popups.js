@@ -343,6 +343,20 @@ function tabLabelWithIcon(name, label) {
 	return (icon ? '<span class=btTabIcon><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></span>' : '') + '<span class=btTabText>' + label + '</span>';
 }
 
+function btMeasureText(text) {
+	var r = ById('btTextRuler');
+	if (!r) {
+		r = document.createElement('span');
+		r.id = 'btTextRuler';
+		r.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;';
+		document.body.appendChild(r);
+	}
+	r.style.fontSize = '11px';
+	r.style.fontWeight = '600';
+	r.textContent = text;
+	return r.offsetWidth;
+}
+
 var tabManager = {
 	tabList: {}, // {name, obj, div}
 	currentTab: null,
@@ -351,8 +365,6 @@ var tabManager = {
 		var t = tabManager;
 		var sorter = [];
 		var LineBreak = 10;
-		if (GlobalOptions.btWinSize.x == 750) { LineBreak = 8; }
-		if (GlobalOptions.btWinSize.x == 1250) { LineBreak = 12; }
 
 		for (var k in Tabs) {
 			if (!Tabs[k].tabDisabled) {
@@ -375,6 +387,18 @@ var tabManager = {
 		}
 
 		sorter.sort(function (a, b) { return a[0] - b[0] });
+
+		var pillW = 90;
+		var maxW = 0;
+		for (var k in t.tabList) {
+			var tw = btMeasureText(t.tabList[k].label);
+			if (tw > maxW) maxW = tw;
+		}
+		pillW = Math.max(70, Math.min(140, maxW + 12 + 5 + 20 + 2));
+		var avail = GlobalOptions.btWinSize.x || 800;
+		if (avail == 750) { LineBreak = 8; } else if (avail == 1250) { LineBreak = 12; } else { LineBreak = 10; }
+		LineBreak = Math.max(5, Math.floor((avail - 16) / pillW));
+
 		var m = '<div align="center" title="PowerBot+ (Version ' + Version + ')"><b>' + btLogoIcon() + '&nbsp;PowerBot+</b>&nbsp;<span style="font-weight:400;font-size:10px;opacity:0.75;">' + Version + '</span></div>';
 
 		if (!GlobalOptions.btPowerBar) {
@@ -401,6 +425,7 @@ var tabManager = {
 		for (var k in t.tabList) {
 			if (t.tabList[k].name == Options.currentTab)
 				t.currentTab = t.tabList[k];
+			ById('bttc' + k).style.width = pillW + 'px';
 			ById('bttc' + k).addEventListener('click', this.e_clickedTab, false);
 			var div = t.tabList[k].div;
 			div.style.display = 'none';

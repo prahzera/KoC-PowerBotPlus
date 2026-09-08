@@ -275,20 +275,25 @@ function BotModernCSS() {
 			border: 1px solid rgba(0,0,0,0.12) !important;\
 			border-radius: 999px !important;\
 			box-shadow: none !important;\
-			width: auto !important;\
-			min-width: 62px;\
-			height: 22px !important;\
-			padding: 1px 12px !important;\
-			display: inline-block;\
+			height: 20px !important;\
+			padding: 0 10px !important;\
+			display: inline-flex;\
+			align-items: center;\
+			justify-content: center;\
+			gap: 5px;\
+			box-sizing: border-box !important;\
 			text-align: center;\
 			color: #3a3a3a !important;\
+			font-size: 11px;\
 			font-weight: 600;\
+			line-height: 1;\
 			text-shadow: none !important;\
 			transition: background-color .12s ease, color .12s ease, transform .08s ease;\
 		}\
 		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; height: auto !important; white-space: nowrap !important; }\
-		body.btModern span.btTabIcon { display: inline-block; margin-right: 5px; vertical-align: -2px; }\
-		body.btModern span.btTabIcon svg { display: block; }\
+		body.btModern span.btTabIcon { flex: 0 0 auto; line-height: 0; }\
+		body.btModern span.btTabIcon svg { width: 12px; height: 12px; display: block; }\
+		body.btModern span.btTabText { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: normal; }\
 		body.btModern a[id^="bttc"].brown, body.btModern div[id^="bttc"].brown { background-color: rgba(154,96,40,0.12) !important; border-color: rgba(154,96,40,0.30) !important; color: #7d4d1f !important; }\
 		body.btModern a[id^="bttc"].brown:hover, body.btModern div[id^="bttc"].brown:hover { background-color: rgba(154,96,40,0.20) !important; filter: none; }\
 		body.btModern a[id^="bttc"].red, body.btModern div[id^="bttc"].red { background-color: rgba(192,57,43,0.10) !important; border-color: rgba(192,57,43,0.30) !important; color: #a83227 !important; }\
