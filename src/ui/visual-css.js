@@ -88,16 +88,32 @@ function BotVisualCSS() {
 		}';
 }
 
+function btStyleNode(id, css) {
+	var el = ById(id);
+	if (!el) {
+		var head = document.head || document.getElementsByTagName('head')[0];
+		if (!head) { return null; }
+		el = document.createElement('style');
+		el.id = id;
+		head.appendChild(el);
+	}
+	if (css !== undefined) { el.textContent = css; }
+	return el;
+}
+
+function RefreshVisuals() {
+	btStyleNode('btVisualCss', BotVisualCSS());
+	btStyleNode('btModernCss', BotModernCSS());
+	if (Options.Theme == 'Dark') { document.body.classList.add('btDarkTheme'); }
+	else { document.body.classList.remove('btDarkTheme'); }
+}
+
 function ApplyBotVisuals() {
-	GM_addStyle(BotVisualCSS());
-	GM_addStyle(BotModernCSS());
+	RefreshVisuals();
 	var speed = GlobalOptions.btAnimSpeed || 'normal';
 	document.body.setAttribute('data-bt-anim', speed);
 	document.body.setAttribute('data-bt-reduce', GlobalOptions.btReduceMotion ? '1' : '0');
-	if (GlobalOptions.btWindowStyle == 'classic') { document.body.classList.remove('btModern'); }
-	else { document.body.classList.add('btModern'); }
-	if (Options.Theme == 'Dark') { document.body.classList.add('btDarkTheme'); }
-	else { document.body.classList.remove('btDarkTheme'); }
+	SetWindowStyle(GlobalOptions.btWindowStyle);
 }
 
 function SetAnimSpeed(speed) {
@@ -107,6 +123,17 @@ function SetAnimSpeed(speed) {
 function SetWindowStyle(style) {
 	if (style == 'classic') { document.body.classList.remove('btModern'); }
 	else { document.body.classList.add('btModern'); }
+}
+
+function SetTheme(theme) {
+	if (theme && window.Tabs && Tabs.Options && Tabs.Options.Colors && Tabs.Options.Colors[theme]) {
+		for (var p in Tabs.Options.Colors[theme]) {
+			Options.Colors[p] = Tabs.Options.Colors[theme][p];
+		}
+	}
+	Options.Theme = theme || 'Default';
+	saveOptions();
+	RefreshVisuals();
 }
 
 function btAnimMs() {
@@ -152,8 +179,8 @@ function btAccentHex() {
 }
 
 function SetAccent() {
-	// Re-inyecta los estilos modernos para aplicar el nuevo acento en vivo
-	GM_addStyle(BotModernCSS());
+	// Aplica el nuevo acento al instante sin recargar
+	RefreshVisuals();
 }
 
 function btShade(hex, amt) { // amt -1..1: negativo = más oscuro, positivo = más claro
@@ -272,6 +299,7 @@ function BotModernCSS() {
 		body.btDarkTheme .btBusyBox { background: #3a3d47; color: #E3E1D6; }\
 		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
 			background-image: none !important;\
+			background-color: #FFFFFF !important;\
 			border: 1px solid rgba(0,0,0,0.12) !important;\
 			border-radius: 999px !important;\
 			box-shadow: none !important;\
@@ -294,20 +322,20 @@ function BotModernCSS() {
 		body.btModern span.btTabIcon { flex: 0 0 auto; line-height: 0; }\
 		body.btModern span.btTabIcon svg { width: 12px; height: 12px; display: block; }\
 		body.btModern span.btTabText { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: normal; }\
-		body.btModern a[id^="bttc"].brown, body.btModern div[id^="bttc"].brown { background-color: rgba(154,96,40,0.12) !important; border-color: rgba(154,96,40,0.30) !important; color: #7d4d1f !important; }\
-		body.btModern a[id^="bttc"].brown:hover, body.btModern div[id^="bttc"].brown:hover { background-color: rgba(154,96,40,0.20) !important; filter: none; }\
-		body.btModern a[id^="bttc"].red, body.btModern div[id^="bttc"].red { background-color: rgba(192,57,43,0.10) !important; border-color: rgba(192,57,43,0.30) !important; color: #a83227 !important; }\
-		body.btModern a[id^="bttc"].red:hover, body.btModern div[id^="bttc"].red:hover { background-color: rgba(192,57,43,0.18) !important; filter: none; }\
-		body.btModern a[id^="bttc"].blue, body.btModern div[id^="bttc"].blue { background-color: rgba(47,99,184,0.10) !important; border-color: rgba(47,99,184,0.30) !important; color: #2b5aa8 !important; }\
-		body.btModern a[id^="bttc"].blue:hover, body.btModern div[id^="bttc"].blue:hover { background-color: rgba(47,99,184,0.18) !important; filter: none; }\
+		body.btModern a[id^="bttc"].brown, body.btModern div[id^="bttc"].brown { background-color: #F4E7D2 !important; border-color: rgba(154,96,40,0.45) !important; color: #7d4d1f !important; }\
+		body.btModern a[id^="bttc"].brown:hover, body.btModern div[id^="bttc"].brown:hover { background-color: #E9D7B9 !important; filter: none; }\
+		body.btModern a[id^="bttc"].red, body.btModern div[id^="bttc"].red { background-color: #F7DDD8 !important; border-color: rgba(192,57,43,0.45) !important; color: #a83227 !important; }\
+		body.btModern a[id^="bttc"].red:hover, body.btModern div[id^="bttc"].red:hover { background-color: #EFCAC3 !important; filter: none; }\
+		body.btModern a[id^="bttc"].blue, body.btModern div[id^="bttc"].blue { background-color: #DDE6F5 !important; border-color: rgba(47,99,184,0.45) !important; color: #2b5aa8 !important; }\
+		body.btModern a[id^="bttc"].blue:hover, body.btModern div[id^="bttc"].blue:hover { background-color: #CBD8EE !important; filter: none; }\
 		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { filter: none; }\
-		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"].brown, body.btModern.btDarkTheme div[id^="bttc"].brown { background-color: rgba(214,154,94,0.14) !important; border-color: rgba(214,154,94,0.32) !important; color: #e0bd94 !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"].brown:hover, body.btModern.btDarkTheme div[id^="bttc"].brown:hover { background-color: rgba(214,154,94,0.22) !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"].red, body.btModern.btDarkTheme div[id^="bttc"].red { background-color: rgba(240,120,104,0.14) !important; border-color: rgba(240,120,104,0.32) !important; color: #efb0a8 !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"].red:hover, body.btModern.btDarkTheme div[id^="bttc"].red:hover { background-color: rgba(240,120,104,0.22) !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"].blue, body.btModern.btDarkTheme div[id^="bttc"].blue { background-color: rgba(120,164,230,0.14) !important; border-color: rgba(120,164,230,0.32) !important; color: #b7cdf0 !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"].blue:hover, body.btModern.btDarkTheme div[id^="bttc"].blue:hover { background-color: rgba(120,164,230,0.22) !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: #2C2E36 !important; border-color: rgba(255,255,255,0.16) !important; color: #E3E1D6 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].brown, body.btModern.btDarkTheme div[id^="bttc"].brown { background-color: #39332B !important; border-color: rgba(214,154,94,0.45) !important; color: #e0bd94 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].brown:hover, body.btModern.btDarkTheme div[id^="bttc"].brown:hover { background-color: #453C30 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].red, body.btModern.btDarkTheme div[id^="bttc"].red { background-color: #3A2B2C !important; border-color: rgba(240,120,104,0.45) !important; color: #efb0a8 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].red:hover, body.btModern.btDarkTheme div[id^="bttc"].red:hover { background-color: #463334 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].blue, body.btModern.btDarkTheme div[id^="bttc"].blue { background-color: #29303E !important; border-color: rgba(120,164,230,0.45) !important; color: #b7cdf0 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].blue:hover, body.btModern.btDarkTheme div[id^="bttc"].blue:hover { background-color: #323B4B !important; }\
 		body.btModern a[id^="bttc"].buttonv2.green, body.btModern div[id^="bttc"].buttonv2.green {\
 			background-image: none !important;\
 			background-color: ' + Accent + ' !important;\

@@ -972,13 +972,13 @@ Tabs.Options = {
 			Options.Colors.Title = ById('togTitleBack').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togTitleText').addEventListener('change', function () {
 			Options.Colors.TitleText = ById('togTitleText').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togDividerTop').addEventListener('change', function () {
 			Options.Colors.DividerTop = ById('togDividerTop').value;
@@ -1002,13 +1002,13 @@ Tabs.Options = {
 			Options.Colors.Panel = ById('togPanelBack').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togPanelText').addEventListener('change', function () {
 			Options.Colors.PanelText = ById('togPanelText').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togHighlightBack').addEventListener('change', function () {
 			Options.Colors.Highlight = ById('togHighlightBack').value;
@@ -1065,9 +1065,12 @@ Tabs.Options = {
 			}
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
-		ChangeOption('', 'btTheme', 'Theme');
+		ById('btTheme').addEventListener('change', function () {
+			SetTheme(ById('btTheme').value);
+			t.PaintAppearanceOptions();
+		}, false);
 	},
 
 	PaintUserOptions: function () {
