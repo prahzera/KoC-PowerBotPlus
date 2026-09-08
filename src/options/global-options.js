@@ -20,6 +20,7 @@ var GlobalOptions = {
 	btReduceMotion: false, // Forzar reducción de movimiento (independiente del SO)
 	btWindowStyle: 'modern', // Estilo de ventanas: 'modern' | 'classic'
 	btAccent: 'blue', // Color de acento UI: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'theme' | <hex>
+	btTabColors: { blue: '#2b5aa8', brown: '#7d4d1f', red: '#a83227' }, // Colores base de los grupos de pestañas (tools / automations / key)
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,

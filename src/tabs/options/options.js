@@ -937,6 +937,10 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Title Background") + ': </td><TD class=xtab><INPUT id=togTitleBack type=color value="' + (normalizeHex(Options.Colors.Title) || '#342819') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togTitleText type=color value="' + (normalizeHex(Options.Colors.TitleText) || '#ffffff') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Title + ';color:' + Options.Colors.TitleText + ';"><b>' + tx('Title') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=color value="' + (normalizeHex(Options.Colors.DividerTop) || '#4b3a26') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=color value="' + (normalizeHex(Options.Colors.DividerBottom) || '#241a10') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=color value="' + (normalizeHex(Options.Colors.DividerText) || '#ffffff') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=color value="' + (normalizeHex(Options.Colors.Panel) || '#f7f3e6') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=color value="' + (normalizeHex(Options.Colors.PanelText) || '#000000') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
+		var TCBlue = normalizeHex((GlobalOptions.btTabColors || {}).blue) || '#2b5aa8';
+		var TCBrown = normalizeHex((GlobalOptions.btTabColors || {}).brown) || '#7d4d1f';
+		var TCRed = normalizeHex((GlobalOptions.btTabColors || {}).red) || '#a83227';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Tab colours") + ': </td><TD class=xtab><INPUT id=btTabColorBlue type=color value="' + TCBlue + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + btShade(TCBlue, 0.84) + ';color:' + TCBlue + ';font-weight:bold;" width=60px>' + tx('Tools') + '</td><TD class=xtab>&nbsp;<INPUT id=btTabColorBrown type=color value="' + TCBrown + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + btShade(TCBrown, 0.84) + ';color:' + TCBrown + ';font-weight:bold;" width=90px>' + tx('Automations') + '</td><TD class=xtab>&nbsp;<INPUT id=btTabColorRed type=color value="' + TCRed + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + btShade(TCRed, 0.84) + ';color:' + TCRed + ';font-weight:bold;" width=80px>' + tx('Highlights') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=color value="' + (normalizeHex(Options.Colors.Highlight) || '#ebdcc0') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=color value="' + (normalizeHex(Options.Colors.HighlightText) || '#000000') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=color value="' + (normalizeHex(Options.Colors.BoldRed) || '#ff4d4d') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#FF4D4D') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=color value="' + (normalizeHex(Options.Colors.BoldOrange) || '#ff8800') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=color value="' + (normalizeHex(Options.Colors.BoldGreen) || '#008800') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=color value="' + (normalizeHex(Options.Colors.BoldMagenta) || '#880088') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
@@ -1007,6 +1011,27 @@ Tabs.Options = {
 		ById('togPanelText').addEventListener('change', function () {
 			Options.Colors.PanelText = ById('togPanelText').value;
 			saveOptions();
+			t.PaintAppearanceOptions();
+			RefreshVisuals();
+		}, false);
+		ById('btTabColorBlue').addEventListener('change', function () {
+			GlobalOptions.btTabColors = GlobalOptions.btTabColors || {};
+			GlobalOptions.btTabColors.blue = ById('btTabColorBlue').value;
+			saveGlobalOptions();
+			t.PaintAppearanceOptions();
+			RefreshVisuals();
+		}, false);
+		ById('btTabColorBrown').addEventListener('change', function () {
+			GlobalOptions.btTabColors = GlobalOptions.btTabColors || {};
+			GlobalOptions.btTabColors.brown = ById('btTabColorBrown').value;
+			saveGlobalOptions();
+			t.PaintAppearanceOptions();
+			RefreshVisuals();
+		}, false);
+		ById('btTabColorRed').addEventListener('change', function () {
+			GlobalOptions.btTabColors = GlobalOptions.btTabColors || {};
+			GlobalOptions.btTabColors.red = ById('btTabColorRed').value;
+			saveGlobalOptions();
 			t.PaintAppearanceOptions();
 			RefreshVisuals();
 		}, false);
