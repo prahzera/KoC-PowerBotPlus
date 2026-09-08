@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.17
-// @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada, acento personalizable en todo el bot y todos los colores de apariencia (fondo de divisor, resaltados, texto en negrita de colores, victoria/derrota de reportes) aplicados al instante sin recargar la página, recoloreando también los reportes que ya estén abiertos y con pestañas inactivas de fondo sólido sin transparencias
+// @version			4.18
+// @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada, acento personalizable en todo el bot y todos los colores de apariencia (fondo de divisor, resaltados, texto en negrita de colores, victoria/derrota de reportes) aplicados al instante sin recargar la página, recoloreando también los reportes que ya estén abiertos y con pestañas inactivas de fondo sólido sin transparencias; corrección de un error que borraba todos los estilos del bot al cambiar el Fondo de Panel
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.17';
+var Version = '4.18';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -1031,6 +1031,7 @@ function PowerBotStartup() {
 		div.ErrText {color:#FF0000;}';
 		return styles;
 	}
+	window.BaseVisualCSS = BaseVisualCSS;
 
 	GM_addStyle("a.inlineButton.brown11 span {background: url(" + LONG_BROWN_BTN + ") no-repeat scroll left top transparent; !important}");
 	GM_addStyle(".castleBut.defending {border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: red;}");

@@ -160,6 +160,7 @@ function PowerBotStartup() {
 		div.ErrText {color:#FF0000;}';
 		return styles;
 	}
+	window.BaseVisualCSS = BaseVisualCSS;
 
 	GM_addStyle("a.inlineButton.brown11 span {background: url(" + LONG_BROWN_BTN + ") no-repeat scroll left top transparent; !important}");
 	GM_addStyle(".castleBut.defending {border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: red;}");
