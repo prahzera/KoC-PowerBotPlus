@@ -402,10 +402,10 @@ var tabManager = {
 		var m = '<div align="center" title="PowerBot+ (Version ' + Version + ')"><b>' + btLogoIcon() + '&nbsp;PowerBot+</b>&nbsp;<span style="font-weight:400;font-size:10px;opacity:0.75;">' + Version + '</span></div>';
 
 		if (!GlobalOptions.btPowerBar) {
-			m += '<TABLE align=center><TR>';
+			m += '<TABLE align=center style="border-spacing:4px 0;table-layout:fixed;"><TR>';
 			for (var i = 0; i < sorter.length; i++) {
 				var color = sorter[i][1].tabColor;
-				m += '<TD align=center ><div><A id=bttc' + sorter[i][1].name + ' class="buttonv2 std ' + color + '">' + tabLabelWithIcon(sorter[i][1].name, sorter[i][1].label) + '</a></div></td>';
+				m += '<TD align=center style="width:' + pillW + 'px;"><div style="width:' + pillW + 'px;margin:0 auto;"><A id=bttc' + sorter[i][1].name + ' class="buttonv2 std ' + color + '" style="width:100%;">' + tabLabelWithIcon(sorter[i][1].name, sorter[i][1].label) + '</a></div></td>';
 				if ((i + 1) % LineBreak == 0) m += '</tr><TR>';
 			}
 			m += '</tr></table>';
@@ -426,6 +426,8 @@ var tabManager = {
 			if (t.tabList[k].name == Options.currentTab)
 				t.currentTab = t.tabList[k];
 			ById('bttc' + k).style.width = pillW + 'px';
+			ById('bttc' + k).style.minWidth = pillW + 'px';
+			ById('bttc' + k).style.maxWidth = pillW + 'px';
 			ById('bttc' + k).addEventListener('click', this.e_clickedTab, false);
 			var div = t.tabList[k].div;
 			div.style.display = 'none';
