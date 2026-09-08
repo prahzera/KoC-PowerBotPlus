@@ -86,6 +86,15 @@ function btRaf(cb) {
 	return raf.call(window, cb);
 }
 
+function normalizeHex(h) {
+	if (!h) { return ''; }
+	h = String(h).trim();
+	if (h.charAt(0) == '#') { h = h.substr(1); }
+	if (/^[0-9a-fA-F]{3}$/.test(h)) { h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2); }
+	if (!/^[0-9a-fA-F]{6}$/.test(h)) { return ''; }
+	return '#' + h.toLowerCase();
+}
+
 function btAccentHex() {
 	if (!GlobalOptions.btAccent) return '#2f63b8';
 	if (GlobalOptions.btAccent == 'theme') return (Options.Colors.Title || '#342819');
@@ -125,7 +134,6 @@ function BotModernCSS() {
 	var TitleDark = btShade(Title, -0.12);
 	var Accent = btAccentHex();
 	var AccentDark = btShade(Accent, -0.12);
-	var AccentBorder = btShade(Accent, 0.35);
 	return '\
 		/* === PowerBot+ modern window design === */\
 		body.btModern .btPopup {\
@@ -179,31 +187,46 @@ function BotModernCSS() {
 		body.btModern a.inlineButton.btButton.brown8:hover { background-color: #a06a35 !important; }\
 		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
 			background-image: none !important;\
-			background-color: rgba(0,0,0,0.06) !important;\
-			border: 1px solid rgba(0,0,0,0.10) !important;\
+			border: 1px solid rgba(0,0,0,0.12) !important;\
 			border-radius: 999px !important;\
 			box-shadow: none !important;\
 			width: auto !important;\
-			height: 24px !important;\
-			padding: 2px 14px !important;\
+			min-width: 62px;\
+			height: 22px !important;\
+			padding: 1px 12px !important;\
 			display: inline-block;\
+			text-align: center;\
 			color: #3a3a3a !important;\
 			font-weight: 600;\
 			text-shadow: none !important;\
 			transition: background-color .12s ease, color .12s ease, transform .08s ease;\
 		}\
-		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; white-space: nowrap !important; }\
-		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { background-color: rgba(0,0,0,0.10) !important; filter: none; }\
-		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.10) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"]:hover, body.btModern.btDarkTheme div[id^="bttc"]:hover { background-color: rgba(255,255,255,0.16) !important; }\
+		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; height: auto !important; white-space: nowrap !important; }\
+		body.btModern span.btTabIcon { display: inline-block; margin-right: 5px; vertical-align: -2px; }\
+		body.btModern span.btTabIcon svg { display: block; }\
+		body.btModern a[id^="bttc"].brown, body.btModern div[id^="bttc"].brown { background-color: rgba(154,96,40,0.12) !important; border-color: rgba(154,96,40,0.30) !important; color: #7d4d1f !important; }\
+		body.btModern a[id^="bttc"].brown:hover, body.btModern div[id^="bttc"].brown:hover { background-color: rgba(154,96,40,0.20) !important; filter: none; }\
+		body.btModern a[id^="bttc"].red, body.btModern div[id^="bttc"].red { background-color: rgba(192,57,43,0.10) !important; border-color: rgba(192,57,43,0.30) !important; color: #a83227 !important; }\
+		body.btModern a[id^="bttc"].red:hover, body.btModern div[id^="bttc"].red:hover { background-color: rgba(192,57,43,0.18) !important; filter: none; }\
+		body.btModern a[id^="bttc"].blue, body.btModern div[id^="bttc"].blue { background-color: rgba(47,99,184,0.10) !important; border-color: rgba(47,99,184,0.30) !important; color: #2b5aa8 !important; }\
+		body.btModern a[id^="bttc"].blue:hover, body.btModern div[id^="bttc"].blue:hover { background-color: rgba(47,99,184,0.18) !important; filter: none; }\
+		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { filter: none; }\
+		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].brown, body.btModern.btDarkTheme div[id^="bttc"].brown { background-color: rgba(214,154,94,0.14) !important; border-color: rgba(214,154,94,0.32) !important; color: #e0bd94 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].brown:hover, body.btModern.btDarkTheme div[id^="bttc"].brown:hover { background-color: rgba(214,154,94,0.22) !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].red, body.btModern.btDarkTheme div[id^="bttc"].red { background-color: rgba(240,120,104,0.14) !important; border-color: rgba(240,120,104,0.32) !important; color: #efb0a8 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].red:hover, body.btModern.btDarkTheme div[id^="bttc"].red:hover { background-color: rgba(240,120,104,0.22) !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].blue, body.btModern.btDarkTheme div[id^="bttc"].blue { background-color: rgba(120,164,230,0.14) !important; border-color: rgba(120,164,230,0.32) !important; color: #b7cdf0 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].blue:hover, body.btModern.btDarkTheme div[id^="bttc"].blue:hover { background-color: rgba(120,164,230,0.22) !important; }\
 		body.btModern a[id^="bttc"].buttonv2.green, body.btModern div[id^="bttc"].buttonv2.green {\
-			background-image: linear-gradient(180deg, ' + Accent + ', ' + AccentDark + ') !important;\
+			background-image: none !important;\
 			background-color: ' + Accent + ' !important;\
-			border-color: ' + AccentBorder + ' !important;\
+			border-color: ' + Accent + ' !important;\
 			color: #fff !important;\
-			box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;\
+			box-shadow: none !important;\
 			text-shadow: none !important;\
 		}\
+		body.btModern a[id^="bttc"].buttonv2.green:hover, body.btModern div[id^="bttc"].buttonv2.green:hover { background-color: ' + AccentDark + ' !important; filter: none; }\
 		body.btModern a.buttonv2.std { border-radius: 6px; text-shadow: 0 1px 1px rgba(0,0,0,0.25); }\
 		body.btModern .divHeader { border-radius: 8px; letter-spacing: 0.3px; font-weight: 700; padding-left: 8px; }\
 		body.btModern table.xtab td.xtabHD, body.btModern table.xtab td.xtabHDDef { background: rgba(0,0,0,0.045); border-radius: 4px; }\

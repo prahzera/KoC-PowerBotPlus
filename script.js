@@ -3446,6 +3446,15 @@ function btRaf(cb) {
 	return raf.call(window, cb);
 }
 
+function normalizeHex(h) {
+	if (!h) { return ''; }
+	h = String(h).trim();
+	if (h.charAt(0) == '#') { h = h.substr(1); }
+	if (/^[0-9a-fA-F]{3}$/.test(h)) { h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2); }
+	if (!/^[0-9a-fA-F]{6}$/.test(h)) { return ''; }
+	return '#' + h.toLowerCase();
+}
+
 function btAccentHex() {
 	if (!GlobalOptions.btAccent) return '#2f63b8';
 	if (GlobalOptions.btAccent == 'theme') return (Options.Colors.Title || '#342819');
@@ -3485,7 +3494,6 @@ function BotModernCSS() {
 	var TitleDark = btShade(Title, -0.12);
 	var Accent = btAccentHex();
 	var AccentDark = btShade(Accent, -0.12);
-	var AccentBorder = btShade(Accent, 0.35);
 	return '\
 		/* === PowerBot+ modern window design === */\
 		body.btModern .btPopup {\
@@ -3539,31 +3547,46 @@ function BotModernCSS() {
 		body.btModern a.inlineButton.btButton.brown8:hover { background-color: #a06a35 !important; }\
 		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
 			background-image: none !important;\
-			background-color: rgba(0,0,0,0.06) !important;\
-			border: 1px solid rgba(0,0,0,0.10) !important;\
+			border: 1px solid rgba(0,0,0,0.12) !important;\
 			border-radius: 999px !important;\
 			box-shadow: none !important;\
 			width: auto !important;\
-			height: 24px !important;\
-			padding: 2px 14px !important;\
+			min-width: 62px;\
+			height: 22px !important;\
+			padding: 1px 12px !important;\
 			display: inline-block;\
+			text-align: center;\
 			color: #3a3a3a !important;\
 			font-weight: 600;\
 			text-shadow: none !important;\
 			transition: background-color .12s ease, color .12s ease, transform .08s ease;\
 		}\
-		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; white-space: nowrap !important; }\
-		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { background-color: rgba(0,0,0,0.10) !important; filter: none; }\
-		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.10) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
-		body.btModern.btDarkTheme a[id^="bttc"]:hover, body.btModern.btDarkTheme div[id^="bttc"]:hover { background-color: rgba(255,255,255,0.16) !important; }\
+		body.btModern a[id^="bttc"] span, body.btModern div[id^="bttc"] span { width: auto !important; height: auto !important; white-space: nowrap !important; }\
+		body.btModern span.btTabIcon { display: inline-block; margin-right: 5px; vertical-align: -2px; }\
+		body.btModern span.btTabIcon svg { display: block; }\
+		body.btModern a[id^="bttc"].brown, body.btModern div[id^="bttc"].brown { background-color: rgba(154,96,40,0.12) !important; border-color: rgba(154,96,40,0.30) !important; color: #7d4d1f !important; }\
+		body.btModern a[id^="bttc"].brown:hover, body.btModern div[id^="bttc"].brown:hover { background-color: rgba(154,96,40,0.20) !important; filter: none; }\
+		body.btModern a[id^="bttc"].red, body.btModern div[id^="bttc"].red { background-color: rgba(192,57,43,0.10) !important; border-color: rgba(192,57,43,0.30) !important; color: #a83227 !important; }\
+		body.btModern a[id^="bttc"].red:hover, body.btModern div[id^="bttc"].red:hover { background-color: rgba(192,57,43,0.18) !important; filter: none; }\
+		body.btModern a[id^="bttc"].blue, body.btModern div[id^="bttc"].blue { background-color: rgba(47,99,184,0.10) !important; border-color: rgba(47,99,184,0.30) !important; color: #2b5aa8 !important; }\
+		body.btModern a[id^="bttc"].blue:hover, body.btModern div[id^="bttc"].blue:hover { background-color: rgba(47,99,184,0.18) !important; filter: none; }\
+		body.btModern a[id^="bttc"]:hover, body.btModern div[id^="bttc"]:hover { filter: none; }\
+		body.btModern.btDarkTheme a[id^="bttc"], body.btModern.btDarkTheme div[id^="bttc"] { background-color: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.14) !important; color: #E3E1D6 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].brown, body.btModern.btDarkTheme div[id^="bttc"].brown { background-color: rgba(214,154,94,0.14) !important; border-color: rgba(214,154,94,0.32) !important; color: #e0bd94 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].brown:hover, body.btModern.btDarkTheme div[id^="bttc"].brown:hover { background-color: rgba(214,154,94,0.22) !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].red, body.btModern.btDarkTheme div[id^="bttc"].red { background-color: rgba(240,120,104,0.14) !important; border-color: rgba(240,120,104,0.32) !important; color: #efb0a8 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].red:hover, body.btModern.btDarkTheme div[id^="bttc"].red:hover { background-color: rgba(240,120,104,0.22) !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].blue, body.btModern.btDarkTheme div[id^="bttc"].blue { background-color: rgba(120,164,230,0.14) !important; border-color: rgba(120,164,230,0.32) !important; color: #b7cdf0 !important; }\
+		body.btModern.btDarkTheme a[id^="bttc"].blue:hover, body.btModern.btDarkTheme div[id^="bttc"].blue:hover { background-color: rgba(120,164,230,0.22) !important; }\
 		body.btModern a[id^="bttc"].buttonv2.green, body.btModern div[id^="bttc"].buttonv2.green {\
-			background-image: linear-gradient(180deg, ' + Accent + ', ' + AccentDark + ') !important;\
+			background-image: none !important;\
 			background-color: ' + Accent + ' !important;\
-			border-color: ' + AccentBorder + ' !important;\
+			border-color: ' + Accent + ' !important;\
 			color: #fff !important;\
-			box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;\
+			box-shadow: none !important;\
 			text-shadow: none !important;\
 		}\
+		body.btModern a[id^="bttc"].buttonv2.green:hover, body.btModern div[id^="bttc"].buttonv2.green:hover { background-color: ' + AccentDark + ' !important; filter: none; }\
 		body.btModern a.buttonv2.std { border-radius: 6px; text-shadow: 0 1px 1px rgba(0,0,0,0.25); }\
 		body.btModern .divHeader { border-radius: 8px; letter-spacing: 0.3px; font-weight: 700; padding-left: 8px; }\
 		body.btModern table.xtab td.xtabHD, body.btModern table.xtab td.xtabHDDef { background: rgba(0,0,0,0.045); border-radius: 4px; }\
@@ -4624,6 +4647,42 @@ function ResetWindowPos(me, el, pop) {
 	}
 }
 
+var TabIcons = {
+	Attack: '<path d="M7 3 L17 21 M17 3 L7 21"/><path d="M4 6 L9 10 M20 18 L15 14"/>',
+	Build: '<path d="M4 6 H14 V9 H4 Z"/><path d="M9 9 V17"/>',
+	Transport: '<path d="M4 7 L12 3 L20 7 V17 L12 21 L4 17 Z"/><path d="M4 7 L12 11 L20 7"/><path d="M12 11 V21"/>',
+	Nomad: '<path d="M12 4 L21 19 H3 Z"/><path d="M12 10 L9.5 14.5"/>',
+	Gift: '<rect x="4" y="10" width="16" height="10" rx="1"/><path d="M12 10 V20 M4 14 H20"/><rect x="10.5" y="8" width="3" height="3"/>',
+	Fort: '<path d="M12 3 L19 6 V12 C19 17 16 20 12 22 C8 20 5 17 5 12 V6 Z"/>',
+	Train: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+	Spells: '<path d="M12 2 L14 9 L21 11 L14 13 L12 20 L10 13 L3 11 L10 9 Z"/>',
+	Craft: '<path d="M9 3 H15 M10 3 V8 L5 17 A2 2 0 0 0 7 20 H17 A2 2 0 0 0 19 17 L14 8 V3"/><path d="M8 14 H16"/>',
+	Reassign: '<path d="M4 7 H18 M18 7 L15 4 M18 7 L15 10"/><path d="M20 17 H6 M6 17 L9 14 M6 17 L9 20"/>',
+	BulkScout: '<circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 L21 21"/>',
+	ScoutReports: '<path d="M6 3 H15 L19 7 V21 H6 Z"/><path d="M15 3 V7 H19"/><path d="M9 12 H15 M9 16 H15"/>',
+	Revive: '<path d="M20.8 4.6 A5.5 5.5 0 0 0 12 5.7 L12 5.7 A5.5 5.5 0 0 0 3.2 4.6 A5.5 5.5 0 0 0 3.2 12.4 L12 21 L20.8 12.4 A5.5 5.5 0 0 0 20.8 4.6 Z"/>',
+	Options: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+	ActionLog: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><path d="M3 6 H3.01 M3 12 H3.01 M3 18 H3.01"/>',
+	Alliance: '<path d="M4 22 V3 M4 3 H18 L15 7 L18 11 H4"/>',
+	Inventory: '<path d="M6 6 H18 A2 2 0 0 1 20 8 V19 A2 2 0 0 1 18 21 H6 A2 2 0 0 1 4 19 V8 A2 2 0 0 1 6 6 Z"/><path d="M12 6 V4 A2 2 0 0 1 16 4"/><path d="M6 14 H18"/>',
+	Messages: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7 L12 13 L21 7"/>',
+	GloryFarm: '<path d="M12 2 L14.5 8.5 L21 9 L16 13.5 L17.5 20 L12 16.5 L6.5 20 L8 13.5 L3 9 L9.5 8.5 Z"/>',
+	Knights: '<path d="M12 2 V19"/><path d="M8 5 H16"/><path d="M9 19 H15"/>',
+	Notes: '<path d="M4 20 L5 15 L16 4 L20 8 L9 19 Z"/><path d="M14 6 L18 10"/>',
+	Monitor: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21 H16 M12 17 V21"/>',
+	Wilds: '<path d="M17 8 C17 4 13 2 12 2 C11 2 7 4 7 8 C7 8 3 10 3 14 C3 17 6 19 8 19 H16 C18 19 21 17 21 14 C21 10 17 8 17 8 Z"/><path d="M12 19 V22"/>',
+	Search: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 L13.5 13.5 L8.5 15.5 L10.5 10.5 Z"/>',
+	OverView: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9 H21 M9 3 V21"/>',
+	Whisper: '<path d="M21 11.5 A8.5 8.5 0 0 1 5.5 16.8 L3 21 L6.3 18.9 A8.5 8.5 0 1 1 21 11.5 Z"/>',
+	Player: '<path d="M20 21 V19 A4 4 0 0 0 16 15 H8 A4 4 0 0 0 4 19 V21"/><circle cx="12" cy="7" r="4"/>',
+	Reference: '<path d="M4 19.5 A2.5 2.5 0 0 1 6.5 17 H20"/><path d="M6.5 2 H20 V22 H6.5 A2.5 2.5 0 0 1 4 19.5 V4.5 A2.5 2.5 0 0 1 6.5 2 Z"/>'
+};
+
+function tabLabelWithIcon(name, label) {
+	var icon = TabIcons[name] || '';
+	return (icon ? '<span class=btTabIcon><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg></span>' : '') + '<span class=btTabText>' + label + '</span>';
+}
+
 var tabManager = {
 	tabList: {}, // {name, obj, div}
 	currentTab: null,
@@ -4662,7 +4721,7 @@ var tabManager = {
 			m += '<TABLE align=center><TR>';
 			for (var i = 0; i < sorter.length; i++) {
 				var color = sorter[i][1].tabColor;
-				m += '<TD align=center ><div><A id=bttc' + sorter[i][1].name + ' class="buttonv2 std ' + color + '"><span style="white-space:nowrap;display:inline-block;width:72px;">' + sorter[i][1].label + '</span></a></div></td>';
+				m += '<TD align=center ><div><A id=bttc' + sorter[i][1].name + ' class="buttonv2 std ' + color + '">' + tabLabelWithIcon(sorter[i][1].name, sorter[i][1].label) + '</a></div></td>';
 				if ((i + 1) % LineBreak == 0) m += '</tr><TR>';
 			}
 			m += '</tr></table>';
@@ -4672,7 +4731,7 @@ var tabManager = {
 			if (GlobalOptions.btPowerBarPopups) { n = '<div id=btPowerBarExtra style="padding-bottom:5px;"></div>'; }
 			for (var i = 0; i < sorter.length; i++) {
 				var color = sorter[i][1].tabColor;
-				n += '<a class=TextLink><div id=bttc' + sorter[i][1].name + ' class="buttonv2 std ' + color + '">' + sorter[i][1].label + '</div></a>';
+				n += '<a class=TextLink><div id=bttc' + sorter[i][1].name + ' class="buttonv2 std ' + color + '">' + tabLabelWithIcon(sorter[i][1].name, sorter[i][1].label) + '</div></a>';
 			}
 			ById('btPowerBarButtons').innerHTML = n;
 		}
@@ -20814,18 +20873,18 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Window Style") + ': ' + htmlSelector({ modern: tx('Modern'), classic: tx('Classic') }, GlobalOptions.btWindowStyle, 'id=btWindowStyle') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Accent Color") + ': ' + htmlSelector(AccentColors, AccentVal, 'id=btAccent') + '</td></tr>';
-		m += '<TR id=btAccentHexRow><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Custom") + ': <INPUT id=btAccentHex type=text size=7 maxlength=7 value="' + (GlobalOptions.btAccent && GlobalOptions.btAccent.charAt(0) === '#' ? GlobalOptions.btAccent : '#2f63b8') + '"></td></tr>';
+		m += '<TR id=btAccentHexRow><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Custom") + ': <INPUT id=btAccentHex type=color value="' + (normalizeHex(GlobalOptions.btAccent) || '#2f63b8') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
 		m += '<TR><TD class=xtab colspan=3><B>' + tx("PowerBot+ Colours") + '&nbsp;<span style="font-size:16px;color:#FF4D4D;">*</span></b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Title Background") + ': </td><TD class=xtab><INPUT id=togTitleBack type=text size=7 maxlength=7 value="' + Options.Colors.Title + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togTitleText type=text size=7 maxlength=7 value="' + Options.Colors.TitleText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Title + ';color:' + Options.Colors.TitleText + ';"><b>' + tx('Title') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=text size=7 maxlength=7 value="' + Options.Colors.DividerTop + '">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=text size=7 maxlength=7 value="' + Options.Colors.DividerBottom + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=text size=7 maxlength=7 value="' + Options.Colors.DividerText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=text size=7 maxlength=7 value="' + Options.Colors.Panel + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=text size=7 maxlength=7 value="' + Options.Colors.PanelText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=text size=7 maxlength=7 value="' + Options.Colors.Highlight + '"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=text size=7 maxlength=7 value="' + Options.Colors.HighlightText + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=text size=7 maxlength=7 value="' + (Options.Colors.BoldRed || '#FF4D4D') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#FF4D4D') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=text size=7 maxlength=7 value="' + (Options.Colors.BoldOrange || '#F80') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=text size=7 maxlength=7 value="' + (Options.Colors.BoldGreen || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=text size=7 maxlength=7 value="' + (Options.Colors.BoldMagenta || '#808') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
-		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Report Result Colours") + ': </td><TD class=xtab><INPUT id=togReportVictory type=text size=7 maxlength=7 value="' + (Options.Colors.ReportVictory || '#080') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportVictory || '#080') + ';font-weight:bold;" width=50px>' + tx('Victory') + '</td><TD class=xtab>&nbsp;<INPUT id=togReportDefeat type=text size=7 maxlength=7 value="' + (Options.Colors.ReportDefeat || '#CC0000') + '"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportDefeat || '#CC0000') + ';font-weight:bold;" width=50px>' + tx('Defeat') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Title Background") + ': </td><TD class=xtab><INPUT id=togTitleBack type=color value="' + (normalizeHex(Options.Colors.Title) || '#342819') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togTitleText type=color value="' + (normalizeHex(Options.Colors.TitleText) || '#ffffff') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Title + ';color:' + Options.Colors.TitleText + ';"><b>' + tx('Title') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Divider Background") + ': </td><TD class=xtab><INPUT id=togDividerTop type=color value="' + (normalizeHex(Options.Colors.DividerTop) || '#4b3a26') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;">&nbsp;-&nbsp;<INPUT id=togDividerBottom type=color value="' + (normalizeHex(Options.Colors.DividerBottom) || '#241a10') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togDividerText type=color value="' + (normalizeHex(Options.Colors.DividerText) || '#ffffff') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background: -moz-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + '); background: -webkit-linear-gradient(top, ' + Options.Colors.DividerTop + ', ' + Options.Colors.DividerBottom + ');color:' + Options.Colors.DividerText + ';"><b>' + tx('DIVIDER') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Panel Background") + ': </td><TD class=xtab><INPUT id=togPanelBack type=color value="' + (normalizeHex(Options.Colors.Panel) || '#f7f3e6') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togPanelText type=color value="' + (normalizeHex(Options.Colors.PanelText) || '#000000') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Panel + ';color:' + Options.Colors.PanelText + ';">' + tx('Panel') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Highlight Background") + ': </td><TD class=xtab><INPUT id=togHighlightBack type=color value="' + (normalizeHex(Options.Colors.Highlight) || '#ebdcc0') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD class=xtab>Text: </td><TD class=xtab><INPUT id=togHighlightText type=color value="' + (normalizeHex(Options.Colors.HighlightText) || '#000000') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:' + Options.Colors.Highlight + ';color:' + Options.Colors.HighlightText + ';"><b>' + tx('Highlight') + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Bold Text Colours") + ': </td><TD class=xtab><INPUT id=togBoldRed type=color value="' + (normalizeHex(Options.Colors.BoldRed) || '#ff4d4d') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldRed || '#FF4D4D') + ';font-weight:bold;" width=50px>' + tx('Red') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldOrange type=color value="' + (normalizeHex(Options.Colors.BoldOrange) || '#ff8800') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldOrange || '#F80') + ';font-weight:bold;" width=50px>' + tx('Orange') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab><INPUT id=togBoldGreen type=color value="' + (normalizeHex(Options.Colors.BoldGreen) || '#008800') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldGreen || '#080') + ';font-weight:bold;" width=50px>' + tx('Green') + '</td><TD class=xtab>&nbsp;<INPUT id=togBoldMagenta type=color value="' + (normalizeHex(Options.Colors.BoldMagenta) || '#880088') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.BoldMagenta || '#808') + ';font-weight:bold;" width=50px>' + tx('Magenta') + '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD class=xtab>' + tx("Report Result Colours") + ': </td><TD class=xtab><INPUT id=togReportVictory type=color value="' + (normalizeHex(Options.Colors.ReportVictory) || '#008800') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportVictory || '#080') + ';font-weight:bold;" width=50px>' + tx('Victory') + '</td><TD class=xtab>&nbsp;<INPUT id=togReportDefeat type=color value="' + (normalizeHex(Options.Colors.ReportDefeat) || '#cc0000') + '" style="width:34px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"></td><TD cellpadding=2 align=center style="border:1px solid #888888;background-color:#FFF;color:' + (Options.Colors.ReportDefeat || '#CC0000') + ';font-weight:bold;" width=50px>' + tx('Defeat') + '</td></tr>';
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
 		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
 		m += '</td></tr>';
