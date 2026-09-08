@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			3.98
-// @releasenotes	        Search: render throttled, paginación de resultados y optimización de cola de última conexión para búsquedas grandes
+// @version			3.99
+// @releasenotes	        Traducciones al español completadas en la pestaña de reportes (búsqueda, exploración, resúmenes de batalla y alianza)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '3.98';
+var Version = '3.99';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -15940,8 +15940,8 @@ var Rpt = {
 			}
 			h += '</div>';
 			h += '<div id=reportHeaderRight style="float:right;width:30%;text-align:right;">';
-			h += 'Report No: ' + reportId;
-			h += '<br><input id=ptpostreportid onclick="Chat.sendChat(\'/a Report No: ' + enFilter(reportId) + '\')" style="font-size:9px" type="submit" value="' + tx('Post To Chat') + '">';
+			h += tx('Report No') + ': ' + reportId;
+			h += '<br><input id=ptpostreportid onclick="Chat.sendChat(\'/a ' + tx('Report No') + ': ' + enFilter(reportId) + '\')" style="font-size:9px" type="submit" value="' + tx('Post To Chat') + '">';
 			if ((rpt.side1PlayerId && (rpt.side1PlayerId == uW.tvuid)) || (rpt.side0PlayerId && (rpt.side0PlayerId == uW.tvuid))) { h += '&nbsp;<input id=ptDeleteReport style="color:#f00;font-size:9px" type="submit" value="' + uW.g_js_strings.commonstr.deletetx + '">'; } //Delete button for own reports
 			h += '</div></div><div style="clear:both;"></div>';
 			return h;
@@ -16002,7 +16002,7 @@ var Rpt = {
 				m += '<FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '"><B> ' + tx('Winner') + '</B></FONT>';
 			m += '<br>';
 			if (rpt.side1AllianceId && (rpt.side1AllianceId != 0)) m += uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side1AllianceId) + '>' + rpt.side1AllianceName + '</span><br>';
-			if (rpt.side1PlayerId && (rpt.side1PlayerId != 0)) m += 'UID:&nbsp;' + MonitorLinkUID(rpt.side1PlayerId) + '<br>';
+			if (rpt.side1PlayerId && (rpt.side1PlayerId != 0)) m += tx('UID') + ':&nbsp;' + MonitorLinkUID(rpt.side1PlayerId) + '<br>';
 			if (rpt.marchName == uW.g_js_strings.commonstr.attack || rpt.marchName == uW.g_js_strings.commonstr.defend)
 				m += tx('Knight Combat Skill') + ': ' + rslt['s1KCombatLv'] + '<br>';
 			if (rslt['s1spell'] && (rslt['s1spell'] != "0")) {
@@ -16016,7 +16016,7 @@ var Rpt = {
 				m += '<FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '"><B> ' + tx('Winner') + '</B></FONT>';
 			m += '<br>';
 			if (rpt.side0AllianceId && (rpt.side0AllianceId != 0)) m += uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side0AllianceId) + '>' + rpt.side0AllianceName + '</span><br>';
-			if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += 'UID:' + MonitorLinkUID(rpt.side0PlayerId) + '<br>';
+			if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += tx('UID') + ':' + MonitorLinkUID(rpt.side0PlayerId) + '<br>';
 			if (rpt.marchName == uW.g_js_strings.commonstr.attack || rpt.marchName == uW.g_js_strings.commonstr.defend)
 				m += tx('Knight Combat Skill') + ': ' + rslt['s0KCombatLv'] + '<br>';
 			if (rslt['s0spell'] && (rslt['s0spell'] != "0")) {
@@ -16867,7 +16867,7 @@ var Rpt = {
 				m += '<TABLE class=ptTab width=100%>';
 				m += '<TR><TD>' + rpt.side0Name + ' (<A onclick="btGotoMapRpt(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>)</td></tr>';
 				if (rpt.side0AllianceId && (rpt.side0AllianceId != 0)) m += '<TR><TD>' + uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side0AllianceId) + '>' + rpt.side0AllianceName + '</span></td></tr>';
-				if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += '<TR><TD>UID: ' + MonitorLinkUID(rpt.side0PlayerId) + '</td></tr>';
+				if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += '<TR><TD>' + tx('UID') + ': ' + MonitorLinkUID(rpt.side0PlayerId) + '</td></tr>';
 				if (rslt['lstlgn']) {
 					if (!rslt['lstlgn'])
 						m += '<TR><TD>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + tx('Not recorded') + '</TD></TR>';
@@ -17369,11 +17369,11 @@ var battleReports = {
 	},
 	hook2: function (msg, args, rslt) {
 		if (rslt.rnds && Options.dispBattleRounds) {
-			msg = msg.replace(/<\/ul>.*\s*<\/div>.*\s*<div class="unitsContainer">/im, '<li><span class=\'label\'>Rounds: </span><span class=\'value\'>' + rslt.rnds + '</span></li></ul></div><div class="unitsContainer">');
+			msg = msg.replace(/<\/ul>.*\s*<\/div>.*\s*<div class="unitsContainer">/im, '<li><span class=\'label\'>' + tx('Rounds') + ': </span><span class=\'value\'>' + rslt.rnds + '</span></li></ul></div><div class="unitsContainer">');
 		}
 		if (Options.reportDeleteButton) {
-			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'PostReport(' + args[0] + ',false)\'><span>Post To Chat</span></a>'); //Post to Chat button
-			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'MoreReport(' + args[0] + ',' + args[1] + ',false)\'><span>More</span></a>'); //More button
+			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'PostReport(' + args[0] + ',false)\'><span>' + tx('Post To Chat') + '</span></a>'); //Post to Chat button
+			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'MoreReport(' + args[0] + ',' + args[1] + ',false)\'><span>' + tx('More') + '</span></a>'); //More button
 			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'deleteAreport(' + args[0] + ',false)\'><span>' + uW.g_js_strings.commonstr.deletetx + '</span></a>'); //Delete button
 		}
 		return msg;
@@ -17381,7 +17381,7 @@ var battleReports = {
 	hook: function (msg, rslt) {
 		msg = msg.replace(/(\bReport\sNo\:\s([0-9]+))/g, '<a onclick=\'ptChatReportClicked($2,0)\'>$1</a>');
 		if (rslt.rnds && Options.dispBattleRounds) {
-			msg = msg.replace(/(Attackers <span.*?)<\/div>/im, '$1<BR>Rounds: ' + rslt.rnds + '</div>');
+			msg = msg.replace(/(Attackers <span.*?)<\/div>/im, '$1<BR>' + tx('Rounds') + ': ' + rslt.rnds + '</div>');
 		}
 		return msg;
 	},
@@ -18327,7 +18327,7 @@ var AllianceReports = {
 					}
 					msg += "<tr valign=top";
 					if (i % 2 == 0) msg += " class=stripe";
-					msg += "><TD class=" + colClass + "><div>" + uW.formatDateByUnixTime(rpt.reportUnixTime) + "<BR>Rpt&nbsp;<a onclick='FindReport(" + rpt.reportId + ",0);return false;'>#" + rpt.reportId + "</a>";
+					msg += "><TD class=" + colClass + "><div>" + uW.formatDateByUnixTime(rpt.reportUnixTime) + "<BR>" + tx('Rpt') + "&nbsp;<a onclick='FindReport(" + rpt.reportId + ",0);return false;'>#" + rpt.reportId + "</a>";
 					msg += "</div></td><TD class=" + colClass + "><div>";
 					if (rpt.marchType == 1) msg += uW.g_js_strings.commonstr.transport;
 					else if (rpt.marchType == 3) msg += uW.g_js_strings.commonstr.scout;
@@ -18460,10 +18460,10 @@ var AllianceReportsCheck = {
 					else if (rpt.side0TileType <= 50) { target = tx("wild"); }
 					var allianceName = '';
 					if (parseIntNan(rpt.side1AllianceId) != 0) {
-						allianceName = ' of ' + allianceNames["a" + rpt.side1AllianceId] + ' (' + getDiplomacy(rpt.side1AllianceId) + ')';
+						allianceName = tx(' of ') + allianceNames["a" + rpt.side1AllianceId] + ' (' + getDiplomacy(rpt.side1AllianceId) + ')';
 					}
 					var date = uW.formatDateByUnixTime(rpt.reportUnixTime);
-					var msg = ':::. | Report No: ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerNames['p' + rpt.side0PlayerId] + '\'s ' + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by') + ' ' + playerNames["p" + rpt.side1PlayerId] + ' ' + tx('at') + ' ' + rpt.side1XCoord + ',' + rpt.side1YCoord + allianceName;
+					var msg = ':::. | ' + tx('Report No') + ': ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerNames['p' + rpt.side0PlayerId] + '\'s ' + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by') + ' ' + playerNames["p" + rpt.side1PlayerId] + ' ' + tx('at') + ' ' + rpt.side1XCoord + ',' + rpt.side1YCoord + allianceName;
 					t.fetchreport(ID, rpt, msg, playerNames, cityNames, rpt.side0TileType, rpt.marchType);
 					t.addAllianceReport(rpt);
 				}
@@ -18491,7 +18491,7 @@ var AllianceReportsCheck = {
 					if (parseInt(rpt.side0PlayerId) == 0) { var playerName = ''; }
 					else { var playerName = playerNames['p' + rpt.side0PlayerId] + '\'s '; }
 					var date = uW.formatDateByUnixTime(rpt.reportUnixTime);
-					var msg = ':::. | Report No: ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerName + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by you');
+					var msg = ':::. | ' + tx('Report No') + ': ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerName + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by you');
 					var automsg = sendChat("/" + Seed.player.name + ' ' + msg);
 					t.addAllianceReport(rpt);
 				}
@@ -32818,7 +32818,7 @@ Tabs.Messages = {
 					}
 					t.report[reportId].side0TileTypeText = totile;
 
-					totile = 'Lvl ' + rpt.side0TileLevel + ' ' + totile;
+					totile = tx('Lvl') + ' ' + rpt.side0TileLevel + ' ' + totile;
 					t.report[reportId].side0TileTypeLevel = totile;
 
 					t.report[reportId].side0TileType = rpt.side0TileType;

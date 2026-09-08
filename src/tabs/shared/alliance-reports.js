@@ -98,7 +98,7 @@ var AllianceReports = {
 					}
 					msg += "<tr valign=top";
 					if (i % 2 == 0) msg += " class=stripe";
-					msg += "><TD class=" + colClass + "><div>" + uW.formatDateByUnixTime(rpt.reportUnixTime) + "<BR>Rpt&nbsp;<a onclick='FindReport(" + rpt.reportId + ",0);return false;'>#" + rpt.reportId + "</a>";
+					msg += "><TD class=" + colClass + "><div>" + uW.formatDateByUnixTime(rpt.reportUnixTime) + "<BR>" + tx('Rpt') + "&nbsp;<a onclick='FindReport(" + rpt.reportId + ",0);return false;'>#" + rpt.reportId + "</a>";
 					msg += "</div></td><TD class=" + colClass + "><div>";
 					if (rpt.marchType == 1) msg += uW.g_js_strings.commonstr.transport;
 					else if (rpt.marchType == 3) msg += uW.g_js_strings.commonstr.scout;
@@ -231,10 +231,10 @@ var AllianceReportsCheck = {
 					else if (rpt.side0TileType <= 50) { target = tx("wild"); }
 					var allianceName = '';
 					if (parseIntNan(rpt.side1AllianceId) != 0) {
-						allianceName = ' of ' + allianceNames["a" + rpt.side1AllianceId] + ' (' + getDiplomacy(rpt.side1AllianceId) + ')';
+						allianceName = tx(' of ') + allianceNames["a" + rpt.side1AllianceId] + ' (' + getDiplomacy(rpt.side1AllianceId) + ')';
 					}
 					var date = uW.formatDateByUnixTime(rpt.reportUnixTime);
-					var msg = ':::. | Report No: ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerNames['p' + rpt.side0PlayerId] + '\'s ' + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by') + ' ' + playerNames["p" + rpt.side1PlayerId] + ' ' + tx('at') + ' ' + rpt.side1XCoord + ',' + rpt.side1YCoord + allianceName;
+					var msg = ':::. | ' + tx('Report No') + ': ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerNames['p' + rpt.side0PlayerId] + '\'s ' + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by') + ' ' + playerNames["p" + rpt.side1PlayerId] + ' ' + tx('at') + ' ' + rpt.side1XCoord + ',' + rpt.side1YCoord + allianceName;
 					t.fetchreport(ID, rpt, msg, playerNames, cityNames, rpt.side0TileType, rpt.marchType);
 					t.addAllianceReport(rpt);
 				}
@@ -262,7 +262,7 @@ var AllianceReportsCheck = {
 					if (parseInt(rpt.side0PlayerId) == 0) { var playerName = ''; }
 					else { var playerName = playerNames['p' + rpt.side0PlayerId] + '\'s '; }
 					var date = uW.formatDateByUnixTime(rpt.reportUnixTime);
-					var msg = ':::. | Report No: ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerName + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by you');
+					var msg = ':::. | ' + tx('Report No') + ': ' + enFilter(rpt.reportId) + ' || ' + date + ' || ' + playerName + target + ' ' + tx('at') + ' ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' ' + tx('has been') + ' ' + atkType + ' ' + tx('by you');
 					var automsg = sendChat("/" + Seed.player.name + ' ' + msg);
 					t.addAllianceReport(rpt);
 				}

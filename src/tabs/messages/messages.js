@@ -435,7 +435,7 @@ Tabs.Messages = {
 					}
 					t.report[reportId].side0TileTypeText = totile;
 
-					totile = 'Lvl ' + rpt.side0TileLevel + ' ' + totile;
+					totile = tx('Lvl') + ' ' + rpt.side0TileLevel + ' ' + totile;
 					t.report[reportId].side0TileTypeLevel = totile;
 
 					t.report[reportId].side0TileType = rpt.side0TileType;

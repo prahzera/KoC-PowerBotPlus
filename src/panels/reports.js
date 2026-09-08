@@ -187,8 +187,8 @@ var Rpt = {
 			}
 			h += '</div>';
 			h += '<div id=reportHeaderRight style="float:right;width:30%;text-align:right;">';
-			h += 'Report No: ' + reportId;
-			h += '<br><input id=ptpostreportid onclick="Chat.sendChat(\'/a Report No: ' + enFilter(reportId) + '\')" style="font-size:9px" type="submit" value="' + tx('Post To Chat') + '">';
+			h += tx('Report No') + ': ' + reportId;
+			h += '<br><input id=ptpostreportid onclick="Chat.sendChat(\'/a ' + tx('Report No') + ': ' + enFilter(reportId) + '\')" style="font-size:9px" type="submit" value="' + tx('Post To Chat') + '">';
 			if ((rpt.side1PlayerId && (rpt.side1PlayerId == uW.tvuid)) || (rpt.side0PlayerId && (rpt.side0PlayerId == uW.tvuid))) { h += '&nbsp;<input id=ptDeleteReport style="color:#f00;font-size:9px" type="submit" value="' + uW.g_js_strings.commonstr.deletetx + '">'; } //Delete button for own reports
 			h += '</div></div><div style="clear:both;"></div>';
 			return h;
@@ -249,7 +249,7 @@ var Rpt = {
 				m += '<FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '"><B> ' + tx('Winner') + '</B></FONT>';
 			m += '<br>';
 			if (rpt.side1AllianceId && (rpt.side1AllianceId != 0)) m += uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side1AllianceId) + '>' + rpt.side1AllianceName + '</span><br>';
-			if (rpt.side1PlayerId && (rpt.side1PlayerId != 0)) m += 'UID:&nbsp;' + MonitorLinkUID(rpt.side1PlayerId) + '<br>';
+			if (rpt.side1PlayerId && (rpt.side1PlayerId != 0)) m += tx('UID') + ':&nbsp;' + MonitorLinkUID(rpt.side1PlayerId) + '<br>';
 			if (rpt.marchName == uW.g_js_strings.commonstr.attack || rpt.marchName == uW.g_js_strings.commonstr.defend)
 				m += tx('Knight Combat Skill') + ': ' + rslt['s1KCombatLv'] + '<br>';
 			if (rslt['s1spell'] && (rslt['s1spell'] != "0")) {
@@ -263,7 +263,7 @@ var Rpt = {
 				m += '<FONT color="' + (Options.Colors.ReportDefeat || '#CC0000') + '"><B> ' + tx('Winner') + '</B></FONT>';
 			m += '<br>';
 			if (rpt.side0AllianceId && (rpt.side0AllianceId != 0)) m += uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side0AllianceId) + '>' + rpt.side0AllianceName + '</span><br>';
-			if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += 'UID:' + MonitorLinkUID(rpt.side0PlayerId) + '<br>';
+			if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += tx('UID') + ':' + MonitorLinkUID(rpt.side0PlayerId) + '<br>';
 			if (rpt.marchName == uW.g_js_strings.commonstr.attack || rpt.marchName == uW.g_js_strings.commonstr.defend)
 				m += tx('Knight Combat Skill') + ': ' + rslt['s0KCombatLv'] + '<br>';
 			if (rslt['s0spell'] && (rslt['s0spell'] != "0")) {
@@ -1114,7 +1114,7 @@ var Rpt = {
 				m += '<TABLE class=ptTab width=100%>';
 				m += '<TR><TD>' + rpt.side0Name + ' (<A onclick="btGotoMapRpt(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>)</td></tr>';
 				if (rpt.side0AllianceId && (rpt.side0AllianceId != 0)) m += '<TR><TD>' + uW.g_js_strings.commonstr.alliance + ':&nbsp;<span style=' + DiplomacyColours(rpt.side0AllianceId) + '>' + rpt.side0AllianceName + '</span></td></tr>';
-				if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += '<TR><TD>UID: ' + MonitorLinkUID(rpt.side0PlayerId) + '</td></tr>';
+				if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m += '<TR><TD>' + tx('UID') + ': ' + MonitorLinkUID(rpt.side0PlayerId) + '</td></tr>';
 				if (rslt['lstlgn']) {
 					if (!rslt['lstlgn'])
 						m += '<TR><TD>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + tx('Not recorded') + '</TD></TR>';

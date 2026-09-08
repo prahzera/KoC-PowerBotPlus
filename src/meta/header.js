@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes	        Search: render throttled, paginación de resultados y optimización de cola de última conexión para búsquedas grandes
+// @releasenotes	        Traducciones al español completadas en la pestaña de reportes (búsqueda, exploración, resúmenes de batalla y alianza)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

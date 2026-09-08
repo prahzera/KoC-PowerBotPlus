@@ -201,11 +201,11 @@ var battleReports = {
 	},
 	hook2: function (msg, args, rslt) {
 		if (rslt.rnds && Options.dispBattleRounds) {
-			msg = msg.replace(/<\/ul>.*\s*<\/div>.*\s*<div class="unitsContainer">/im, '<li><span class=\'label\'>Rounds: </span><span class=\'value\'>' + rslt.rnds + '</span></li></ul></div><div class="unitsContainer">');
+			msg = msg.replace(/<\/ul>.*\s*<\/div>.*\s*<div class="unitsContainer">/im, '<li><span class=\'label\'>' + tx('Rounds') + ': </span><span class=\'value\'>' + rslt.rnds + '</span></li></ul></div><div class="unitsContainer">');
 		}
 		if (Options.reportDeleteButton) {
-			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'PostReport(' + args[0] + ',false)\'><span>Post To Chat</span></a>'); //Post to Chat button
-			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'MoreReport(' + args[0] + ',' + args[1] + ',false)\'><span>More</span></a>'); //More button
+			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'PostReport(' + args[0] + ',false)\'><span>' + tx('Post To Chat') + '</span></a>'); //Post to Chat button
+			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'MoreReport(' + args[0] + ',' + args[1] + ',false)\'><span>' + tx('More') + '</span></a>'); //More button
 			msg = msg.replace(/Reports<\/span><\/a>/im, 'Reports</span></a><a class=\'button20\' onclick=\'deleteAreport(' + args[0] + ',false)\'><span>' + uW.g_js_strings.commonstr.deletetx + '</span></a>'); //Delete button
 		}
 		return msg;
@@ -213,7 +213,7 @@ var battleReports = {
 	hook: function (msg, rslt) {
 		msg = msg.replace(/(\bReport\sNo\:\s([0-9]+))/g, '<a onclick=\'ptChatReportClicked($2,0)\'>$1</a>');
 		if (rslt.rnds && Options.dispBattleRounds) {
-			msg = msg.replace(/(Attackers <span.*?)<\/div>/im, '$1<BR>Rounds: ' + rslt.rnds + '</div>');
+			msg = msg.replace(/(Attackers <span.*?)<\/div>/im, '$1<BR>' + tx('Rounds') + ': ' + rslt.rnds + '</div>');
 		}
 		return msg;
 	},
