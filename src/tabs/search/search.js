@@ -257,7 +257,8 @@ Tabs.Search = {
 	searchClickSort: function (e) {
 		var t = Tabs.Search;
 		var newColNum = e.id.substr(9);
-		ById('SearchCol' + Options.SearchOptions.sortColNum).className = 'buttonv2 std blue';
+		var oc = ById('SearchCol' + Options.SearchOptions.sortColNum);
+		if (oc) { oc.className = 'buttonv2 std blue'; }
 		e.className = 'buttonv2 std green';
 		if (newColNum == Options.SearchOptions.sortColNum) { Options.SearchOptions.sortDir *= -1; }
 		else { Options.SearchOptions.sortColNum = newColNum; }
@@ -403,7 +404,7 @@ Tabs.Search = {
 		t.opt.provinceSlices = ById('pbProvinceSlices').value;
 		t.setupResultsPanel(true);
 		t.stopSearch('Previous Search');
-		if (Options.SearchOptions.ShowLastLogin && t.mapDat.length != 0) { t.enqueueLastLogins(); }
+		if (t.lastLoginUsable() && t.mapDat.length != 0) { t.enqueueLastLogins(); }
 	},
 
 	displaylastsearch: function () {
@@ -684,6 +685,7 @@ t.setupFilterDisplay();
 				t.lastLoginPending = {};
 				t.lastLoginTotal = 0;
 				t.lastLoginFetched = 0;
+				if (Options.SearchOptions.sortColNum == 22) { Options.SearchOptions.sortColNum = 2; }
 			}
 			t.dispMapTable();
 		});
@@ -891,8 +893,12 @@ t.setupFilterDisplay();
 		catch (e) { logerr(e); }
 
 		try {
+			if (ById('pbslastlogin1')) {
+				if (t.lastLoginUsable()) { jQuery('#pbslastlogin1').removeClass('divHide'); }
+				else { jQuery('#pbslastlogin1').addClass('divHide'); }
+			}
 			if (ById('pbslastlogin2')) {
-				if (Options.SearchOptions.ShowLastLogin) {
+				if (t.lastLoginUsable()) {
 					jQuery('#pbslastlogin2').removeClass('divHide');
 					jQuery('#pbslastlogin3').removeClass('divHide');
 				}
@@ -902,13 +908,14 @@ t.setupFilterDisplay();
 				}
 			}
 			if (ById('pbslastloginrefresh')) {
-				if (Options.SearchOptions.ShowLastLogin) {
+				if (t.lastLoginUsable()) {
 					jQuery('#pbslastloginrefresh').removeClass('divHide');
 				}
 				else {
 					jQuery('#pbslastloginrefresh').addClass('divHide');
 				}
 			}
+			if (!t.lastLoginUsable() && Options.SearchOptions.sortColNum == 22) { Options.SearchOptions.sortColNum = 2; }
 		}
 		catch (e) { logerr(e); }
 
@@ -1196,6 +1203,10 @@ t.setupFilterDisplay();
 		return 'd';
 	},
 
+	lastLoginUsable: function () {
+		return Options.SearchOptions.ShowLastLogin && (Options.SearchOptions.SearchType == 0 || Options.SearchOptions.SearchType == 2);
+	},
+
 	lastLoginText: function (dl) {
 		var t = Tabs.Search;
 		if (!dl) return '&mdash;';
@@ -1217,7 +1228,7 @@ t.setupFilterDisplay();
 
 	enqueueLastLogins: function () {
 		var t = Tabs.Search;
-		if (!Options.SearchOptions.ShowLastLogin) return;
+		if (!t.lastLoginUsable()) return;
 		for (var i = t.lastLoginEnqLen; i < t.mapDat.length; i++) {
 			var uid = t.mapDat[i][6];
 			if (!uid || uid == 0 || uid == "0") continue;
@@ -1236,7 +1247,7 @@ t.setupFilterDisplay();
 
 	RefreshLastLogins: function () {
 		var t = Tabs.Search;
-		if (!Options.SearchOptions.ShowLastLogin) return;
+		if (!t.lastLoginUsable()) return;
 		var queue = [];
 		for (var k = 0; k < t.dat.length; k++) {
 			var uid = t.dat[k][6];
@@ -1285,7 +1296,7 @@ t.setupFilterDisplay();
 
 	processLastLoginQueue: function () {
 		var t = Tabs.Search;
-		if (!Options.SearchOptions.ShowLastLogin) { t.lastLoginRunning = false; return; }
+		if (!t.lastLoginUsable()) { t.lastLoginRunning = false; return; }
 		if (t.lastLoginQueue.length == 0) {
 			t.lastLoginRunning = false;
 			t.lastLoginPending = {};
@@ -1537,7 +1548,7 @@ t.setupFilterDisplay();
 				}
 			}
 
-			if (TileOK && Options.SearchOptions.ShowLastLogin && (parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0)) {
+			if (TileOK && t.lastLoginUsable() && (parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0)) {
 				var LLuid = t.mapDat[i][6];
 				if (LLuid && LLuid != 0 && t.mapDat[i][12] != 1) {
 					var Lldl = t.mapDat[i][22] || t.lastLogin[LLuid];
@@ -1576,7 +1587,7 @@ t.setupFilterDisplay();
 			m += '<TD nowrap><A id=SearchCol8 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Player') + '&nbsp;</span></a></td>';
 			m += '<TD nowrap><A id=SearchCol7 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('City') + '&nbsp;</span></a></td>';
 			m += '<TD nowrap><A id=SearchCol9 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + tx('Might') + '&nbsp;</span></a></td>';
-			if (Options.SearchOptions.ShowLastLogin) {
+			if (t.lastLoginUsable()) {
 				m += '<TD nowrap><A id=SearchCol22 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '&nbsp;</span></a></td>';
 			}
 			m += '<TD nowrap><A id=SearchCol10 onclick="ptsearchClickSort(this)" class="buttonv2 std blue" style="padding-left:0px;padding-right:0px;"><span style="display:inline-block;width:100%;">&nbsp;' + uW.g_js_strings.commonstr.alliance + '&nbsp;</span></a></td>';
@@ -1611,7 +1622,7 @@ t.setupFilterDisplay();
 			var qsdelay = 0;
 			var r = 0;
 			var RowId = "";
-			var LLspan = Options.SearchOptions.ShowLastLogin ? 5 : 4;
+			var LLspan = t.lastLoginUsable() ? 5 : 4;
 
 			for (var i = pageStart; i < pageEnd; i++) {
 				RowId = 'search_' + t.dat[i][0].toString() + '_' + t.dat[i][1].toString();
@@ -1687,7 +1698,7 @@ t.setupFilterDisplay();
 m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0) ? status + PlayerLink(t.dat[i][6], playername) : playername) + '</td>';
 				m += '<td ' + rowStyle + ' class=xtab>' + cityname + '</td>';
 				m += '<td ' + rowStyle + ' class=xtab align=right>' + might + '</td>';
-				if (Options.SearchOptions.ShowLastLogin) {
+				if (t.lastLoginUsable()) {
 					var lld = '&mdash;';
 					if (t.dat[i][12] == 1) { lld = '<span style="color:#080;"><b>' + uW.g_js_strings.commonstr.online.toUpperCase() + '</b></span>'; }
 					else if (t.dat[i][22]) { lld = t.lastLoginText(t.dat[i][22]); }

@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes	        Traducciones al español completadas en la pestaña de reportes (búsqueda, exploración, resúmenes de batalla y alianza)
+// @releasenotes	        Search: la columna 'Último inicio de sesión' solo aparece en búsquedas de ciudad y salvaje, y al desactivarla se vuelve a ordenar por distancia
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
