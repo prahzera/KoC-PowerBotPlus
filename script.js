@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.12
-// @releasenotes        Rediseño de las pestañas (píldoras con esquinas redondeadas), botón de cerrar minimalista y nuevo panel 'Apariencia' en Opciones con color de acento personalizable (azul, verde, púrpura, naranja, rojo, según el tema o color a medida) y bloque de colores movido a ese panel
+// @version			4.13
+// @releasenotes        Pestañas con iconos SVG coloreadas según tipo (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada y acento personalizable en todo el bot
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.12';
+var Version = '4.13';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -3390,6 +3390,48 @@ function BotVisualCSS() {
 		@keyframes btSpin { to { transform: rotate(360deg); } }\
 		.botTabEnter { animation: btTabIn .15s ease; }\
 		@keyframes btTabIn { from { opacity: .3; transform: translateY(-3px); } to { opacity: 1; transform: none; } }\
+		#btToastWrap {\
+			position: fixed;\
+			top: 8px;\
+			right: 8px;\
+			z-index: 2147483647;\
+			display: flex;\
+			flex-direction: column;\
+			align-items: flex-end;\
+			gap: 6px;\
+			max-width: 360px;\
+		}\
+		.btToast {\
+			display: flex;\
+			align-items: flex-start;\
+			gap: 8px;\
+			padding: 9px 12px;\
+			border-radius: 8px;\
+			font-family: \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;\
+			font-size: 12px;\
+			font-weight: 600;\
+			line-height: 1.35;\
+			color: #fff;\
+			background: #4a4e5a;\
+			border: 1px solid rgba(0,0,0,0.25);\
+			box-shadow: 0 4px 14px rgba(0,0,0,0.35);\
+			animation: btToastIn .18s ease;\
+			cursor: pointer;\
+		}\
+		.btToast.ok { background: linear-gradient(180deg, #2e8540, #236b32); }\
+		.btToast.err { background: linear-gradient(180deg, #c0392b, #a83227); }\
+		.btToastIcon svg { display: block; }\
+		.btToastOut { animation: btToastOut .22s ease forwards; }\
+		@keyframes btToastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }\
+		@keyframes btToastOut { to { opacity: 0; transform: translateY(-6px); } }\
+		table.btZebra tbody tr:nth-child(even) td { background: rgba(0,0,0,0.04); }\
+		body.btDarkTheme table.btZebra tbody tr:nth-child(even) td { background: rgba(255,255,255,0.035); }\
+		body.btDarkTheme .oddRow { background: rgba(255,255,255,0.045) !important; }\
+		body.btDarkTheme .evenRow { background: rgba(255,255,255,0) !important; }\
+		.btEmpty { padding: 18px 10px; text-align: center; color: #8a8a8a; font-size: 12px; font-weight: 600; }\
+		.btEmptyIcon { display: inline-block; vertical-align: -3px; margin-right: 7px; }\
+		.btEmptyIcon svg { display: block; }\
+		body.btDarkTheme .btEmpty { color: #a9a69a; }\
 		.btPopup { border-width: 4px; box-shadow: 1px 3px 12px rgba(0,0,0,.35); }\
 		.btPopup * { scrollbar-width: thin; }\n\
 		.btPopup *::-webkit-scrollbar { width: 10px; height: 10px; }\n\
@@ -3543,8 +3585,51 @@ function BotModernCSS() {
 		}\
 		body.btModern a.inlineButton.btButton > span { background: none !important; color: inherit !important; text-shadow: none !important; }\
 		body.btModern a.inlineButton.btButton:hover { background-color: ' + AccentDark + ' !important; filter: brightness(1.05); }\
-		body.btModern a.inlineButton.btButton.brown8 { background-color: #8a5a2b !important; }\
-		body.btModern a.inlineButton.btButton.brown8:hover { background-color: #a06a35 !important; }\
+		body.btModern a.inlineButton.btButton.brown8, body.btModern a.inlineButton.btButton.brown11 { background-color: #8a5a2b !important; }\
+		body.btModern a.inlineButton.btButton.brown8:hover, body.btModern a.inlineButton.btButton.brown11:hover { background-color: #a06a35 !important; filter: brightness(1.05); }\
+		body.btModern a.inlineButton.btButton.red14, body.btModern a.inlineButton.btButton.red20 { background-color: #c0392b !important; }\
+		body.btModern a.inlineButton.btButton.red14:hover, body.btModern a.inlineButton.btButton.red20:hover { background-color: #a83227 !important; filter: brightness(1.05); }\
+		body.btModern a.inlineButton.btButton.green20 { background-color: #2e8540 !important; }\
+		body.btModern a.inlineButton.btButton.green20:hover { background-color: #236b32 !important; filter: brightness(1.05); }\
+		body.btModern a.inlineButton.btButton.disabled { opacity: 0.55 !important; cursor: default !important; pointer-events: none !important; }\
+		body.btModern a.buttonv2.red14, body.btModern a.buttonv2.red20 { background-color: #c0392b !important; border-color: #c0392b !important; color: #fff !important; }\
+		body.btModern a.buttonv2.green20 { background-color: #2e8540 !important; border-color: #2e8540 !important; color: #fff !important; }\
+		.btToast.info { background: linear-gradient(180deg, ' + Accent + ', ' + AccentDark + '); }\
+		#btBusyOverlay {\
+			position: fixed;\
+			inset: 0;\
+			z-index: 2147483646;\
+			background: rgba(0,0,0,0.0);\
+			display: none;\
+			align-items: flex-start;\
+			justify-content: center;\
+			pointer-events: none;\
+			padding-top: 8px;\
+		}\
+		#btBusyOverlay.btBusyShow { display: flex; }\
+		.btBusyBox {\
+			display: flex;\
+			align-items: center;\
+			gap: 10px;\
+			padding: 12px 18px;\
+			border-radius: 10px;\
+			background: ' + Panel + ';\
+			color: ' + (Options.Colors.PanelText || '#222') + ';\
+			border: 1px solid rgba(0,0,0,0.18);\
+			box-shadow: 0 6px 22px rgba(0,0,0,0.3);\
+			font-family: \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;\
+			font-size: 13px;\
+			font-weight: 600;\
+		}\
+		.btBusySpin {\
+			width: 16px;\
+			height: 16px;\
+			border: 2px solid #999;\
+			border-top-color: ' + Accent + ';\
+			border-radius: 50%;\
+			animation: btSpin .7s linear infinite;\
+		}\
+		body.btDarkTheme .btBusyBox { background: #3a3d47; color: #E3E1D6; }\
 		body.btModern a[id^="bttc"], body.btModern div[id^="bttc"] {\
 			background-image: none !important;\
 			border: 1px solid rgba(0,0,0,0.12) !important;\
@@ -4715,7 +4800,7 @@ var tabManager = {
 		}
 
 		sorter.sort(function (a, b) { return a[0] - b[0] });
-		var m = '<div align="center"><b>PowerBot+ (Version ' + Version + ')</b></div>';
+		var m = '<div align="center" title="PowerBot+ (Version ' + Version + ')"><b>' + btLogoIcon() + '&nbsp;PowerBot+</b>&nbsp;<span style="font-weight:400;font-size:10px;opacity:0.75;">' + Version + '</span></div>';
 
 		if (!GlobalOptions.btPowerBar) {
 			m += '<TABLE align=center><TR>';
@@ -14420,6 +14505,7 @@ var QuickMarch = {
 		t.LoadMarchPresets();
 		ById('QMPresetName').value = "";
 		ById('btMarchMessages').innerHTML = tx("March Preset Saved");
+		btToast(tx("March Preset Saved"), 'ok');
 	},
 
 	DelMarchPreset: function () {
@@ -14630,6 +14716,7 @@ var QuickMarch = {
 					uW.cityinfo_army();
 					setTimeout(uW.update_seed_ajax, 250);
 					ById('btMarchMessages').innerHTML = tx("Raid Added Successfully");
+					btToast(tx("Raid Added Successfully"), 'ok');
 					Seed.knights['city' + params.settings.cityId]['knt' + params.queue[0].cityMarches.knightId].knightStatus = 10; // update knight instantly!
 					t.FromCityClick(t.SourceCity, true); // force update
 				} else {
@@ -30320,6 +30407,7 @@ Tabs.Search = {
 		t.searchRunning = true;
 		t.pageNum = 1;
 		document.body.classList.add('pb-search-running');
+		btBusy(true, tx('Searching map...'));
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 
 		t.setupResultsPanel(false);
@@ -30935,6 +31023,7 @@ t.setupFilterDisplay();
 
 	mapCallback: function (uList) {
 		var t = Tabs.Search;
+		btBusy(false);
 
 		var rslt = t.SearchList;
 		var map = rslt.data;
@@ -31424,7 +31513,7 @@ t.setupFilterDisplay();
 		t.scouted = 0;
 
 		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
-		var m = '<center><br><br>' + tx('No tiles found matching search criteria') + '</center>';
+		var m = btEmptyState(tx('No tiles found matching search criteria'), 'info');
 		if (t.dat.length != 0) {
 			if (!t.searchRunning) { t.dat.sort(sortFunc); }
 
@@ -31635,6 +31724,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		ById('pbStatStatus').innerHTML = msg;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 		document.body.classList.remove('pb-search-running');
+		btBusy(false);
 
 		var sNote = '';
 		if (savelast) {
@@ -31903,6 +31993,7 @@ Tabs.GloryFarm = {
 		t.searchRunning = true;
 		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 		ById('pbGloryResults').innerHTML = '<center>' + tx('Searching map...') + '</center>';
+		btBusy(true, tx('Searching map...'));
 
 		t.mapDat = [];
 		t.dat = [];
@@ -31966,6 +32057,7 @@ Tabs.GloryFarm = {
 	eventGetMap: function (rslt, blocksSearched) {
 		var t = Tabs.GloryFarm;
 		if (!t.searchRunning) return;
+		btBusy(false);
 
 		if (!rslt.ok) {
 			console.log("GloryFarm: Map lookup failed/returned ok=false. Retrying block string.");
@@ -32161,6 +32253,7 @@ Tabs.GloryFarm = {
 		clearTimeout(t.SearchTimer);
 		clearTimeout(t.DefendTimer);
 		clearTimeout(t.DefendFailsafe);
+		btBusy(false);
 		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 		if (msg) ById('pbGloryResults').innerHTML = '<center>' + msg + '</center>';
 	},
@@ -35422,7 +35515,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -35453,7 +35546,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -35485,7 +35578,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -35521,7 +35614,7 @@ Tabs.Inventory = {
 			totaltime = totaltime + itemtime;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		var tm = ById('pbinvspeedtime')
 		if (tm) tm.innerHTML = uW.timestr(totaltime);
@@ -35560,7 +35653,7 @@ Tabs.Inventory = {
 			totalmight = totalmight + might;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		var tm = ById('pbinvcombatmight')
 		if (tm) tm.innerHTML = addCommas(totalmight);
@@ -35593,7 +35686,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -35621,7 +35714,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -35657,7 +35750,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 		var nodes = ByCl("pbinv_equip");
@@ -35696,7 +35789,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -35725,7 +35818,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -42410,6 +42503,7 @@ Tabs.Transport = {
 		Options.TransportOptions.Routes = [];
 		saveOptions();
 		ById('pbtrMessages').innerHTML = tx("All transport routes deleted") + "!";
+		btToast(tx("All transport routes deleted") + "!", 'ok');
 		t.PaintRoutes();
 	},
 
@@ -42505,7 +42599,7 @@ Tabs.Transport = {
 		}
 
 		if (!Routes) {
-			z += '<tr><td colspan=6 class=xtab><div align="center"><br><br>' + tx('No transport routes') + '</div></td></tr>';
+			z += '<tr><td colspan=6 class=xtab>' + btEmptyState(tx('No transport routes'), 'info') + '</td></tr>';
 		}
 
 		z += '</table></div><br>';
@@ -42568,9 +42662,9 @@ Tabs.Transport = {
 			}
 		}
 		saveOptions();
-		if (Action == 1 || Action == 2) { ById('pbtrMessages').innerHTML = tx("Transport routes deleted!"); }
+		if (Action == 1 || Action == 2) { ById('pbtrMessages').innerHTML = tx("Transport routes deleted!"); btToast(tx("Transport routes deleted!"), 'ok'); }
 		else {
-			if (Action == 3 || Action == 4) { ById('pbtrMessages').innerHTML = tx("Transport routes relocated!"); }
+			if (Action == 3 || Action == 4) { ById('pbtrMessages').innerHTML = tx("Transport routes relocated!"); btToast(tx("Transport routes relocated!"), 'ok'); }
 		}
 		t.PaintRoutes();
 	},
@@ -42942,6 +43036,7 @@ Tabs.Transport = {
 			t.RouteObject = null; // clear route object
 		}
 		ById('pbtrMessages').innerHTML = tx("Transport route saved!");
+		btToast(tx("Transport route saved!"), 'ok');
 		t.PaintRoutes();
 	},
 
@@ -43617,6 +43712,7 @@ Tabs.Transport = {
 			March.addMarch(params, function (rslt) {
 				if (rslt.ok) {
 					ById('pbtrMessages').innerHTML = tx("Manual transport successful!");
+					btToast(tx("Manual transport successful!"), 'ok');
 				}
 				else {
 					if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }
@@ -49034,6 +49130,7 @@ Tabs.Revive = {
 		Options.ReviveOptions.HealArray[citynum] = [];
 		saveOptions();
 		ById('btRevMessages').innerHTML = tx("City Queue deleted!");
+		btToast(tx("City Queue deleted!"), 'ok');
 		t.PaintCityInfo();
 	},
 
@@ -49042,6 +49139,7 @@ Tabs.Revive = {
 		Options.ReviveOptions.HealArray[citynum].splice(index, 1);
 		saveOptions();
 		ById('btRevMessages').innerHTML = tx("Queue entry deleted!");
+		btToast(tx("Queue entry deleted!"), 'ok');
 		t.PaintCityInfo();
 	},
 
@@ -49530,6 +49628,67 @@ Tabs.Revive = {
 	},
 }
 
+/** Toast notifications **/
+
+var btToastIcons = {
+	ok: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="6 12 10 16 18 8"></polyline></svg>',
+	err: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+	info: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+};
+
+function btLogoIcon() {
+	return '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M3 17l18 0"></path><path d="M5 17l2-10 5 6 5-6 2 10"></path></svg>';
+}
+
+function btToast(msg, kind) {
+	if (!msg) { return; }
+	var wrap = ById('btToastWrap');
+	if (!wrap) {
+		wrap = document.createElement('div');
+		wrap.id = 'btToastWrap';
+		document.body.appendChild(wrap);
+	}
+	kind = kind || 'ok';
+	var toast = document.createElement('div');
+	toast.className = 'btToast ' + kind;
+	if (kind == 'err') { toast.setAttribute('role', 'alert'); }
+	else { toast.setAttribute('role', 'status'); }
+	toast.innerHTML = '<span class="btToastIcon">' + (btToastIcons[kind] || btToastIcons.info) + '</span><span class="btToastMsg"></span>';
+	toast.lastChild.textContent = msg;
+	toast.addEventListener('click', function () { btToastClose(toast); }, false);
+	wrap.appendChild(toast);
+	while (wrap.childNodes.length > 4) { wrap.removeChild(wrap.firstChild); }
+	setTimeout(function () { toast.classList.add('btToastOut'); }, 3200);
+	setTimeout(function () { btToastClose(toast); }, 3550);
+}
+
+function btToastClose(toast) {
+	if (toast && toast.parentNode) { toast.parentNode.removeChild(toast); }
+}
+
+function btBusy(on, msg) {
+	var ov = ById('btBusyOverlay');
+	if (on) {
+		if (!ov) {
+			ov = document.createElement('div');
+			ov.id = 'btBusyOverlay';
+			document.body.appendChild(ov);
+		}
+		ov.innerHTML = '<div class="btBusyBox"><span class="btBusySpin"></span><span class="btBusyMsg"></span></div>';
+		var mm = ov.querySelector('.btBusyMsg');
+		if (mm && msg) { mm.textContent = msg; }
+		ov.classList.add('btBusyShow');
+	}
+	else {
+		if (ov) { ov.classList.remove('btBusyShow'); }
+	}
+}
+
+function btEmptyState(label, kind) {
+	var icon = btToastIcons[kind] || btToastIcons.info;
+	var safe = String(label == null ? '' : label).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	return '<div class="btEmpty"><span class="btEmptyIcon">' + icon + '</span><span class="btEmptyLabel">' + safe + '</span></div>';
+}
 /** END OF TABS **/
 
 if (document.URL.search(/main_src.php/i) != -1) {

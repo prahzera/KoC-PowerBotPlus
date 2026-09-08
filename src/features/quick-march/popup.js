@@ -1384,6 +1384,7 @@ var QuickMarch = {
 		t.LoadMarchPresets();
 		ById('QMPresetName').value = "";
 		ById('btMarchMessages').innerHTML = tx("March Preset Saved");
+		btToast(tx("March Preset Saved"), 'ok');
 	},
 
 	DelMarchPreset: function () {
@@ -1594,6 +1595,7 @@ var QuickMarch = {
 					uW.cityinfo_army();
 					setTimeout(uW.update_seed_ajax, 250);
 					ById('btMarchMessages').innerHTML = tx("Raid Added Successfully");
+					btToast(tx("Raid Added Successfully"), 'ok');
 					Seed.knights['city' + params.settings.cityId]['knt' + params.queue[0].cityMarches.knightId].knightStatus = 10; // update knight instantly!
 					t.FromCityClick(t.SourceCity, true); // force update
 				} else {

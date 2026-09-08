@@ -375,7 +375,7 @@ var tabManager = {
 		}
 
 		sorter.sort(function (a, b) { return a[0] - b[0] });
-		var m = '<div align="center"><b>PowerBot+ (Version ' + Version + ')</b></div>';
+		var m = '<div align="center" title="PowerBot+ (Version ' + Version + ')"><b>' + btLogoIcon() + '&nbsp;PowerBot+</b>&nbsp;<span style="font-weight:400;font-size:10px;opacity:0.75;">' + Version + '</span></div>';
 
 		if (!GlobalOptions.btPowerBar) {
 			m += '<TABLE align=center><TR>';

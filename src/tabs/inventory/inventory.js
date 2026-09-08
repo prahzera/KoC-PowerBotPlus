@@ -132,7 +132,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -163,7 +163,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -195,7 +195,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -231,7 +231,7 @@ Tabs.Inventory = {
 			totaltime = totaltime + itemtime;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		var tm = ById('pbinvspeedtime')
 		if (tm) tm.innerHTML = uW.timestr(totaltime);
@@ -270,7 +270,7 @@ Tabs.Inventory = {
 			totalmight = totalmight + might;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		var tm = ById('pbinvcombatmight')
 		if (tm) tm.innerHTML = addCommas(totalmight);
@@ -303,7 +303,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -331,7 +331,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -367,7 +367,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 		var nodes = ByCl("pbinv_equip");
@@ -406,7 +406,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},
@@ -435,7 +435,7 @@ Tabs.Inventory = {
 			count++;
 		}
 		m += "</table>";
-		div.innerHTML = (count != 0) ? m : '<br><CENTER>' + tx('No useable items in this category') + '</CENTER><br>';
+		div.innerHTML = (count != 0) ? m : btEmptyState(tx('No useable items in this category'), 'info');
 
 		t.setEventHandlers();
 	},

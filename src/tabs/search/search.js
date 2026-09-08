@@ -468,6 +468,7 @@ Tabs.Search = {
 		t.searchRunning = true;
 		t.pageNum = 1;
 		document.body.classList.add('pb-search-running');
+		btBusy(true, tx('Searching map...'));
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 
 		t.setupResultsPanel(false);
@@ -1083,6 +1084,7 @@ t.setupFilterDisplay();
 
 	mapCallback: function (uList) {
 		var t = Tabs.Search;
+		btBusy(false);
 
 		var rslt = t.SearchList;
 		var map = rslt.data;
@@ -1572,7 +1574,7 @@ t.setupFilterDisplay();
 		t.scouted = 0;
 
 		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
-		var m = '<center><br><br>' + tx('No tiles found matching search criteria') + '</center>';
+		var m = btEmptyState(tx('No tiles found matching search criteria'), 'info');
 		if (t.dat.length != 0) {
 			if (!t.searchRunning) { t.dat.sort(sortFunc); }
 
@@ -1783,6 +1785,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		ById('pbStatStatus').innerHTML = msg;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 		document.body.classList.remove('pb-search-running');
+		btBusy(false);
 
 		var sNote = '';
 		if (savelast) {

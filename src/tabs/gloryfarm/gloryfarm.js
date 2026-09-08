@@ -82,6 +82,7 @@ Tabs.GloryFarm = {
 		t.searchRunning = true;
 		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 		ById('pbGloryResults').innerHTML = '<center>' + tx('Searching map...') + '</center>';
+		btBusy(true, tx('Searching map...'));
 
 		t.mapDat = [];
 		t.dat = [];
@@ -145,6 +146,7 @@ Tabs.GloryFarm = {
 	eventGetMap: function (rslt, blocksSearched) {
 		var t = Tabs.GloryFarm;
 		if (!t.searchRunning) return;
+		btBusy(false);
 
 		if (!rslt.ok) {
 			console.log("GloryFarm: Map lookup failed/returned ok=false. Retrying block string.");
@@ -340,6 +342,7 @@ Tabs.GloryFarm = {
 		clearTimeout(t.SearchTimer);
 		clearTimeout(t.DefendTimer);
 		clearTimeout(t.DefendFailsafe);
+		btBusy(false);
 		ById('pbGlorySubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 		if (msg) ById('pbGloryResults').innerHTML = '<center>' + msg + '</center>';
 	},

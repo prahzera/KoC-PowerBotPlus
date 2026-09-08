@@ -194,6 +194,7 @@ Tabs.Transport = {
 		Options.TransportOptions.Routes = [];
 		saveOptions();
 		ById('pbtrMessages').innerHTML = tx("All transport routes deleted") + "!";
+		btToast(tx("All transport routes deleted") + "!", 'ok');
 		t.PaintRoutes();
 	},
 
@@ -289,7 +290,7 @@ Tabs.Transport = {
 		}
 
 		if (!Routes) {
-			z += '<tr><td colspan=6 class=xtab><div align="center"><br><br>' + tx('No transport routes') + '</div></td></tr>';
+			z += '<tr><td colspan=6 class=xtab>' + btEmptyState(tx('No transport routes'), 'info') + '</td></tr>';
 		}
 
 		z += '</table></div><br>';
@@ -352,9 +353,9 @@ Tabs.Transport = {
 			}
 		}
 		saveOptions();
-		if (Action == 1 || Action == 2) { ById('pbtrMessages').innerHTML = tx("Transport routes deleted!"); }
+		if (Action == 1 || Action == 2) { ById('pbtrMessages').innerHTML = tx("Transport routes deleted!"); btToast(tx("Transport routes deleted!"), 'ok'); }
 		else {
-			if (Action == 3 || Action == 4) { ById('pbtrMessages').innerHTML = tx("Transport routes relocated!"); }
+			if (Action == 3 || Action == 4) { ById('pbtrMessages').innerHTML = tx("Transport routes relocated!"); btToast(tx("Transport routes relocated!"), 'ok'); }
 		}
 		t.PaintRoutes();
 	},
@@ -726,6 +727,7 @@ Tabs.Transport = {
 			t.RouteObject = null; // clear route object
 		}
 		ById('pbtrMessages').innerHTML = tx("Transport route saved!");
+		btToast(tx("Transport route saved!"), 'ok');
 		t.PaintRoutes();
 	},
 
@@ -1401,6 +1403,7 @@ Tabs.Transport = {
 			March.addMarch(params, function (rslt) {
 				if (rslt.ok) {
 					ById('pbtrMessages').innerHTML = tx("Manual transport successful!");
+					btToast(tx("Manual transport successful!"), 'ok');
 				}
 				else {
 					if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }

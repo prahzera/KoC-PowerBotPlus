@@ -184,6 +184,7 @@ const MANIFEST = [
   'tabs/attack/attack.js', // /** Attack Tab **/ (43199) + Tabs.Attack
   'tabs/build/build.js', // /** Build Tab **/ (44360) + Tabs.Build
   'tabs/revive/revive.js', // /** Revive Tab **/ (47224) + Tabs.Revive
+  'ui/toasts.js', // /** Notifications **/ + btToast, btBusy, btEmptyState, btLogoIcon
 
   // ─────────────────────────── footer ───────────────────────────
   'footer/init.js', // /** END OF TABS **/ (48345) + bloque inicial PowerBotStartup() (48347-48351)

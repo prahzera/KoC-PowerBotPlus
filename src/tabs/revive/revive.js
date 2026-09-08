@@ -623,6 +623,7 @@ Tabs.Revive = {
 		Options.ReviveOptions.HealArray[citynum] = [];
 		saveOptions();
 		ById('btRevMessages').innerHTML = tx("City Queue deleted!");
+		btToast(tx("City Queue deleted!"), 'ok');
 		t.PaintCityInfo();
 	},
 
@@ -631,6 +632,7 @@ Tabs.Revive = {
 		Options.ReviveOptions.HealArray[citynum].splice(index, 1);
 		saveOptions();
 		ById('btRevMessages').innerHTML = tx("Queue entry deleted!");
+		btToast(tx("Queue entry deleted!"), 'ok');
 		t.PaintCityInfo();
 	},
 
