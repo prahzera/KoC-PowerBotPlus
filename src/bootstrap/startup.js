@@ -50,6 +50,8 @@ function PowerBotStartup() {
 
 	if (!Options.GreenCastles) { URL_CASTLE_BUT_SEL = URL_CASTLE_BUT_HOVER; }
 
+	ApplyBotVisuals();
+
 	var styles = '\
 		.buttonv2.std {width:123px; height:20px; line-height:20px; padding:2px 7px;} \
 		.kocmain .mod_comm .comm_global .chatlist .global {background-color:transparent;}\

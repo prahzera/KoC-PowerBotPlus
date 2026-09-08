@@ -22,6 +22,7 @@ Tabs.Options = {
 				div#throneMainContainer div#heroContainer{width:85px;height:150px;top:190px;left:585px;z-index:97;}',
 	Colors: {
 		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#FF4D4D', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', ReportVictory: '#080', ReportDefeat: '#CC0000', },
+		Dark: { Title: '#1F2128', TitleText: '#E8E2D1', DividerTop: '#3B3E4A', DividerBottom: '#202129', DividerText: '#D8D3C5', Panel: '#23242A', PanelText: '#E3E1D6', Highlight: '#2E3B2E', HighlightText: '#EAF5EA', BoldRed: '#FF6B6B', BoldOrange: '#FFA94D', BoldGreen: '#5FBF5F', BoldMagenta: '#C46BC4', ReportVictory: '#4CC94C', ReportDefeat: '#FF5555', },
 	},
 	ReportOptions: {
 		EnhanceAR: false,
@@ -867,6 +868,10 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btWideMap type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Enable wide map expansion button on the map panel") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
+		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
 		var UpdateLocations = { 0: "SourceForge", 1: "GreasyFork", 2: "GitHub", 3: "pbkplowplow.com" };
 		m += '<TR><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=ExtendedDebugChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Extended debug mode (Activates additional logging)") + '</td></tr>';
@@ -900,6 +905,9 @@ Tabs.Options = {
 		t.togGlobalOpt('btTrackOpen', 'btTrackOpen');
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
 		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
+		t.changeGlobalOpt('btAnimSpeed', 'btAnimSpeed', SetAnimSpeed);
+		t.togGlobalOpt('btAnimatePopups', 'btAnimatePopups');
+		t.togGlobalOpt('btReduceMotion', 'btReduceMotion', function (on) { document.body.setAttribute('data-bt-reduce', on ? '1' : '0'); });
 
 		t.togGlobalOpt('AutoUpdateChk', 'AutoUpdates');
 		t.togGlobalOpt('ExtendedDebugChk', 'ExtendedDebugMode', t.RestartReminder);
@@ -2148,6 +2156,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
 		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
 		m += '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab><span style="opacity:0.7;">' + tx('Tip: use the Dark theme for a dark window interface') + '</span></td></tr>';
 
 		m += '</table>';
 

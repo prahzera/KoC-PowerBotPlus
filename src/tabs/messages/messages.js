@@ -1125,7 +1125,7 @@ Tabs.Messages = {
 		}
 		else {
 			var rpId = t.FetchReportArray.splice(0, 1);
-			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in report details') + ':&nbsp;' + rpId + '</center>';
+			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in report details') + ':&nbsp;' + rpId + ' <span class="pb-loading"></span></center>';
 			FetchReport(rpId, function () { t.FetchReports(notify); });
 		}
 	},
@@ -1262,7 +1262,7 @@ Tabs.Messages = {
 		}
 		else {
 			var rpId = t.FetchReportArray.splice(0, 1);
-			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in scout report details') + ':&nbsp;' + rpId + '</center>';
+			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in scout report details') + ':&nbsp;' + rpId + ' <span class="pb-loading"></span></center>';
 			FetchReportDetail(rpId, 1, function () { t.FetchReportDetails(notify); });
 		}
 	},

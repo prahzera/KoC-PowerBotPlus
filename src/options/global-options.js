@@ -15,6 +15,9 @@ var GlobalOptions = {
 	btTrackOpen: true,
 	btTransparent: false,
 	btKocBgColor: '#ffffff', // Color de fondo del contenedor del juego (#kocContainer)
+	btAnimSpeed: 'normal', // Velocidad de animación UI: 'normal' | 'smooth' | 'off'
+	btAnimatePopups: true, // Animar apertura/cierre de ventanas emergentes
+	btReduceMotion: false, // Forzar reducción de movimiento (independiente del SO)
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,

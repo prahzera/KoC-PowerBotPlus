@@ -78,6 +78,7 @@ const MANIFEST = [
   'ui/march-display.js', // UpdateMarch(2847), UpdateIncomingMarch(2890), updatePlayers(2910)
   'ui/champion-display.js', // getChampionStatus(2928), getChampionCity(2940), getCityChampion(2952), SetChampionIcon(2966), BuildChampData(2996)
   'ui/main-loop.js', // /** main loop **/ (3115) + EverySecond(3117)
+  'ui/visual-css.js', // BotVisualCSS, ApplyBotVisuals, SetAnimSpeed, btAnimMs, btReducedMotion, btRaf (polish/animaciones)
   'ui/incoming.js', // CheckForIncoming(3230), Copy_Local_ATKP(3424), Copy_Local_ATKINC(3459)
 
   // ─────────────────────────── utils ───────────────────────────

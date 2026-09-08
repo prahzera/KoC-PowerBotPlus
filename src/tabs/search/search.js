@@ -467,6 +467,7 @@ Tabs.Search = {
 
 		t.searchRunning = true;
 		t.pageNum = 1;
+		document.body.classList.add('pb-search-running');
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 
 		t.setupResultsPanel(false);
@@ -1781,6 +1782,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		t.searchRunning = false;
 		ById('pbStatStatus').innerHTML = msg;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
+		document.body.classList.remove('pb-search-running');
 
 		var sNote = '';
 		if (savelast) {

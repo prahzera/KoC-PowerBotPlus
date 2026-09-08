@@ -1,7 +1,7 @@
 function CPopup(prefix, x, y, width, height, enableDrag, onClose) {
 	var pop = WinManager.get(prefix);
 	if (pop) {
-		pop.show(false);
+		pop.show(false, true);
 		return pop;
 	}
 	this.BASE_ZINDEX = 111111;
@@ -130,12 +130,42 @@ function CPopup(prefix, x, y, width, height, enableDrag, onClose) {
 		return ById(this.prefix + '_content');
 	}
 
-	function show(tf) {
+	function show(tf, instant) {
+		var dur = btAnimMs();
+		var reduced = btReducedMotion();
+		if (t._hideTimer) { clearTimeout(t._hideTimer); t._hideTimer = null; }
 		if (tf) {
+			t.div.style.transition = '';
+			t.div.style.opacity = '';
 			t.div.style.display = 'block';
 			t.focusMe();
+			if (!instant && dur > 0 && !reduced) {
+				try {
+					var target = GlobalOptions.btTransparent ? 0.9 : 1;
+					t.div.style.opacity = '0';
+					t.div.style.transition = 'opacity ' + (dur / 1000) + 's ease';
+					btRaf(function () { t.div.style.opacity = '' + target; });
+					setTimeout(function () { t.div.style.transition = ''; }, dur + 100);
+				} catch (e) { t.div.style.opacity = ''; t.div.style.transition = ''; }
+			}
 		} else {
-			t.div.style.display = 'none';
+			if (instant || dur <= 0 || reduced) {
+				t.div.style.display = 'none';
+				t.div.style.opacity = '';
+				t.div.style.transition = '';
+			} else {
+				try {
+					t.div.style.transition = 'opacity ' + (dur / 1000) + 's ease';
+					t.div.style.opacity = '0';
+					var d = t.div;
+					t._hideTimer = setTimeout(function () {
+						t._hideTimer = null;
+						d.style.display = 'none';
+						d.style.opacity = '';
+						d.style.transition = '';
+					}, dur + 60);
+				} catch (e) { t.div.style.display = 'none'; t.div.style.opacity = ''; t.div.style.transition = ''; }
+			}
 		}
 		return tf;
 	}
@@ -417,6 +447,11 @@ var tabManager = {
 			t.currentTab.div.style.display = 'none';
 			t.currentTab = newTab;
 			newTab.div.style.display = 'block';
+			if (btAnimMs() > 0 && !btReducedMotion()) {
+				var td = newTab.div;
+				td.classList.add('botTabEnter');
+				setTimeout(function () { td.classList.remove('botTabEnter'); }, 250);
+			}
 			Options.currentTab = newTab.name;
 			saveOptions();
 		}

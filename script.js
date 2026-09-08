@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.00
-// @releasenotes	        Search: la columna 'Último inicio de sesión' solo aparece en búsquedas de ciudad y salvaje, y al desactivarla se vuelve a ordenar por distancia
+// @version			4.10
+// @releasenotes        Mejora visual y UX: animaciones en botones/ventanas/pestañas, tema oscuro (Opciones > Colores > Tema), indicador de carga en reportes y nueva sección 'Apariencia' (velocidad de animación, animar pop-ups, reducir movimiento)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.00';
+var Version = '4.10';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -458,6 +458,9 @@ var GlobalOptions = {
 	btTrackOpen: true,
 	btTransparent: false,
 	btKocBgColor: '#ffffff', // Color de fondo del contenedor del juego (#kocContainer)
+	btAnimSpeed: 'normal', // Velocidad de animación UI: 'normal' | 'smooth' | 'off'
+	btAnimatePopups: true, // Animar apertura/cierre de ventanas emergentes
+	btReduceMotion: false, // Forzar reducción de movimiento (independiente del SO)
 	AutoUpdates: true,
 	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
 	ExtendedDebugMode: false,
@@ -914,6 +917,8 @@ function PowerBotStartup() {
 	}
 
 	if (!Options.GreenCastles) { URL_CASTLE_BUT_SEL = URL_CASTLE_BUT_HOVER; }
+
+	ApplyBotVisuals();
 
 	var styles = '\
 		.buttonv2.std {width:123px; height:20px; line-height:20px; padding:2px 7px;} \
@@ -3351,6 +3356,85 @@ function EverySecond() {
 	}
 }
 
+/** Visual polish & animations **/
+
+function BotVisualCSS() {
+	return '\
+		/* === PowerBot+ UI polish / animations === */\
+		.tab, a.buttonv2.std, a.inlineButton.btButton, a.xlink, .TextLink, .divLink, .btExpander, .btBackExpander, #btEmoticonLink {\
+			transition: filter .12s ease, transform .08s ease, opacity .12s ease, color .12s ease;\
+		}\
+		.tab:hover, a.buttonv2.std:hover, a.inlineButton.btButton:hover, a.xlink:hover, .TextLink:hover { filter: brightness(1.07); }\
+		.tab:active, a.buttonv2.std:active, a.inlineButton.btButton:active, #btEmoticonLink:active {\
+			transform: translateY(1px);\
+			filter: brightness(.92);\
+		}\
+		.btExpander, .btBackExpander, .divHeader { cursor: pointer; }\
+		.btExpander:hover, .btBackExpander:hover { filter: brightness(1.1); }\
+		a:focus-visible { outline: 2px solid #88ccff; outline-offset: 2px; }\
+		.btInput:focus { outline: 2px solid rgba(136,204,255,.6); }\
+		.btPopupTop, tr[id$="_bar"] { cursor: move; transition: filter .15s ease, background-color .15s ease; }\
+		.btPopupTop:hover, tr[id$="_bar"]:hover { filter: brightness(1.1); }\
+		td[id$="_X"] { cursor: pointer !important; transition: filter .1s ease; }\
+		td[id$="_X"]:hover { filter: brightness(1.8); }\
+		table.xtab tr:hover td, table.xtabBR tr:hover td { background-color: rgba(0,0,0,0.09); }\
+		a[id^="clickBat"], a[id^="SearchCol"], a[id^="btMSort"] { cursor: pointer; }\
+		a[id^="clickBat"].buttonv2.green { box-shadow: inset 0 0 0 2px #2f7d2f; }\
+		body.pb-search-running #pbStatStatus, body.pb-search-running #pbStatSearched { animation: btPulse 1.4s ease-in-out infinite; }\
+		body.pb-search-running #pbSearchSubmit { background: #c0392b; color: #fff; }\
+		@keyframes btPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }\
+		.pb-loading { display: inline-block; }\
+		.pb-loading::after { content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 8px; vertical-align: middle; border: 2px solid #888; border-top-color: #222; border-radius: 50%; animation: btSpin .7s linear infinite; }\
+		@keyframes btSpin { to { transform: rotate(360deg); } }\
+		.botTabEnter { animation: btTabIn .15s ease; }\
+		@keyframes btTabIn { from { opacity: .3; transform: translateY(-3px); } to { opacity: 1; transform: none; } }\
+		.btPopup { border-width: 4px; box-shadow: 1px 3px 12px rgba(0,0,0,.35); }\
+		.btPopup * { scrollbar-width: thin; }\n\
+		.btPopup *::-webkit-scrollbar { width: 10px; height: 10px; }\n\
+		.btPopup *::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 5px; }\n\
+		.btPopup *::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.4); }\n\
+		.btPopup *::-webkit-scrollbar-track { background: rgba(0,0,0,.05); }\n\
+		body.btDarkTheme .btPopup { background: ' + (Options.Colors.Panel || '#fff') + ' !important; }\
+		body[data-bt-reduce="1"] *, body[data-bt-anim="off"] * { animation: none !important; transition: none !important; }\
+		body[data-bt-anim="smooth"] .tab, body[data-bt-anim="smooth"] a.buttonv2.std, body[data-bt-anim="smooth"] a.inlineButton.btButton, body[data-bt-anim="smooth"] .btPopupTop, body[data-bt-anim="smooth"] tr[id$="_bar"] {\
+			transition-duration: .25s;\
+		}\
+		@media (prefers-reduced-motion: reduce) {\
+			* { animation: none !important; transition: none !important; }\
+		}';
+}
+
+function ApplyBotVisuals() {
+	GM_addStyle(BotVisualCSS());
+	var speed = GlobalOptions.btAnimSpeed || 'normal';
+	document.body.setAttribute('data-bt-anim', speed);
+	document.body.setAttribute('data-bt-reduce', GlobalOptions.btReduceMotion ? '1' : '0');
+	if (Options.Theme == 'Dark') { document.body.classList.add('btDarkTheme'); }
+	else { document.body.classList.remove('btDarkTheme'); }
+}
+
+function SetAnimSpeed(speed) {
+	document.body.setAttribute('data-bt-anim', speed || 'normal');
+}
+
+function btAnimMs() {
+	var s = GlobalOptions.btAnimSpeed || 'normal';
+	if (s == 'off') return 0;
+	if (s == 'smooth') return 280;
+	return 150;
+}
+
+function btReducedMotion() {
+	if (GlobalOptions.btReduceMotion) return true;
+	if (document.body && document.body.getAttribute('data-bt-anim') == 'off') return true;
+	if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+	return false;
+}
+
+function btRaf(cb) {
+	var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || function (f) { return setTimeout(f, 16); };
+	return raf.call(window, cb);
+}
 function CheckForIncoming() {
 	var atype = "";
 	var atime = "";
@@ -4085,7 +4169,7 @@ function SliderBar(container, width, height, value, classPrefix, margin) {
 function CPopup(prefix, x, y, width, height, enableDrag, onClose) {
 	var pop = WinManager.get(prefix);
 	if (pop) {
-		pop.show(false);
+		pop.show(false, true);
 		return pop;
 	}
 	this.BASE_ZINDEX = 111111;
@@ -4214,12 +4298,42 @@ function CPopup(prefix, x, y, width, height, enableDrag, onClose) {
 		return ById(this.prefix + '_content');
 	}
 
-	function show(tf) {
+	function show(tf, instant) {
+		var dur = btAnimMs();
+		var reduced = btReducedMotion();
+		if (t._hideTimer) { clearTimeout(t._hideTimer); t._hideTimer = null; }
 		if (tf) {
+			t.div.style.transition = '';
+			t.div.style.opacity = '';
 			t.div.style.display = 'block';
 			t.focusMe();
+			if (!instant && dur > 0 && !reduced) {
+				try {
+					var target = GlobalOptions.btTransparent ? 0.9 : 1;
+					t.div.style.opacity = '0';
+					t.div.style.transition = 'opacity ' + (dur / 1000) + 's ease';
+					btRaf(function () { t.div.style.opacity = '' + target; });
+					setTimeout(function () { t.div.style.transition = ''; }, dur + 100);
+				} catch (e) { t.div.style.opacity = ''; t.div.style.transition = ''; }
+			}
 		} else {
-			t.div.style.display = 'none';
+			if (instant || dur <= 0 || reduced) {
+				t.div.style.display = 'none';
+				t.div.style.opacity = '';
+				t.div.style.transition = '';
+			} else {
+				try {
+					t.div.style.transition = 'opacity ' + (dur / 1000) + 's ease';
+					t.div.style.opacity = '0';
+					var d = t.div;
+					t._hideTimer = setTimeout(function () {
+						t._hideTimer = null;
+						d.style.display = 'none';
+						d.style.opacity = '';
+						d.style.transition = '';
+					}, dur + 60);
+				} catch (e) { t.div.style.display = 'none'; t.div.style.opacity = ''; t.div.style.transition = ''; }
+			}
 		}
 		return tf;
 	}
@@ -4501,6 +4615,11 @@ var tabManager = {
 			t.currentTab.div.style.display = 'none';
 			t.currentTab = newTab;
 			newTab.div.style.display = 'block';
+			if (btAnimMs() > 0 && !btReducedMotion()) {
+				var td = newTab.div;
+				td.classList.add('botTabEnter');
+				setTimeout(function () { td.classList.remove('botTabEnter'); }, 250);
+			}
 			Options.currentTab = newTab.name;
 			saveOptions();
 		}
@@ -19639,6 +19758,7 @@ Tabs.Options = {
 				div#throneMainContainer div#heroContainer{width:85px;height:150px;top:190px;left:585px;z-index:97;}',
 	Colors: {
 		Default: { Title: '#342819', TitleText: '#FFFFFF', DividerTop: '#E9D9AE', DividerBottom: '#8C7D5D', DividerText: '#000000', Panel: '#F7F3E6', PanelText: '#000000', Highlight: '#FFFFCC', HighlightText: '#000000', BoldRed: '#FF4D4D', BoldOrange: '#F80', BoldGreen: '#080', BoldMagenta: '#808', ReportVictory: '#080', ReportDefeat: '#CC0000', },
+		Dark: { Title: '#1F2128', TitleText: '#E8E2D1', DividerTop: '#3B3E4A', DividerBottom: '#202129', DividerText: '#D8D3C5', Panel: '#23242A', PanelText: '#E3E1D6', Highlight: '#2E3B2E', HighlightText: '#EAF5EA', BoldRed: '#FF6B6B', BoldOrange: '#FFA94D', BoldGreen: '#5FBF5F', BoldMagenta: '#C46BC4', ReportVictory: '#4CC94C', ReportDefeat: '#FF5555', },
 	},
 	ReportOptions: {
 		EnhanceAR: false,
@@ -20484,6 +20604,10 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btWideMap type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Enable wide map expansion button on the map panel") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
+		m += '<TR><TD class=xtab colspan=3><B>' + tx("Appearance") + '</b></td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Animation Speed") + ': ' + htmlSelector({ normal: tx('Normal'), smooth: tx('Smooth'), off: tx('Off') }, GlobalOptions.btAnimSpeed, 'id=btAnimSpeed') + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btAnimatePopups type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Animate Window Pop-ups") + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=btReduceMotion type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Reduce Motion") + '</td></tr>';
 		var UpdateLocations = { 0: "SourceForge", 1: "GreasyFork", 2: "GitHub", 3: "pbkplowplow.com" };
 		m += '<TR><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=ExtendedDebugChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Extended debug mode (Activates additional logging)") + '</td></tr>';
@@ -20517,6 +20641,9 @@ Tabs.Options = {
 		t.togGlobalOpt('btTrackOpen', 'btTrackOpen');
 		t.togGlobalOpt('btTransparent', 'btTransparent', t.RestartReminder);
 		t.changeGlobalOpt('btKocBgColor', 'btKocBgColor', function (color) { ApplyKocBgColor(color); });
+		t.changeGlobalOpt('btAnimSpeed', 'btAnimSpeed', SetAnimSpeed);
+		t.togGlobalOpt('btAnimatePopups', 'btAnimatePopups');
+		t.togGlobalOpt('btReduceMotion', 'btReduceMotion', function (on) { document.body.setAttribute('data-bt-reduce', on ? '1' : '0'); });
 
 		t.togGlobalOpt('AutoUpdateChk', 'AutoUpdates');
 		t.togGlobalOpt('ExtendedDebugChk', 'ExtendedDebugMode', t.RestartReminder);
@@ -21765,6 +21892,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab>' + tx("HTML colours") + ':&nbsp;<a class=xlink href="http://www.colorpicker.com/" target="_blank">' + tx("Colour Picker") + '</a>&nbsp;/&nbsp;<a class=xlink href="http://www.w3schools.com/html/html_colors.asp" target="_blank">' + tx('Colours') + '</a></td><td class=xtab>';
 		m += tx('Theme') + ':&nbsp;' + htmlSelector(Themes, Options.Theme, 'id=btTheme') + '&nbsp' + makeButtonv2('blue', 'id=btResetColors', tx("Reset Colours"));
 		m += '</td></tr>';
+		m += '<TR><TD class=xtab width=30>&nbsp;</td><TD colspan=4 class=xtab><span style="opacity:0.7;">' + tx('Tip: use the Dark theme for a dark window interface') + '</span></td></tr>';
 
 		m += '</table>';
 
@@ -29945,6 +30073,7 @@ Tabs.Search = {
 
 		t.searchRunning = true;
 		t.pageNum = 1;
+		document.body.classList.add('pb-search-running');
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
 
 		t.setupResultsPanel(false);
@@ -31259,6 +31388,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		t.searchRunning = false;
 		ById('pbStatStatus').innerHTML = msg;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
+		document.body.classList.remove('pb-search-running');
 
 		var sNote = '';
 		if (savelast) {
@@ -33519,7 +33649,7 @@ Tabs.Messages = {
 		}
 		else {
 			var rpId = t.FetchReportArray.splice(0, 1);
-			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in report details') + ':&nbsp;' + rpId + '</center>';
+			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in report details') + ':&nbsp;' + rpId + ' <span class="pb-loading"></span></center>';
 			FetchReport(rpId, function () { t.FetchReports(notify); });
 		}
 	},
@@ -33656,7 +33786,7 @@ Tabs.Messages = {
 		}
 		else {
 			var rpId = t.FetchReportArray.splice(0, 1);
-			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in scout report details') + ':&nbsp;' + rpId + '</center>';
+			t.popMsg.getMainDiv().innerHTML = '<br><br><br><center>' + tx('Reading in scout report details') + ':&nbsp;' + rpId + ' <span class="pb-loading"></span></center>';
 			FetchReportDetail(rpId, 1, function () { t.FetchReportDetails(notify); });
 		}
 	},
