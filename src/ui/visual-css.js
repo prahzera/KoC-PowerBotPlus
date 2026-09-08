@@ -102,6 +102,10 @@ function btStyleNode(id, css) {
 }
 
 function RefreshVisuals() {
+	var baseCss = (typeof BaseVisualCSS === 'function') ? BaseVisualCSS() : '';
+	btStyleNode('btBaseCss', baseCss);
+	var base = ById('btBaseStyle');
+	if (base) { base.textContent = baseCss; }
 	btStyleNode('btVisualCss', BotVisualCSS());
 	btStyleNode('btModernCss', BotModernCSS());
 	if (Options.Theme == 'Dark') { document.body.classList.add('btDarkTheme'); }

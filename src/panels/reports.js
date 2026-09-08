@@ -82,6 +82,7 @@ var Rpt = {
 
 	ReportPopup: function (rslt, rpt, reportId) {
 		var t = Rpt;
+		t.LastReport = { rslt: rslt, rpt: rpt, reportId: reportId };
 
 		var m = '';
 		var unitImg = [];
@@ -1373,6 +1374,15 @@ var Rpt = {
 			if (t.popReport.onClose) t.popReport.onClose();
 			t.popReport.destroy();
 			t.popReport = null;
+		}
+	},
+
+	Rerender: function () {
+		var t = Rpt;
+		if (t.popReport && t.LastReport && t.popReport.div && t.popReport.div.style.display !== 'none') {
+			t.ReportPopup(t.LastReport.rslt, t.LastReport.rpt, t.LastReport.reportId);
+			if (t.popReport && t.popReport.unfocusMe) { t.popReport.unfocusMe(); }
+			if (typeof mainPop !== 'undefined' && mainPop && mainPop.focusMe) { mainPop.focusMe(); }
 		}
 	},
 };

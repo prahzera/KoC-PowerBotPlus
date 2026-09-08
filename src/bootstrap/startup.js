@@ -52,7 +52,8 @@ function PowerBotStartup() {
 
 	ApplyBotVisuals();
 
-	var styles = '\
+	function BaseVisualCSS() {
+		var styles = '\
 		.buttonv2.std {width:123px; height:20px; line-height:20px; padding:2px 7px;} \
 		.kocmain .mod_comm .comm_global .chatlist .global {background-color:transparent;}\
 		table.xtab td {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
@@ -157,6 +158,8 @@ function PowerBotStartup() {
 		.btTop { vertical-align:text-top; }\
 		.btFaint { opacity:0.8; }\
 		div.ErrText {color:#FF0000;}';
+		return styles;
+	}
 
 	GM_addStyle("a.inlineButton.brown11 span {background: url(" + LONG_BROWN_BTN + ") no-repeat scroll left top transparent; !important}");
 	GM_addStyle(".castleBut.defending {border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: red;}");
@@ -269,7 +272,7 @@ function PowerBotStartup() {
 	}
 
 	mainPop = new CPopup('btMain', Options.btWinPos.x, Options.btWinPos.y, GlobalOptions.btWinSize.x, 100, true, CloseMainTab);
-	mainPop.getMainDiv().innerHTML = '<STYLE>' + styles + '</style>';
+	mainPop.getMainDiv().innerHTML = '<STYLE id=btBaseStyle>' + BaseVisualCSS() + '</style>';
 
 	WideScreen.setDashboard(Options.btDashboard); // do after styles added ^^
 

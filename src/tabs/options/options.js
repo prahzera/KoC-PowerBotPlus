@@ -988,19 +988,19 @@ Tabs.Options = {
 			Options.Colors.DividerTop = ById('togDividerTop').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togDividerBottom').addEventListener('change', function () {
 			Options.Colors.DividerBottom = ById('togDividerBottom').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togDividerText').addEventListener('change', function () {
 			Options.Colors.DividerText = ById('togDividerText').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togPanelBack').addEventListener('change', function () {
 			Options.Colors.Panel = ById('togPanelBack').value;
@@ -1039,49 +1039,51 @@ Tabs.Options = {
 			Options.Colors.Highlight = ById('togHighlightBack').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togHighlightText').addEventListener('change', function () {
 			Options.Colors.HighlightText = ById('togHighlightText').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldRed').addEventListener('change', function () {
 			Options.Colors.BoldRed = ById('togBoldRed').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldOrange').addEventListener('change', function () {
 			Options.Colors.BoldOrange = ById('togBoldOrange').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldGreen').addEventListener('change', function () {
 			Options.Colors.BoldGreen = ById('togBoldGreen').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldMagenta').addEventListener('change', function () {
 			Options.Colors.BoldMagenta = ById('togBoldMagenta').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togReportVictory').addEventListener('change', function () {
 			Options.Colors.ReportVictory = ById('togReportVictory').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
+			Rpt.Rerender();
 		}, false);
 		ById('togReportDefeat').addEventListener('change', function () {
 			Options.Colors.ReportDefeat = ById('togReportDefeat').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
+			Rpt.Rerender();
 		}, false);
 		ById('btResetColors').addEventListener('click', function () {
 			var Theme = ById('btTheme').value;

@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.16
-// @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada, acento personalizable en todo el bot, cambios de apariencia (acento, título, panel, tema y colores de los grupos de pestañas herramientas/automatizaciones/destacadas) aplicados al instante sin recargar la página y pestañas inactivas con fondo sólido sin transparencias
+// @version			4.17
+// @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada, acento personalizable en todo el bot y todos los colores de apariencia (fondo de divisor, resaltados, texto en negrita de colores, victoria/derrota de reportes) aplicados al instante sin recargar la página, recoloreando también los reportes que ya estén abiertos y con pestañas inactivas de fondo sólido sin transparencias
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.16';
+var Version = '4.17';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -923,7 +923,8 @@ function PowerBotStartup() {
 
 	ApplyBotVisuals();
 
-	var styles = '\
+	function BaseVisualCSS() {
+		var styles = '\
 		.buttonv2.std {width:123px; height:20px; line-height:20px; padding:2px 7px;} \
 		.kocmain .mod_comm .comm_global .chatlist .global {background-color:transparent;}\
 		table.xtab td {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
@@ -1028,6 +1029,8 @@ function PowerBotStartup() {
 		.btTop { vertical-align:text-top; }\
 		.btFaint { opacity:0.8; }\
 		div.ErrText {color:#FF0000;}';
+		return styles;
+	}
 
 	GM_addStyle("a.inlineButton.brown11 span {background: url(" + LONG_BROWN_BTN + ") no-repeat scroll left top transparent; !important}");
 	GM_addStyle(".castleBut.defending {border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: red;}");
@@ -1140,7 +1143,7 @@ function PowerBotStartup() {
 	}
 
 	mainPop = new CPopup('btMain', Options.btWinPos.x, Options.btWinPos.y, GlobalOptions.btWinSize.x, 100, true, CloseMainTab);
-	mainPop.getMainDiv().innerHTML = '<STYLE>' + styles + '</style>';
+	mainPop.getMainDiv().innerHTML = '<STYLE id=btBaseStyle>' + BaseVisualCSS() + '</style>';
 
 	WideScreen.setDashboard(Options.btDashboard); // do after styles added ^^
 
@@ -3463,6 +3466,10 @@ function btStyleNode(id, css) {
 }
 
 function RefreshVisuals() {
+	var baseCss = (typeof BaseVisualCSS === 'function') ? BaseVisualCSS() : '';
+	btStyleNode('btBaseCss', baseCss);
+	var base = ById('btBaseStyle');
+	if (base) { base.textContent = baseCss; }
 	btStyleNode('btVisualCss', BotVisualCSS());
 	btStyleNode('btModernCss', BotModernCSS());
 	if (Options.Theme == 'Dark') { document.body.classList.add('btDarkTheme'); }
@@ -16322,6 +16329,7 @@ var Rpt = {
 
 	ReportPopup: function (rslt, rpt, reportId) {
 		var t = Rpt;
+		t.LastReport = { rslt: rslt, rpt: rpt, reportId: reportId };
 
 		var m = '';
 		var unitImg = [];
@@ -17613,6 +17621,15 @@ var Rpt = {
 			if (t.popReport.onClose) t.popReport.onClose();
 			t.popReport.destroy();
 			t.popReport = null;
+		}
+	},
+
+	Rerender: function () {
+		var t = Rpt;
+		if (t.popReport && t.LastReport && t.popReport.div && t.popReport.div.style.display !== 'none') {
+			t.ReportPopup(t.LastReport.rslt, t.LastReport.rpt, t.LastReport.reportId);
+			if (t.popReport && t.popReport.unfocusMe) { t.popReport.unfocusMe(); }
+			if (typeof mainPop !== 'undefined' && mainPop && mainPop.focusMe) { mainPop.focusMe(); }
 		}
 	},
 };
@@ -21092,19 +21109,19 @@ Tabs.Options = {
 			Options.Colors.DividerTop = ById('togDividerTop').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togDividerBottom').addEventListener('change', function () {
 			Options.Colors.DividerBottom = ById('togDividerBottom').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togDividerText').addEventListener('change', function () {
 			Options.Colors.DividerText = ById('togDividerText').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togPanelBack').addEventListener('change', function () {
 			Options.Colors.Panel = ById('togPanelBack').value;
@@ -21143,49 +21160,51 @@ Tabs.Options = {
 			Options.Colors.Highlight = ById('togHighlightBack').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togHighlightText').addEventListener('change', function () {
 			Options.Colors.HighlightText = ById('togHighlightText').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldRed').addEventListener('change', function () {
 			Options.Colors.BoldRed = ById('togBoldRed').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldOrange').addEventListener('change', function () {
 			Options.Colors.BoldOrange = ById('togBoldOrange').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldGreen').addEventListener('change', function () {
 			Options.Colors.BoldGreen = ById('togBoldGreen').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togBoldMagenta').addEventListener('change', function () {
 			Options.Colors.BoldMagenta = ById('togBoldMagenta').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
 		}, false);
 		ById('togReportVictory').addEventListener('change', function () {
 			Options.Colors.ReportVictory = ById('togReportVictory').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
+			Rpt.Rerender();
 		}, false);
 		ById('togReportDefeat').addEventListener('change', function () {
 			Options.Colors.ReportDefeat = ById('togReportDefeat').value;
 			saveOptions();
 			t.PaintAppearanceOptions();
-			t.RestartReminder();
+			RefreshVisuals();
+			Rpt.Rerender();
 		}, false);
 		ById('btResetColors').addEventListener('click', function () {
 			var Theme = ById('btTheme').value;
