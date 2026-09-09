@@ -93,6 +93,7 @@ const MANIFEST = [
   'utils/scripting.js', // addScript(4401), CalterUwFunc(4409), CalterFuncModifier(4476)
   'utils/ajax.js', // matTypeof(4602), implodeUrlArgs(4615), addUrlArgs(4623), myClone(4635), MyAjaxRequest(4642), AjaxRequest(4710), DouW(4786)
   'utils/game-utils.js', // /** Standard Game Functions **/ (4800) + getThroneEffectName(4802), SelectText(4810), StartKeyTimer(4825), htmlTitleLine(4830), strButton20(4834), strButton14(4839), strButton8(4845), makeButtonv2(4850), getServerId(4854), getTokenServerId(4865), getFeedServerId(4875), getFeedId(4885), getFeedUserId(4895)
+  'utils/no-throttle-timer.js', // noThrottleTimeout(fn,ms), noThrottleClear(id) — Worker-based timer, sin throttling en background
   'utils/options-io.js', // readGlobalOptions(4905), saveGlobalOptions(4929), readOptions(4933), saveOptions(4948), readUserOptions(4955), saveUserOptions(4965), readLanguage(4970), saveLanguage(4980), ToggleOption(4984), ChangeOption(5004), ChangeIntegerOption(5019)
   'utils/city.js', // GetDisplayName(5035), setCities(5042), SelectCity(5060), OpenBuilding(5066), showBlessings(5081), getAscensionValues(5094), getSpellData(5106), getFactionBonus(5120), getTREffectStyle(5130), setTroops(5159)
   'utils/map-math.js', // distance(5179), CalculateTileId(5191), getMaxWilds(5207)

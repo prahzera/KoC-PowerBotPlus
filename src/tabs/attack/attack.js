@@ -118,7 +118,7 @@ Tabs.Attack = {
 		// start autoattack loop timer to start in 8 seconds...
 
 		if (Options.AttackOptions.Running) {
-			t.timer = setTimeout(function () { t.doAutoLoop(0, false); }, (8 * 1000));
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(0, false); }, (8 * 1000));
 		}
 	},
 
@@ -302,7 +302,7 @@ Tabs.Attack = {
 		if (Options.AttackOptions.Running == true) {
 			Options.AttackOptions.Running = false;
 			obj.value = tx("Attack = OFF");
-			clearTimeout(t.timer);
+			noThrottleClear(t.timer);
 		}
 		else {
 			Options.AttackOptions.Running = true;
@@ -312,7 +312,7 @@ Tabs.Attack = {
 			while (n--) {
 				Options.AttackOptions.Routes[n].LastRoundOne = 0;
 			}
-			t.timer = setTimeout(function () { t.doAutoLoop(0, false); }, 0);
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(0, false); }, 0);
 			t.sendAttackReport(); // check
 		}
 		saveOptions();
@@ -964,7 +964,7 @@ Tabs.Attack = {
 
 	doAutoLoop: function (idx, busted) {
 		var t = Tabs.Attack;
-		clearTimeout(t.timer);
+		noThrottleClear(t.timer);
 		if (!Options.AttackOptions.Running) return;
 
 		if (idx >= Options.AttackOptions.Routes.length) { idx = 0; } // safety, if route(s) have been deleted.
@@ -1001,10 +1001,10 @@ Tabs.Attack = {
 		var t = Tabs.Attack;
 		if (idx >= Options.AttackOptions.Routes.length - 1) {
 			if (!t.loopaction) { t.autodelay = Options.AttackOptions.intervalSecs; } // if no action this loop, apply delay anyway...
-			t.timer = setTimeout(function () { t.doAutoLoop(0, false); }, (t.autodelay * 1000));
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(0, false); }, (t.autodelay * 1000));
 		}
 		else {
-			t.timer = setTimeout(function () { t.doAutoLoop(idx + 1, false); }, (t.autodelay * 1000));
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx + 1, false); }, (t.autodelay * 1000));
 		}
 	},
 
@@ -1093,7 +1093,7 @@ Tabs.Attack = {
 					}
 					saveOptions();
 					if (buster) { // wave 1 success!.. reset loop on same route for wave 2...
-						t.timer = setTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
+						t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
 					}
 				}
 				else {

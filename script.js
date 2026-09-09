@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.20
-// @releasenotes        Pestañas compactas con iconos SVG y ancho uniforme (estilo plano, sin degradados), color pickers en el panel Apariencia en vez de escribir HEX, jerarquía de colores en botones (rojo peligro, verde éxito, marrón acción), notificaciones toast, estado vacío con icono en tablas, indicador de búsqueda en marcha, cabecera de ventana rediseñada, acento personalizable en todo el bot y todos los colores de apariencia (fondo de divisor, resaltados, texto en negrita de colores, victoria/derrota de reportes) aplicados al instante sin recargar la página, recoloreando también los reportes que ya estén abiertos y con pestañas inactivas de fondo sólido sin transparencias; corrección de un error que borraba todos los estilos del bot al cambiar el Fondo de Panel; botones de las pestañas con ancho fijo idéntico; al abrir Deshacer en masa se marcan automáticamente las calidades Simple a Fabuloso
+// @version			4.21
+// @releasenotes        Bug corregido: ataques automáticos no se enviaban en segundo plano (throttling del navegador); ahora el bucle de ataque usa un Worker independiente que no sufre limitaciones de velocidad
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.20';
+var Version = '4.21';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -5562,6 +5562,86 @@ function getFeedUserId() {
 		myFeedUserId = Sresult;
 	return myFeedUserId;
 }
+
+/** Anti-throttle timer: evita que el navegador limite setTimeout en pestañas en segundo plano.
+ *  Crea un Web Worker inline que dispara mensajes en el interval solicitado,
+ *  sin sufrir el throttling de Chrome/Firefox (mín. 1s o más en background).
+ *
+ *  API pública:
+ *    var id = noThrottleTimeout(fn, delayMs)  → como setTimeout pero sin throttling
+ *    noThrottleClear(id)                       → como clearTimeout
+ */
+var noThrottleTimeout = (function () {
+	var _worker = null;
+	var _pending = {}; // id → {fn, fired}
+	var _nextId = 1;
+
+	function _getWorker() {
+		if (_worker) return _worker;
+		try {
+			var blob = new Blob([
+				'var timers={};',
+				'self.onmessage=function(e){',
+				' var d=e.data;',
+				' if(d.cmd==="set"){',
+				'  var id=d.id,ms=d.ms;',
+				'  timers[id]=setTimeout(function(){self.postMessage({id:id});delete timers[id];},ms);',
+				' } else if(d.cmd==="clear"){',
+				'  clearTimeout(timers[d.id]);delete timers[d.id];',
+				' }',
+				'}'
+			], { type: 'application/javascript' });
+			_worker = new Worker(URL.createObjectURL(blob));
+			_worker.onmessage = function (e) {
+				var id = e.data.id;
+				var entry = _pending[id];
+				if (entry) {
+					delete _pending[id];
+					try { entry.fn(); } catch (ex) { logerr(ex); }
+				}
+			};
+		} catch (ex) {
+			// Si el Worker falla (p.ej. CSP restrictivo), caemos a setTimeout normal
+			_worker = null;
+		}
+		return _worker;
+	}
+
+	function noThrottleTimeout(fn, ms) {
+		var id = _nextId++;
+		var w = _getWorker();
+		if (!w) {
+			// fallback a setTimeout estándar
+			_pending[id] = { fn: fn };
+			var nativeId = setTimeout(function () {
+				var entry = _pending[id];
+				if (entry) { delete _pending[id]; try { entry.fn(); } catch (ex) { logerr(ex); } }
+			}, ms);
+			_pending[id].nativeId = nativeId;
+			return id;
+		}
+		_pending[id] = { fn: fn };
+		w.postMessage({ cmd: 'set', id: id, ms: ms });
+		return id;
+	}
+
+	function noThrottleClear(id) {
+		if (!id) return;
+		var entry = _pending[id];
+		delete _pending[id];
+		var w = _getWorker();
+		if (w) {
+			w.postMessage({ cmd: 'clear', id: id });
+		} else if (entry && entry.nativeId) {
+			clearTimeout(entry.nativeId);
+		}
+	}
+
+	noThrottleTimeout.clear = noThrottleClear;
+	return noThrottleTimeout;
+})();
+
+function noThrottleClear(id) { noThrottleTimeout.clear(id); }
 
 function readGlobalOptions() {
 	s = GM_getValue('Options_??');
@@ -44765,7 +44845,7 @@ Tabs.Attack = {
 		// start autoattack loop timer to start in 8 seconds...
 
 		if (Options.AttackOptions.Running) {
-			t.timer = setTimeout(function () { t.doAutoLoop(0, false); }, (8 * 1000));
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(0, false); }, (8 * 1000));
 		}
 	},
 
@@ -44949,7 +45029,7 @@ Tabs.Attack = {
 		if (Options.AttackOptions.Running == true) {
 			Options.AttackOptions.Running = false;
 			obj.value = tx("Attack = OFF");
-			clearTimeout(t.timer);
+			noThrottleClear(t.timer);
 		}
 		else {
 			Options.AttackOptions.Running = true;
@@ -44959,7 +45039,7 @@ Tabs.Attack = {
 			while (n--) {
 				Options.AttackOptions.Routes[n].LastRoundOne = 0;
 			}
-			t.timer = setTimeout(function () { t.doAutoLoop(0, false); }, 0);
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(0, false); }, 0);
 			t.sendAttackReport(); // check
 		}
 		saveOptions();
@@ -45611,7 +45691,7 @@ Tabs.Attack = {
 
 	doAutoLoop: function (idx, busted) {
 		var t = Tabs.Attack;
-		clearTimeout(t.timer);
+		noThrottleClear(t.timer);
 		if (!Options.AttackOptions.Running) return;
 
 		if (idx >= Options.AttackOptions.Routes.length) { idx = 0; } // safety, if route(s) have been deleted.
@@ -45648,10 +45728,10 @@ Tabs.Attack = {
 		var t = Tabs.Attack;
 		if (idx >= Options.AttackOptions.Routes.length - 1) {
 			if (!t.loopaction) { t.autodelay = Options.AttackOptions.intervalSecs; } // if no action this loop, apply delay anyway...
-			t.timer = setTimeout(function () { t.doAutoLoop(0, false); }, (t.autodelay * 1000));
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(0, false); }, (t.autodelay * 1000));
 		}
 		else {
-			t.timer = setTimeout(function () { t.doAutoLoop(idx + 1, false); }, (t.autodelay * 1000));
+			t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx + 1, false); }, (t.autodelay * 1000));
 		}
 	},
 
@@ -45740,7 +45820,7 @@ Tabs.Attack = {
 					}
 					saveOptions();
 					if (buster) { // wave 1 success!.. reset loop on same route for wave 2...
-						t.timer = setTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
+						t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
 					}
 				}
 				else {
