@@ -895,8 +895,9 @@ t.setupFilterDisplay();
 		catch (e) { logerr(e); }
 
 		try {
+			var llSupportedType = (stype == 0 || stype == 2);
 			if (ById('pbslastlogin1')) {
-				if (t.lastLoginUsable()) { jQuery('#pbslastlogin1').removeClass('divHide'); }
+				if (llSupportedType) { jQuery('#pbslastlogin1').removeClass('divHide'); }
 				else { jQuery('#pbslastlogin1').addClass('divHide'); }
 			}
 			if (ById('pbslastlogin2')) {

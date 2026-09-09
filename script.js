@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.21
-// @releasenotes        Bug corregido: ataques automáticos no se enviaban en segundo plano (throttling del navegador); ahora el bucle de ataque usa un Worker independiente que no sufre limitaciones de velocidad
+// @version			4.22
+// @releasenotes        Bug corregido: el checkbox "Mostrar última conexión" en la pestaña Search desaparecía y no se podía activar; ahora se muestra siempre que el tipo de búsqueda sea Ciudad o Salvaje
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.21';
+var Version = '4.22';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -31079,8 +31079,9 @@ t.setupFilterDisplay();
 		catch (e) { logerr(e); }
 
 		try {
+			var llSupportedType = (stype == 0 || stype == 2);
 			if (ById('pbslastlogin1')) {
-				if (t.lastLoginUsable()) { jQuery('#pbslastlogin1').removeClass('divHide'); }
+				if (llSupportedType) { jQuery('#pbslastlogin1').removeClass('divHide'); }
 				else { jQuery('#pbslastlogin1').addClass('divHide'); }
 			}
 			if (ById('pbslastlogin2')) {

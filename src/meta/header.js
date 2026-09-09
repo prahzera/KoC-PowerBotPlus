@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Bug corregido: ataques automáticos no se enviaban en segundo plano (throttling del navegador); ahora el bucle de ataque usa un Worker independiente que no sufre limitaciones de velocidad
+// @releasenotes        Bug corregido: el checkbox "Mostrar última conexión" en la pestaña Search desaparecía y no se podía activar; ahora se muestra siempre que el tipo de búsqueda sea Ciudad o Salvaje
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
