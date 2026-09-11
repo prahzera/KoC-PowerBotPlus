@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.23
-// @releasenotes        Pestaña Reportes de Exploración: se agregaron opciones para procesar reportes de exploraciones entrantes (otros te exploran) y salientes (tú exploras a otros) de forma independiente con las mismas reglas y filtros de recursos
+// @version			4.24
+// @releasenotes        El auto-updater ahora verifica si hay nuevas versiones cada 15 minutos en vez de una vez al día
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.23';
+var Version = '4.24';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -761,7 +761,7 @@ var AutoUpdater = {
 		var now = unixTime();
 		var lastCheck = 0;
 		if (GM_getValue('updated_' + this.id, 0)) lastCheck = parseInt(GM_getValue('updated_' + this.id, 0));
-		if (now > (lastCheck + 60 * 60 * 24)) this.call(true, false);
+		if (now > (lastCheck + 60 * 15)) this.call(true, false);
 		GM_setValue('updated_' + AutoUpdater.id, now);
 	},
 
@@ -1202,7 +1202,10 @@ function PowerBotStartup() {
 
 	// Set to check for updates in 15 seconds
 
-	if (GlobalOptions.AutoUpdates) { setTimeout(function () { AutoUpdater.check(); }, 15000); }
+	if (GlobalOptions.AutoUpdates) {
+		setTimeout(function () { AutoUpdater.check(); }, 15000);
+		setInterval(function () { AutoUpdater.check(); }, 15 * 60 * 1000); // cada 15 minutos
+	}
 
 	// start main looper
 

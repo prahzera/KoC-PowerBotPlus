@@ -84,7 +84,7 @@ var AutoUpdater = {
 		var now = unixTime();
 		var lastCheck = 0;
 		if (GM_getValue('updated_' + this.id, 0)) lastCheck = parseInt(GM_getValue('updated_' + this.id, 0));
-		if (now > (lastCheck + 60 * 60 * 24)) this.call(true, false);
+		if (now > (lastCheck + 60 * 15)) this.call(true, false);
 		GM_setValue('updated_' + AutoUpdater.id, now);
 	},
 

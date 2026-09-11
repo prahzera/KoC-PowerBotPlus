@@ -331,7 +331,10 @@ function PowerBotStartup() {
 
 	// Set to check for updates in 15 seconds
 
-	if (GlobalOptions.AutoUpdates) { setTimeout(function () { AutoUpdater.check(); }, 15000); }
+	if (GlobalOptions.AutoUpdates) {
+		setTimeout(function () { AutoUpdater.check(); }, 15000);
+		setInterval(function () { AutoUpdater.check(); }, 15 * 60 * 1000); // cada 15 minutos
+	}
 
 	// start main looper
 
