@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.22
-// @releasenotes        Bug corregido: el checkbox "Mostrar última conexión" en la pestaña Search desaparecía y no se podía activar; ahora se muestra siempre que el tipo de búsqueda sea Ciudad o Salvaje
+// @version			4.23
+// @releasenotes        Pestaña Reportes de Exploración: se agregaron opciones para procesar reportes de exploraciones entrantes (otros te exploran) y salientes (tú exploras a otros) de forma independiente con las mismas reglas y filtros de recursos
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.22';
+var Version = '4.23';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -36530,6 +36530,8 @@ Tabs.ScoutReports = {
 		lost: false,
 		friendly: true,
 		hostile: true,
+		incoming: true,
+		outgoing: true,
 	},
 	LoopCounter: 0,
 	lrpts: null,
@@ -36621,13 +36623,17 @@ Tabs.ScoutReports = {
 		for (var k in reports) {
 			if (Options.ScoutOptions.On) {
 				if (reports[k].marchType == 3) {
-					if (reports[k].side1PlayerId == uW.tvuid) {
+					var isIncoming = (reports[k].side1PlayerId == uW.tvuid);
+					var isOutgoing = (reports[k].side0PlayerId == uW.tvuid);
+					var isRelevant = (isIncoming && Options.ScoutOptions.incoming) || (isOutgoing && Options.ScoutOptions.outgoing);
+					if (isRelevant) {
+						var otherAllianceId = isIncoming ? reports[k].side0AllianceId : reports[k].side1AllianceId;
 						var rptdel = false;
-						if (reports[k].side0AllianceId && Options.ScoutOptions.friendly == true) {
+						if (otherAllianceId && Options.ScoutOptions.friendly == true) {
 							if (Seed.allianceDiplomacies.friendlyToThem) {
 								for (var l in Seed.allianceDiplomacies.friendlyToThem) {
-									if (reports[k].side0AllianceId == Seed.allianceDiplomacies.friendlyToThem[l].allianceId) {
-										if (GlobalOptions.ExtendedDebugMode) actionLog('deleting friendly scout' + k.substr(2), 'SCOUT');
+									if (otherAllianceId == Seed.allianceDiplomacies.friendlyToThem[l].allianceId) {
+										if (GlobalOptions.ExtendedDebugMode) actionLog('deleting friendly scout ' + k.substr(2), 'SCOUT');
 										deletes1.push(k.substr(2));
 										rptdel = true;
 									}
@@ -36635,7 +36641,7 @@ Tabs.ScoutReports = {
 							}
 							if (Seed.allianceDiplomacies.friendly) {
 								for (var l in Seed.allianceDiplomacies.friendly) {
-									if (reports[k].side0AllianceId == Seed.allianceDiplomacies.friendly[l].allianceId) {
+									if (otherAllianceId == Seed.allianceDiplomacies.friendly[l].allianceId) {
 										if (GlobalOptions.ExtendedDebugMode) actionLog('deleting friendly scout ' + k.substr(2), 'SCOUT');
 										deletes1.push(k.substr(2));
 										rptdel = true;
@@ -36643,21 +36649,21 @@ Tabs.ScoutReports = {
 								}
 							}
 						};
-						if (reports[k].side0AllianceId && Options.ScoutOptions.hostile == true) {
+						if (otherAllianceId && Options.ScoutOptions.hostile == true) {
 							if (Seed.allianceDiplomacies.hostile) {
 								for (var l in Seed.allianceDiplomacies.hostile) {
-									if (reports[k].side0AllianceId == Seed.allianceDiplomacies.hostile[l].allianceId) {
+									if (otherAllianceId == Seed.allianceDiplomacies.hostile[l].allianceId) {
 										if (GlobalOptions.ExtendedDebugMode) actionLog('not deleting hostile scout ' + k.substr(2), 'SCOUT');
 										rptdel = true;
 									}
 								}
 							}
 						};
-					};
-					if (rptdel == false) { t.tocheck.push(k.substr(2)); }
-				};
+						if (rptdel == false) { t.tocheck.push(k.substr(2)); }
+					}
+				}
 			}
-		};
+		}
 		if (deletes1.length > 0) {
 			t.deleteCheckedReports(deletes1);
 		} else {
@@ -36785,7 +36791,9 @@ Tabs.ScoutReports = {
 		m += '<tr><td>&nbsp;&nbsp;<b>' + tx('OR') + '</b></td><td align="right">' + tx('Stone is more than') + ' :&nbsp;</td><td><INPUT id=frR3 type=text value=' + Options.ScoutOptions.r3 + '></td></tr>';
 		m += '<tr><td>&nbsp;&nbsp;<b>' + tx('OR') + '</b></td><td align="right">' + tx('Ore is more than') + ' :&nbsp;</td><td><INPUT id=frR4 type=text value=' + Options.ScoutOptions.r4 + '></td></tr>';
 		m += '<tr><td colspan=2>&nbsp;</td><td>(' + tx('NB - Set amount to zero to disable the check for that resource') + ')</td></tr></table>';
-		m += '<hr>&nbsp;&nbsp;&nbsp;&nbsp;<input id=frfriendly type=checkbox ' + (Options.ScoutOptions.friendly ? 'CHECKED' : '') + '><b>' + tx('ALWAYS') + '</b> ' + tx('Delete Scout Reports of Friendly Alliances');
+		m += '<hr>&nbsp;&nbsp;&nbsp;&nbsp;<input id=frincoming type=checkbox ' + (Options.ScoutOptions.incoming ? 'CHECKED' : '') + '>&nbsp;' + tx('Process Incoming Scout Reports (others scouting you)');
+		m += '<br>&nbsp;&nbsp;&nbsp;&nbsp;<input id=froutgoing type=checkbox ' + (Options.ScoutOptions.outgoing ? 'CHECKED' : '') + '>&nbsp;' + tx('Process Outgoing Scout Reports (you scouting others)');
+		m += '<br>&nbsp;&nbsp;&nbsp;&nbsp;<input id=frfriendly type=checkbox ' + (Options.ScoutOptions.friendly ? 'CHECKED' : '') + '><b>' + tx('ALWAYS') + '</b> ' + tx('Delete Scout Reports of Friendly Alliances');
 		m += '<br>&nbsp;&nbsp;&nbsp;&nbsp;<input id=frhostile type=checkbox ' + (Options.ScoutOptions.hostile ? 'CHECKED' : '') + '><b>' + tx('NEVER') + '</b> ' + tx('Delete Scout Reports of Hostile Alliances');
 		m += '<br>&nbsp;';
 
@@ -36798,6 +36806,8 @@ Tabs.ScoutReports = {
 		ChangeOption('ScoutOptions', 'frR4', 'r4');
 
 		ToggleOption('ScoutOptions', 'frlost', 'lost');
+		ToggleOption('ScoutOptions', 'frincoming', 'incoming');
+		ToggleOption('ScoutOptions', 'froutgoing', 'outgoing');
 		ToggleOption('ScoutOptions', 'frfriendly', 'friendly');
 		ToggleOption('ScoutOptions', 'frhostile', 'hostile');
 

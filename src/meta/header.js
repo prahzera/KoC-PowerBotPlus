@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Bug corregido: el checkbox "Mostrar última conexión" en la pestaña Search desaparecía y no se podía activar; ahora se muestra siempre que el tipo de búsqueda sea Ciudad o Salvaje
+// @releasenotes        Pestaña Reportes de Exploración: se agregaron opciones para procesar reportes de exploraciones entrantes (otros te exploran) y salientes (tú exploras a otros) de forma independiente con las mismas reglas y filtros de recursos
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
