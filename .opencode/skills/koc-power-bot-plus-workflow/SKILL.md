@@ -1,6 +1,6 @@
 ---
 name: koc-power-bot-plus-workflow
-description: Checklist obligatorio para CUALQUIER cambio en el repositorio KoC Power Bot Plus. Usa SIEMPRE que edites src/, lang_es.json/lang_en.json, script.js, o prepares una versión/release: subir versión en package.json, actualizar // @releasenotes en src/meta/header.js (New Features! del modal), revisar claves de idioma, npm run build + build:check, y commit con formato "KoC Power Bot Plus vX.Y.Z - ...". Incluye referencia completa del Tab Search (mapa, provincias, bloques, last login) para no investigar.
+description: Checklist obligatorio para CUALQUIER cambio en el repositorio KoC Power Bot Plus. Usa SIEMPRE que edites src/, lang_es.json/lang_en.json, script.js, o prepares una versión/release: versionado X.Y.Z (npm run version:fix/feature/major), actualizar // @releasenotes en src/meta/header.js (New Features! del modal), revisar claves de idioma, npm run build + build:check, y commit con formato "KoC Power Bot Plus vX.Y.Z - ...". Incluye referencia completa del Tab Search (mapa, provincias, bloques, last login), cambios recientes (v4.25 distancia desde ciudad, v4.26 idioma auto-refrescable) y trabajo pendiente, para no investigar.
 ---
 
 # Workflow: cambios en KoC Power Bot Plus
@@ -34,7 +34,13 @@ Userscript monolito: `src/` es la fuente de verdad. `script.js` y `script.meta.j
 - `src/core/runtime.js` define los objetos globales base: `JSON2`, `uW` (objeto real del juego, p. ej. `uW.g_ajaxpath`, `uW.g_js_strings`, `uW.tvuid`, `uW.provincenames`), `Seed`, `CM`, `http`, `KOCMON_ON`, `GameURL`.
 - `src/core/world.js`: objeto `Provinces` (esquinas superior-izquierda de cada provincia). `src/core/constants.js`: `MAP_DELAY = 2000`, `MAX_BLOCKS = 20`.
 - `src/utils/i18n.js`: `tx('Clave')` traduce desde el pack descargado; usa la clave si no hay pack.
-- Versiones pasadas: 3.90..3.96 (filtros last login, botón Actualizar) → 3.97 (búsqueda de todo el mapa). Última feature v3.97 en `main` (commit de release). NO push sin pedido.
+- Historial de versiones: 3.90..3.98 (last login, búsqueda de todo el mapa) → v4.x (UI/UX, apariencia, releases 4.13-4.24) → v4.25 (Search: distancia desde la ciudad seleccionada) → v4.26 (idioma: packs con LangVersion y refresco automático) → desde 4.26.0 versionado **X.Y.Z** (ver sección Versionado).
+
+## Versionado (X.Y.Z) — desde 4.26.0
+- Formato OBLIGATORIO `X.Y.Z` en `package.json` (build.js aborta si no lo cumple; regex `^[0-9]+\.[0-9]+\.[0-9]+$`). **X** = versión principal del sistema, **Y** = feature nueva, **Z** = arreglo/mejora. Evita llegar a "4.10000" con fixes.
+- Comandos: `npm run version:fix` (Z+1), `npm run version:feature` (Y+1, Z=0), `npm run version:major` (X+1, Y=Z=0). Cada uno sube la versión y recompila+valida (`scripts/bump-version.js`).
+- El auto-updater (`AutoUpdater.compareVersion`, src/options/auto-updater.js) ya compara X.Y.Z por partes (`split('.')`+`parseIntNan`): "4.26.0" vs "4.26" no da falso update; "4.26.1" > "4.26.0" correcto.
+- El release automático (release.yml) matchea `^KoC Power Bot Plus v([0-9.]+)` → soporta `v4.26.1`; tag/name de la release serán `v4.26.1`.
 
 ## Estructura de src/
 - `tabs/` — una carpeta por tab/feature UI (hojas. repetitivo `tabs/search`, `tabs/shared/...`).
@@ -117,3 +123,21 @@ Objeto de estado: `Tabs.Search` (todo en mayúsculas/claves: `Options`, `LastSea
 
 ## Opciones clave de `Tabs.Search.Options` (SearchOptions)
 `SearchType` (0 ciudad, 1 barbario, 2+ salvaje...) · `SearchShape` (0 cuadrado / 1 círculo) · `MinLevel/MaxLevel` · `WildType` · `Unowned/Misted/OldMists/NewMists` · `Hostile/Friendly/Neutral/Unallied` · `HostileAlliances` (objeto aid→true = EXCLUIR esa alianza hostil del filtro) · `MinMight/MaxMight` (en el filtro se multiplican por 1e9: `MinMight * 1000000000`) · `Rank/RankType` · `AllianceName/PlayerName` (búsqueda parcial, toUpperCase) · `ShowLastLogin`/`LastLoginMinDays`/`LastLoginMaxDays` · `sortColNum` (22 = last login).
+
+---
+
+# Cambios recientes (referencia rápida)
+
+## v4.25 — Search: distancia desde la ciudad seleccionada
+- La columna Distance (`mapDat[2]`) se calcula desde la ciudad del picker (`t.ModelCityId`, helper `t.distOrigin()`) en vez del centro de la búsqueda/provincia. `mapCallback` usa `dOrigin = t.distOrigin()`.
+- Al cambiar de ciudad, `citySelNotify` llama `t.recalcDistances()` (recalcula `mapDat[2]` y re-renderiza) si hay resultados y el panel existe.
+- IMPORTANTE: el filtro de búsqueda CIRCULAR sigue relativo al CENTRO de búsqueda (`distance(startX, startY, x, y) <= maxDistance`), NO a `mapDat[2]`.
+
+## v4.26 — Idioma: packs auto-refrescables
+- Los packs (`lang_es.json`/`lang_en.json`) llevan metadatos `"CurrLang"` y `"LangVersion"` (fecha YYYYMMDD; NO son claves de traducción).
+- `LoadLanguage` (src/tabs/options/options.js) aplica el pack descargado si `rslt.LangVersion && (!LanguageArray.LangVersion || parseIntNan(String(local)) < parseIntNan(String(remote)))`. Antes solo avisaba "New Language Pack Available!" sin aplicar (bug: packs nunca se refrescaban).
+- Refresco automático: al arrancar (src/bootstrap/startup.js), si `Options.LanguageLastChecked + 7 días < unixTime()` **O** `Options.LanguageScriptVersion != Version` → `Tabs.Options.LoadLanguage` a los 8 s. `LanguageScriptVersion` (src/options/options.js, default 0) se fija en LoadLanguage → al actualizar el script el pack se refresca.
+- Las ediciones manuales (Options > Edit Translations) persisten hasta que el pack remoto sea más nuevo.
+
+## Trabajo pendiente (no implementado)
+- Tab Scout Reports: detección casi-instantánea de reportes nuevos (hoy `listreports` escanea `listReports.php` cada 30 s en reposo; `fetchreport` procesa 1 detalle cada 2 s). Plan: trigger al aterrizar marcha de exploración propia (`Seed.queue_atkp` con `marchType == 3` cruzando `destinationUnixTime`) + trigger cuando suba `Seed.newReportCount` + bajar `scandelay` 30→5 s. Cuando se implemente → feature → `npm run version:feature` → 4.27.0.
