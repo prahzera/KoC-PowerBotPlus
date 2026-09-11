@@ -42,7 +42,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.26
+// @version			4.26.0
 // @releasenotes        Arreglado el idioma: el paquete de traducción ahora se actualiza solo (con versión en los packs y refresco semanal al iniciar), así el tab de Reportes de Exploración y las claves nuevas se traducen correctamente
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.26';
+var Version = '4.26.0';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }

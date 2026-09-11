@@ -34,6 +34,17 @@ const WATCH = args.includes('--watch');
 
 const VERSION = PKG.version;
 
+// Formato obligatorio X.Y.Z: X = versión principal del sistema, Y = nuevas
+// features, Z = arreglos y mejoras. Cualquier otro formato aborta el build.
+const VERSION_RE = /^[0-9]+\.[0-9]+\.[0-9]+$/;
+
+if (!VERSION_RE.test(VERSION)) {
+  fail(
+    `La versión de package.json ("${VERSION}") debe tener formato X.Y.Z (ej. 4.26.0).\n` +
+      `Feature nueva → "npm run version:feature" (sube Y). Arreglo/mejora → "npm run version:fix" (sube Z).`
+  );
+}
+
 function fail(msg) {
   console.error(`✗ ${msg}`);
   process.exit(1);

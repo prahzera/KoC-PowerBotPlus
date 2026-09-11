@@ -2,7 +2,7 @@
 
 > All-in-One automation userscript for **Kingdoms of Camelot** (Facebook / Web)
 
-[![Version](https://img.shields.io/badge/version-3.73-blue)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest)
+[![Version](https://img.shields.io/github/v/release/prahzera/KoC-PowerBotPlus)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest)
 [![License](https://img.shields.io/badge/license-CC--BY--4.0-green)](https://creativecommons.org/licenses/by/4.0/)
 [![Install](https://img.shields.io/badge/Install-Tampermonkey-brightgreen)](https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js)
 
@@ -163,9 +163,16 @@ npm run build:check   # verify the output is byte-identical to script.js, abort 
 npm run watch         # rebuild automatically on every src/ change
 ```
 
-The **version** is centralized in `package.json` (`"version"`) and injected
-into the banner (`// @version`) and `var Version` during the build — bump it
-in one place only.
+The **version** is centralized in `package.json` (`"version"`) with format
+**X.Y.Z**: X = major del sistema, Y = nueva feature, Z = arreglos/mejoras.
+It is injected into the banner (`// @version`) and `var Version` during the
+build. Bump it with the npm scripts (they also rebuild):
+
+```bash
+npm run version:feature   # +1 en Y (reset Z a 0) — nuevas features
+npm run version:fix       # +1 en Z — arreglos y mejoras
+npm run version:major     # +1 en X (reset Y y Z a 0)
+```
 
 ---
 
