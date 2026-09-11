@@ -2577,6 +2577,7 @@ Tabs.Options = {
 	LoadLanguage: function (lang, notify) {
 		var t = Tabs.Options;
 		Options.LanguageLastChecked = unixTime();
+		Options.LanguageScriptVersion = Version;
 		saveOptions();
 		var LangURL = 'https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/lang_' + lang + '.json?' + new Date();
 		try {
@@ -2599,8 +2600,8 @@ Tabs.Options = {
 							t.UpdateLangArray(rslt);
 						}
 						else {
-							if (!LanguageArray.LangVersion || parseIntNan(LanguageArray.LangVersion.substring(0, 8)) < parseIntNan(rslt.LangVersion.substring(0, 8))) {
-								t.languagestatus = "New Language Pack Available!";
+							if (rslt.LangVersion && (!LanguageArray.LangVersion || parseIntNan(String(LanguageArray.LangVersion).substring(0, 8)) < parseIntNan(String(rslt.LangVersion).substring(0, 8)))) {
+								t.UpdateLangArray(rslt);
 							}
 						}
 					}

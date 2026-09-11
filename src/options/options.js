@@ -125,6 +125,7 @@ var Options = {
 	AutoMist: false,
 	AutoMistMarch: false,
 	LanguageLastChecked: 0,
+	LanguageScriptVersion: 0,
 	FixCastleLag: true,
 	OpenSettingsDiv: '',
 	btDashboard: true,

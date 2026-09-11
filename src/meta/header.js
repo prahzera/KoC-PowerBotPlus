@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        En el tab Search la distancia ahora se calcula desde tu ciudad seleccionada (y se recalcula al cambiar de ciudad), en vez de desde el centro de la búsqueda/provincia
+// @releasenotes        Arreglado el idioma: el paquete de traducción ahora se actualiza solo (con versión en los packs y refresco semanal al iniciar), así el tab de Reportes de Exploración y las claves nuevas se traducen correctamente
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

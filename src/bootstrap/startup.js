@@ -27,6 +27,9 @@ function PowerBotStartup() {
 	Dashboard.OptionsInit(); // always initialise dashboard options
 	Options.Language = uW.g_ajaxparams.lang;
 	readLanguage(Options.Language); // initially load any language settings stored in browser memory cache
+	if (Options.LanguageLastChecked + (3600 * 24 * 7) < unixTime() || Options.LanguageScriptVersion != Version) {
+		setTimeout(function () { Tabs.Options.LoadLanguage(Options.Language); }, 8000);
+	}
 
 	AreYouALeader();
 

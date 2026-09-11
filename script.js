@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.25
-// @releasenotes        En el tab Search la distancia ahora se calcula desde tu ciudad seleccionada (y se recalcula al cambiar de ciudad), en vez de desde el centro de la búsqueda/provincia
+// @version			4.26
+// @releasenotes        Arreglado el idioma: el paquete de traducción ahora se actualiza solo (con versión en los packs y refresco semanal al iniciar), así el tab de Reportes de Exploración y las claves nuevas se traducen correctamente
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -116,7 +116,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.25';
+var Version = '4.26';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -656,6 +656,7 @@ var Options = {
 	AutoMist: false,
 	AutoMistMarch: false,
 	LanguageLastChecked: 0,
+	LanguageScriptVersion: 0,
 	FixCastleLag: true,
 	OpenSettingsDiv: '',
 	btDashboard: true,
@@ -898,6 +899,9 @@ function PowerBotStartup() {
 	Dashboard.OptionsInit(); // always initialise dashboard options
 	Options.Language = uW.g_ajaxparams.lang;
 	readLanguage(Options.Language); // initially load any language settings stored in browser memory cache
+	if (Options.LanguageLastChecked + (3600 * 24 * 7) < unixTime() || Options.LanguageScriptVersion != Version) {
+		setTimeout(function () { Tabs.Options.LoadLanguage(Options.Language); }, 8000);
+	}
 
 	AreYouALeader();
 
@@ -22826,6 +22830,7 @@ Tabs.Options = {
 	LoadLanguage: function (lang, notify) {
 		var t = Tabs.Options;
 		Options.LanguageLastChecked = unixTime();
+		Options.LanguageScriptVersion = Version;
 		saveOptions();
 		var LangURL = 'https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/lang_' + lang + '.json?' + new Date();
 		try {
@@ -22848,8 +22853,8 @@ Tabs.Options = {
 							t.UpdateLangArray(rslt);
 						}
 						else {
-							if (!LanguageArray.LangVersion || parseIntNan(LanguageArray.LangVersion.substring(0, 8)) < parseIntNan(rslt.LangVersion.substring(0, 8))) {
-								t.languagestatus = "New Language Pack Available!";
+							if (rslt.LangVersion && (!LanguageArray.LangVersion || parseIntNan(String(LanguageArray.LangVersion).substring(0, 8)) < parseIntNan(String(rslt.LangVersion).substring(0, 8)))) {
+								t.UpdateLangArray(rslt);
 							}
 						}
 					}
