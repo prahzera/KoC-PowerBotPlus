@@ -316,7 +316,24 @@ Tabs.Search = {
 		var t = Tabs.Search;
 		if (city) {
 			t.ModelCityId = city.id;
+			if (t.mapDat.length != 0 && ById('pbStatFound')) { t.recalcDistances(); }
 		}
+	},
+
+	distOrigin: function () {
+		var t = Tabs.Search;
+		var city = Cities.byID[t.ModelCityId];
+		if (city) { return { x: city.x, y: city.y }; }
+		return { x: t.opt.startX, y: t.opt.startY };
+	},
+
+	recalcDistances: function () {
+		var t = Tabs.Search;
+		var origin = t.distOrigin();
+		for (var i = 0; i < t.mapDat.length; i++) {
+			t.mapDat[i][2] = distance(origin.x, origin.y, t.mapDat[i][0], t.mapDat[i][1]);
+		}
+		t.dispMapTable();
 	},
 
 	saveoldmists: function () {
@@ -1091,6 +1108,7 @@ t.setupFilterDisplay();
 		var map = rslt.data;
 		var userInfo = rslt.userInfo;
 		var alliance = rslt.allianceNames;
+		var dOrigin = t.distOrigin();
 
 		for (var k in map) {
 			var xOK = false;
@@ -1110,7 +1128,7 @@ t.setupFilterDisplay();
 				var city = ''
 				var alli = '';
 				var aID = 0;
-				var dist = distance(t.opt.startX, t.opt.startY, map[k].xCoord, map[k].yCoord);
+				var dist = distance(dOrigin.x, dOrigin.y, map[k].xCoord, map[k].yCoord);
 
 				var u = map[k].tileUserId || 0;
 				if (u != 0) {
@@ -1428,7 +1446,7 @@ t.setupFilterDisplay();
 		t.dat = [];
 
 		for (var i = 0; i < t.mapDat.length; i++) {
-			var TileOK = (Options.SearchOptions.SearchShape == 0 || t.mapDat[i][2] <= t.opt.maxDistance); // check distance on circle search
+			var TileOK = (Options.SearchOptions.SearchShape == 0 || distance(t.opt.startX, t.opt.startY, t.mapDat[i][0], t.mapDat[i][1]) <= t.opt.maxDistance); // check distance on circle search
 
 			if (TileOK) { // check type
 				if (Options.SearchOptions.SearchType == 0) { // city

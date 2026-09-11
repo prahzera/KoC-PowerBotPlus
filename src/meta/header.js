@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        El auto-updater ahora verifica si hay nuevas versiones cada 15 minutos en vez de una vez al día
+// @releasenotes        En el tab Search la distancia ahora se calcula desde tu ciudad seleccionada (y se recalcula al cambiar de ciudad), en vez de desde el centro de la búsqueda/provincia
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
