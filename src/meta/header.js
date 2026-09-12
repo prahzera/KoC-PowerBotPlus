@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Arreglado el idioma: el paquete de traducción ahora se actualiza solo (con versión en los packs y refresco semanal al iniciar), así el tab de Reportes de Exploración y las claves nuevas se traducen correctamente
+// @releasenotes        Optimizada la auto-construcción (AutoBuild): procesa todas las ciudades en paralelo de forma asíncrona reduciendo el tiempo entre colas
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

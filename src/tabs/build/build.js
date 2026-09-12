@@ -1238,21 +1238,31 @@ Tabs.Build = {
 		}
 	},
 
-	doAutoLoop: function (idx) {
+	doAutoLoop: function (targetIdx) {
 		var t = Tabs.Build;
 		clearTimeout(t.timer);
 		if (!Options.BuildOptions.Running) return;
 
-		var cityId = Cities.cities[idx - 1].id;
-		if (idx == 1) { t.loopaction = false; } // reset loop action indicator for first city
-		t.autodelay = 0; // no delay if no action taken!
+		if (targetIdx && typeof targetIdx === 'number' && targetIdx > 0 && targetIdx <= Cities.numCities) {
+			t.processCity(targetIdx);
+		} else {
+			for (var i = 1; i <= Cities.numCities; i++) {
+				t.processCity(i);
+			}
+		}
 
-		// first check if city is idle (or busy)
+		t.timer = setTimeout(function () { t.doAutoLoop(); }, (t.intervalSecs * 1000));
+	},
+
+	processCity: function (idx) {
+		var t = Tabs.Build;
+		if (!Cities.cities[idx - 1]) return;
+		var cityId = Cities.cities[idx - 1].id;
 
 		var now = unixTime();
 		var isBusy = false;
 		var qcon = Seed.queue_con["city" + cityId];
-		if (qcon.length > 0) {
+		if (qcon && qcon.length > 0) {
 			if (parseInt(qcon[0][4]) > now) {
 				isBusy = true;
 				// try second queue
@@ -1357,14 +1367,6 @@ Tabs.Build = {
 					}
 				}
 			}
-		}
-
-		if (idx == Cities.numCities) {
-			if (!t.loopaction) { t.autodelay = t.intervalSecs; } // if no action this loop, apply delay anyway...
-			t.timer = setTimeout(function () { t.doAutoLoop(1); }, (t.autodelay * 1000));
-		}
-		else {
-			t.timer = setTimeout(function () { t.doAutoLoop(idx + 1); }, (t.autodelay * 1000));
 		}
 	},
 
