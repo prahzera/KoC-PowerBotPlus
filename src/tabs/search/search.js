@@ -36,6 +36,16 @@ Tabs.Search = {
 	searchWorkers: 3,
 	reqBatch: 20,
 	workerLastReq: {},
+	defendWorkers: 5,
+	defending: false,
+	defendQueue: [],
+	defendTotal: 0,
+	defendDone: 0,
+	defendActive: 0,
+	defendTimer: null,
+	showOnlyDefenders: false,
+	defendEyeIcon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+	defendEyeOffIcon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>',
 	firstX: 0,
 	firstY: 0,
 	lastX: 0,
@@ -558,6 +568,12 @@ Tabs.Search = {
 		t.lastLoginPending = {};
 		t.lastLoginFetched = 0;
 		t.lastLoginTotal = 0;
+		t.showOnlyDefenders = false;
+		clearTimeout(t.defendTimer);
+		t.defendTimer = null;
+		t.defending = false;
+		t.defendQueue = [];
+		t.defendActive = 0;
 
 		var curX = t.firstX;
 		var curY = t.firstY;
@@ -1648,6 +1664,10 @@ t.setupFilterDisplay();
 				}
 			}
 
+			if (TileOK && t.showOnlyDefenders) {
+				TileOK = (t.mapDat[i][19] === true);
+			}
+
 			if (TileOK) {
 				t.dat.push(t.mapDat[i]);
 			}
@@ -1997,33 +2017,117 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 	HighlightDefenders: function () {
 		var t = Tabs.Search;
 
-		var delayer = 0;
+		if (t.defending) {
+			if (ById('pbHighDefendersProg')) ById('pbHighDefendersProg').innerHTML = '&nbsp;';
+			return;
+		}
 		ById('pbHighDefenders').outerHTML = '<span id=pbHighDefendersProg>&nbsp;</span>';
+
+		t.defendQueue = [];
+		t.defendTotal = 0;
+		t.defendDone = 0;
+		t.defendActive = 0;
+		t.defending = true;
 
 		for (var k = 0; k < t.dat.length; k++) {
 			if ((t.dat[k][3] == 51 && t.dat[k][5] && t.dat[k][5] != 0) || (t.dat[k][3] == 53)) {
 				if (!t.ReqSent[t.dat[k][0] + '_' + t.dat[k][1]] || t.ReqSent[t.dat[k][0] + '_' + t.dat[k][1]] == 0) {
 					t.ReqSent[t.dat[k][0] + '_' + t.dat[k][1]] = 1;
-					setTimeout(getDefendStatus, (250 * delayer), t.dat[k][0], t.dat[k][1], false, false, t.UpdateDefendStatus, k, t.dat.length, 'pbHighDefendersProg');
-					delayer = delayer + 1;
+					t.defendQueue.push({ x: t.dat[k][0], y: t.dat[k][1], k: k });
 				}
 			}
 		}
 
-		function ClearAtEnd() {
-			if (ById('pbHighDefendersProg')) {
-				ById('pbHighDefendersProg').outerHTML = strButton20(tx('Highlight Defenders'), 'id=pbHighDefenders');
-				ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
-			}
-		};
+		t.defendTotal = t.defendQueue.length;
 
-		setTimeout(ClearAtEnd, (250 * delayer));
+		if (t.defendTotal == 0) {
+			t.highlightClearAtEnd();
+			return;
+		}
+
+		this.updateDefendProgress();
+		var workers = Math.min(t.defendWorkers, t.defendTotal);
+		for (var w = 0; w < workers; w++) {
+			t.defendWorker(w * 150);
+		}
+
+		t.defendTimer = setTimeout(function () {
+			var t = Tabs.Search;
+			if (t.defending) {
+				t.highlightClearAtEnd(true);
+			}
+		}, Math.min((t.defendTotal / workers + 30) * 2000, 3600000));
 	},
 
-	UpdateDefendStatus: function (rslt, x, y, k) {
+	defendWorker: function (delay) {
+		var t = Tabs.Search;
+		setTimeout(function () {
+			if (!t.defending || !t.defendQueue.length) { return; }
+			t.defendActive++;
+			var item = t.defendQueue.shift();
+			getDefendStatus(item.x, item.y, false, false, t.UpdateDefendStatus, item, false);
+		}, delay);
+	},
+
+	updateDefendProgress: function () {
+		var t = Tabs.Search;
+		if (ById('pbHighDefendersProg')) {
+			ById('pbHighDefendersProg').innerHTML = tx('Checking') + ' ' + t.defendDone + ' ' + uW.g_js_strings.commonstr.of + ' ' + t.defendTotal;
+		}
+	},
+
+	highlightClearAtEnd: function (forcereset) {
+		var t = Tabs.Search;
+		clearTimeout(t.defendTimer);
+		t.defendTimer = null;
+		t.defending = false;
+		if (forcereset) {
+			for (var qi = 0; qi < t.defendQueue.length; qi++) {
+				t.ReqSent[t.defendQueue[qi].x + '_' + t.defendQueue[qi].y] = 0;
+			}
+			t.defendActive = 0;
+		}
+		t.defendQueue = [];
+		if (ById('pbHighDefendersProg')) {
+			var m = strButton20(tx('Highlight Defenders'), 'id=pbHighDefenders');
+			var defcnt = 0;
+			for (var i = 0; i < t.dat.length; i++) {
+				if (t.dat[i][19]) defcnt++;
+			}
+			if (defcnt == 0) { t.showOnlyDefenders = false; }
+			if (defcnt > 0) {
+				m += '&nbsp;<a title="' + tx('Show Defenders Only') + '" id=pbOnlyDefenders class="inlineButton btButton blue14" style="cursor:pointer;"><span>' + (t.showOnlyDefenders ? t.defendEyeOffIcon : t.defendEyeIcon) + '</span></a>';
+			}
+			ById('pbHighDefendersProg').outerHTML = m;
+			ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
+			if (ById('pbOnlyDefenders')) {
+				ById('pbOnlyDefenders').addEventListener('click', t.ToggleOnlyDefenders, false);
+				if (t.showOnlyDefenders) jQuery('#pbOnlyDefenders').css('outline', '2px solid rgba(124,252,0,0.8)').css('outlineOffset', '1px');
+			}
+		}
+	},
+
+	ToggleOnlyDefenders: function () {
+		var t = Tabs.Search;
+		t.showOnlyDefenders = !t.showOnlyDefenders;
+		var btn = ById('pbOnlyDefenders');
+		if (btn) {
+			btn.innerHTML = '<span>' + (t.showOnlyDefenders ? t.defendEyeOffIcon : t.defendEyeIcon) + '</span>';
+			if (t.showOnlyDefenders) {
+				jQuery('#pbOnlyDefenders').css('outline', '2px solid rgba(124,252,0,0.8)').css('outlineOffset', '1px');
+			}
+			else {
+				jQuery('#pbOnlyDefenders').css('outline', '').css('outlineOffset', '');
+			}
+		}
+		t.dispMapTable();
+	},
+
+	UpdateDefendStatus: function (rslt, x, y, item) {
 		var t = Tabs.Search;
 		t.ReqSent[x + '_' + y] = 0;
 		var div = ById('search_' + x + '_' + y);
+		var k = (item && typeof item === 'object') ? item.k : item;
 		var coords = t.dat[k][0] + '_' + t.dat[k][1];
 		if (rslt.ok && rslt.ok == "true") {
 			t.dat[k][19] = true;
@@ -2040,6 +2144,11 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 			if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
 				t.mapDat[i][19] = t.dat[k][19];
 			}
+		}
+		t.defendDone++;
+		t.updateDefendProgress();
+		if (t.defendDone >= t.defendTotal) {
+			t.highlightClearAtEnd();
 		}
 	},
 
