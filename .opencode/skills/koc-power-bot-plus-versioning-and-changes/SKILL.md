@@ -33,8 +33,9 @@ Skill complementaria de `koc-power-bot-plus-workflow`. Cargarla SIEMPRE junto a 
 ## Trabajo pendiente (no implementado)
 - **Tab Scout Reports — detección casi-instantánea**: hoy `listreports` escanea `listReports.php` cada 30 s en reposo (10 s inicial; 5 s entre páginas o tras borrar) y `fetchreport` procesa 1 detalle cada 2 s vía `EverySecond` (que corre cada 1 s vía `tabManager.EverySecond()`).
 - Plan acordado (híbrido): (1) trigger al aterrizar una marcha de exploración propia (`Seed.queue_atkp` con `marchType == 3` cruzando `destinationUnixTime`, o desapareciendo de la cola); (2) trigger cuando suba `Seed.newReportCount`; (3) bajar `scandelay` 30→5 s como respaldo (cubre scouts entrantes). Detalles en el plan de sesión.
-- Cuando se implemente → es una feature → `npm run version:feature` → 4.27.0 (no olvidar `// @releasenotes`).
+- Cuando se implemente → es una feature → `npm run version:feature` → 4.27.0 (no olvidar `// @releasenotes`, siempre en inglés).
 
 ## Reglas rápidas
 - Build: `node --check <archivo>` → `npm run build` → `npm run build:check`; commitear `script.js` siempre que cambie.
-- Commit de release: `KoC Power Bot Plus vX.Y.Z - <descripción>`. Cambios de skill/tooling/infra: mensaje normal sin prefijo. NO push salvo que lo pida el usuario.
+- Commit de release: `KoC Power Bot Plus vX.Y.Z - <descripción>` SIEMPRE en español. Cambios de skill/tooling/infra: mensaje normal sin prefijo. NO push salvo que lo pida el usuario.
+- Idioma: release notes (`// @releasenotes`) SIEMPRE en inglés · commits SIEMPRE en español.

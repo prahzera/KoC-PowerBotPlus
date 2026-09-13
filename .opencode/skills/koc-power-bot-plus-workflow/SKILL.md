@@ -11,19 +11,20 @@ Userscript monolito: `src/` es la fuente de verdad. `script.js` y `script.meta.j
 
 1. **Versión (X.Y.Z)**: subir `"version"` en `package.json` SOLO cuando el cambio sea una actualización/release user-facing (auto-update). Formato obligatorio **X.Y.Z** (build.js aborta si no lo cumple): **X** = versión principal del sistema, **Y** = nuevas features, **Z** = arreglos y mejoras de features. Usar `npm run version:feature` (sube Y, Z=0), `npm run version:fix` (sube Z) o `npm run version:major` (sube X, Y=Z=0); estos scripts suben la versión y recompilan. El build inyecta la versión en el banner `// @version`, en `var Version` (src/core/version.js) y en `script.meta.js` (build.js). Cambios internos (skill, tooling, build, sólo release notes, infra) NO suben versión. NO editar a mano `src/core/version.js` (es un placeholder que el build sobreescribe) ni el `// @version` de `src/meta/header.js`.
 
-2. **Release notes (por eso el modal "New Features!")**: actualizar SIEMPRE la línea `// @releasenotes` de `src/meta/header.js` (línea 46) con el resumen user-facing de los cambios de esta versión, en una sola línea y en español. AutoUpdater la lee (regex `\/\/\s*@releasenotes\s+(.+)`) y la muestra bajo `tx('New Features!')`. Si no se actualiza, los usuarios ven las notas viejas.
+2. **Release notes (por eso el modal "New Features!")**: actualizar SIEMPRE la línea `// @releasenotes` de `src/meta/header.js` (línea 46) con el resumen user-facing de los cambios de esta versión, en una sola línea y SIEMPRE EN INGLÉS (los mensajes de commit en español son aparte, ver punto 5). AutoUpdater la lee (regex `\/\/\s*@releasenotes\s+(.+)`) y la muestra bajo `tx('New Features!')`. Si no se actualiza, los usuarios ven las notas viejas.
 
 3. **Idiomas (lang packs)**: todo string NUEVO visible para el usuario se añade como clave en `lang_es.json` (valor en español) y `lang_en.json` (valor `""`). Las claves solo llegan a los usuarios tras publicar una release (los packs se descargan de `releases/latest/download/lang_<lang>.json`). Si existe un string del juego adecuado, usar `uW.g_js_strings.*` en vez de una clave nueva (evita depender del pack). Claves retiradas deben borrarse de ambos archivos.
 
 4. **Build y verificación**: para archivos editados de `src/`: `node --check <file>`, luego `npm run build` y `npm run build:check`. Archivos nuevos en `src/` se registran automáticamente en `scripts/manifest.js` (lista ORDENADA de concatenación) con un build normal (en `--check` eso es un error a propósito). Si resultó script.js / script.meta.js, commitearlos siempre.
 
-5. **Commit**: el formato `KoC Power Bot Plus vX.Y.Z - <descripción>` (primera línea matcheable por `^KoC Power Bot Plus v([0-9.]+)`, que dispara el release automático al pushear a main) se usa SOLO para releases/actualizaciones. Para cambios que NO lanzan update (skill, tooling, build, release-notes-only, infra) usar un mensaje NORMAL descriptivo SIN prefijo de versión (p. ej. `Add workflow skill`). Committear solo lo intencional (git status/git diff antes); NO hacer push salvo que el usuario lo pida.
+5. **Commit**: el formato `KoC Power Bot Plus vX.Y.Z - <descripción>` (primera línea matcheable por `^KoC Power Bot Plus v([0-9.]+)`, que dispara el release automático al pushear a main) se usa SOLO para releases/actualizaciones. Los mensajes de commit SIEMPRE en español. Para cambios que NO lanzan update (skill, tooling, build, release-notes-only, infra) usar un mensaje NORMAL descriptivo SIN prefijo de versión (p. ej. `Add workflow skill`). Committear solo lo intencional (git status/git diff antes); NO hacer push salvo que el usuario lo pida.
 
 ## Reglas
 - No editar `script.js` directamente: cambiar en `src/` y rebuild.
 - No crear documentación (*.md) ni comentarios en el código salvo que se pida.
 - No subir secretos.
 - Trabajar en español cuando el usuario lo haga.
+- **Idiomas: `// @releasenotes` (mensajes de cambios de versión) SIEMPRE en inglés**; los **mensajes de commit en GitHub SIEMPRE en español**.
 
 ---
 
