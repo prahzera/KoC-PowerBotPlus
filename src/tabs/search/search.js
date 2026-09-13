@@ -39,6 +39,7 @@ Tabs.Search = {
 	defendWorkers: 5,
 	defending: false,
 	defendQueue: [],
+	defendSeen: {},
 	defendTotal: 0,
 	defendDone: 0,
 	defendActive: 0,
@@ -2000,6 +2001,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		ById('pbHighDefenders').outerHTML = '<span id=pbHighDefendersProg>&nbsp;</span>';
 
 		t.defendQueue = [];
+		t.defendSeen = {};
 		t.defendTotal = 0;
 		t.defendDone = 0;
 		t.defendActive = 0;
@@ -2007,8 +2009,10 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 
 		for (var k = 0; k < t.dat.length; k++) {
 			if ((t.dat[k][3] == 51 && t.dat[k][5] && t.dat[k][5] != 0) || (t.dat[k][3] == 53)) {
-				if (!t.ReqSent[t.dat[k][0] + '_' + t.dat[k][1]] || t.ReqSent[t.dat[k][0] + '_' + t.dat[k][1]] == 0) {
-					t.ReqSent[t.dat[k][0] + '_' + t.dat[k][1]] = 1;
+				var ckey = t.dat[k][0] + '_' + t.dat[k][1];
+				if (!t.defendSeen[ckey]) {
+					t.defendSeen[ckey] = 1;
+					t.ReqSent[ckey] = 1;
 					t.defendQueue.push({ x: t.dat[k][0], y: t.dat[k][1], k: k });
 				}
 			}
@@ -2037,12 +2041,15 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 
 	defendWorker: function (delay) {
 		var t = Tabs.Search;
-		setTimeout(function () {
-			if (!t.defending || !t.defendQueue.length) { return; }
-			t.defendActive++;
-			var item = t.defendQueue.shift();
-			getDefendStatus(item.x, item.y, false, false, t.UpdateDefendStatus, item, false);
-		}, delay);
+		setTimeout(function () { t.defendNext(); }, delay);
+	},
+
+	defendNext: function () {
+		var t = Tabs.Search;
+		if (!t.defending || !t.defendQueue.length) { return; }
+		t.defendActive++;
+		var item = t.defendQueue.shift();
+		getDefendStatus(item.x, item.y, false, false, t.UpdateDefendStatus, item, false);
 	},
 
 	updateDefendProgress: function () {
@@ -2123,6 +2130,8 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		}
 		t.defendDone++;
 		t.updateDefendProgress();
+		if (t.defendActive > 0) { t.defendActive--; }
+		if (t.defendQueue.length > 0) { t.defendNext(); }
 		if (t.defendDone >= t.defendTotal) {
 			t.highlightClearAtEnd();
 		}

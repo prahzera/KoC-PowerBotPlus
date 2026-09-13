@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: corregido Highlight Defenders, que no llegaba a comprobar defensores cuando había candidatos (un error al iniciar dejaba el botón colgado en "Checking..."); ahora vuelve a resaltar y marcar las ciudades que se defienden
+// @releasenotes        Search: corregido Highlight Defenders para que compruebe TODAS las ciudades del resultado y no solo las 5 primeras (los workers ahora se reabastecen de la cola al recibir cada respuesta, y se limpian los candados obsoletos que quedaban de ejecuciones anteriores)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
