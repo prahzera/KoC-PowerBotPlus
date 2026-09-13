@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.26.2
-// @releasenotes        Corregido el alto del Dashboard (ahora se ajusta al contenido, ya no 5000px) y el iframe del juego en el portal (100% de ancho y alto con scroll automático, ya no 2000px/3000px fijos)
+// @version			4.26.3
+// @releasenotes        Search: botón Actualizar de la columna de Último inicio de sesión junto a Iniciar/Detener (con tooltip e ícono explicativo), la búsqueda ya no se cuelga ante fallos del servidor (reintentos con backoff) y es mucho más rápida (lotes de 60 bloques con workers en paralelo)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +129,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.26.2';
+var Version = '4.26.3';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30237,6 +30237,11 @@ Tabs.Search = {
 	blocksTotal: 0,
 	blocksSearched: 0,
 	tilesFound: 0,
+	activeRequests: 0,
+	failStreak: 0,
+	runToken: 0,
+	searchWorkers: 3,
+	reqBatch: 60,
 	firstX: 0,
 	firstY: 0,
 	lastX: 0,
@@ -30348,7 +30353,8 @@ Tabs.Search = {
 		m += '</select>&nbsp;<SPAN id=pbSlicesSpan style="display:none;">' + tx('Divide into') + ':&nbsp;' + htmlSelector({ 1: '1', 4: '4', 9: '9', 16: '16', 25: '25', 36: '36', 49: '49', 64: '64' }, 1, 'id=pbProvinceSlices') + '&nbsp;' + tx('squares') + '.&nbsp;&nbsp;&nbsp;' + tx('Your Square') + ':&nbsp;<select id="pbProvinceSlice"><option value=1 selected>1</option></select></SPAN>&nbsp;' + tx('Detect new mists') + '<INPUT id=pbautoKM type=checkbox />';
 		m += '&nbsp;<input style="display:none;" type=button class=btInput id=pbClearMistData value="' + tx('Reset saved mists') + '">';
 		m += '</td>';
-		m += '<td align=left width=30%><a id=pbSearchSubmit class="inlineButton btButton blue20"><span>' + tx('Start Search') + '</span></a></td></tr>';
+		m += '<td align=left width=30%><a id=pbSearchSubmit class="inlineButton btButton blue20"><span>' + tx('Start Search') + '</span></a>';
+		m += '&nbsp;<span id=pbslastloginrefresh style="vertical-align:middle;">&nbsp;' + strButton20(tx('Refresh'), 'id=pbRefreshLastLogin title="' + tx('Refresh Last Login Only') + '"') + '&nbsp;<span class="tooldesc"><span style="display:inline-block;width:15px;height:15px;border:1px solid #888;border-radius:50%;text-align:center;line-height:13px;font-size:10px;cursor:help;">?</span><span class="tooltip" style="white-space: pre-line; word-wrap: break-word;">' + tx('Refresh Last Login Only') + '</span></span></span></td></tr>';
 		m += '</table>';
 
 		m += '<hr><div id=pbSearchResults style="height:' + t.PANEL_HEIGHT + 'px;">&nbsp;</div><div style="min-height:30px;" align=center id=pbSearchBottom>&nbsp;</div>';
@@ -30418,6 +30424,10 @@ Tabs.Search = {
 		ById('pbSearchY').addEventListener('change', t.e_coordChange, false);
 		ById('pbSearchY').addEventListener('change', t.e_coordChange, false);
 		ById('pbSearchSubmit').addEventListener('click', t.clickedSearch, false);
+
+		if (ById('pbRefreshLastLogin')) {
+			ById('pbRefreshLastLogin').addEventListener('click', t.RefreshLastLogins, false);
+		}
 
 		if (ById('pbSearchAura')) {
 			ById('pbSearchAura').addEventListener('click', t.clickedSearchAura, false);
@@ -30755,21 +30765,16 @@ Tabs.Search = {
 		t.lastLoginFetched = 0;
 		t.lastLoginTotal = 0;
 
-		var counter = t.BlockList.length;
-		if (counter > MAX_BLOCKS) { counter = MAX_BLOCKS; }
-
 		var curX = t.firstX;
 		var curY = t.firstY;
 		ById('pbStatStatus').innerHTML = tx('Searching at ') + curX + ',' + curY;
 
-		t.Blocks = [];
-		for (var i = 1; i <= counter; i++) {
-			t.Blocks.push(t.BlockList.shift());
-			t.blocksSearched++;
+		t.activeRequests = 0;
+		t.failStreak = 0;
+		t.runToken++;
+		for (var wN = 0; wN < t.searchWorkers; wN++) {
+			t.SearchTimer = setTimeout(function (token) { return function () { Tabs.Search.armNextBatch(token); }; }(t.runToken), wN * 300);
 		}
-		var blockString = t.Blocks.join("%2C");
-
-		t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(blockString, rslt); });
 	},
 
 	setupResultsPanel: function (Previous) {
@@ -30789,8 +30794,7 @@ Tabs.Search = {
 		var HEIGHT3 = t.PANEL_HEIGHT - 20;
 		m = '<DIV class=divHeader><TABLE width=100% cellspacing=0><TR><TD class=xtab width=125><DIV id=pbStatSearched></div></td>';
 		m += '<TD class=xtab align=center><SPAN style="white-space:normal" id=pbStatStatus></span></td>';
-		m += '<TD class=xtab align=right width=125><DIV id=pbStatFound></div></td>';
-		m += '<TD id=pbslastloginrefresh class=xtab align=center width=50 style="padding-left:2px;padding-right:2px;">' + strButton20(tx('Refresh'), 'id=pbRefreshLastLogin') + '</td></tr></table></div>';
+		m += '<TD class=xtab align=right width=125><DIV id=pbStatFound></div></td></tr></table></div>';
 		m += '<TABLE class=xtab style="width:100%" cellpadding=0 cellspacing=0 align=left><TR valign=top>';
 		m += '<TD id=pbSearchFilterContainer style="padding-right:5px;width:130px;height:' + HEIGHT1 + 'px;padding:5px;border:1px solid;display:' + FilterDisp + '"><DIV id=pbSearchFilters></div></td>';
 		m += '<td id=pbSearchOpener valign=middle style="padding-right:5px;width:20px;background:none;border:none;height:' + HEIGHT2 + 'px;"><a><div class="btExpander buttonv2 blue" style="width:20px;height:' + HEIGHT2 + 'px;"><span style="display:inline-block;height:100%;vertical-align:middle;"></span><img id=pbSearchOpenerImage style="margin-left:-4px;vertical-align:middle;" height="10" src="' + FilterArrow + '"></div></a></td>';
@@ -30799,7 +30803,6 @@ Tabs.Search = {
 
 		ById('pbSearchResults').innerHTML = m;
 		ById('pbSearchOpener').addEventListener('click', t.ToggleSearchFilters, false);
-		ById('pbRefreshLastLogin').addEventListener('click', t.RefreshLastLogins, false);
 
 		/* paint filter panel */
 
@@ -31280,42 +31283,116 @@ t.setupFilterDisplay();
 		});
 	},
 
-	eventGetPlayerOnline: function (blockString, rslt) {
+	eventGetPlayerOnline: function (token, blockString, rslt) {
 		var t = Tabs.Search;
-		if (!t.searchRunning) { return; }
-		if (!rslt.ok) {
-			if (rslt.BotCode && rslt.BotCode == 999) { // map captcha
+		if (!t.searchRunning || t.runToken !== token) { return; }
+		if (!rslt || !rslt.ok) {
+			if (rslt && rslt.BotCode && rslt.BotCode == 999) { // map captcha
 				t.stopSearch('<span class=boldRed>' + tx('Server returning "green map". You should stop searching for about 20 minutes - Aborting search :(') + '</span>', true);
 				return;
 			}
-			if (rslt.msg && rslt.msg == "invalid parameters") {
+			if (rslt && rslt.msg && rslt.msg == "invalid parameters") {
 				t.stopSearch('<span class=boldRed>' + tx('Invalid Parameters - Aborting search :(') + '</span>', true);
 				return;
 			}
-			t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(blockString, rslt); }) }, MAP_DELAY); //we need to retry if bad ajax request.
+			t.failStreak++;
+			if (t.failStreak >= 50) {
+				t.stopSearch('<span class=boldRed>' + tx('Server is not responding - Aborting search') + '</span>', true);
+				return;
+			}
+			var backoff = MAP_DELAY * Math.min(t.failStreak, 15);
+			if (ById('pbStatStatus') && t.failStreak >= 5) {
+				ById('pbStatStatus').innerHTML = tx('Server is not responding, retrying') + '... (' + t.failStreak + ')';
+			}
+			t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(token, blockString, rslt); }) }, backoff);
 			return;
 		}
 
-		var map = rslt.data;
-		t.SearchList = rslt;
+		t.failStreak = 0;
+		var map = (rslt.data) ? rslt.data : {};
 		var uList = [];
-		for (k in map) {
+		for (var k in map) {
 			if (map[k].tileUserId != null) {
 				uList.push(map[k].tileUserId);
 			}
 		}
-		getOnline(uList, function (r) { t.mapCallback(r) });
+		if (uList.length == 0) {
+			t.proceedWithMap(token, rslt, {});
+			return;
+		}
+		var timedOut = false;
+		var timeout = setTimeout(function () {
+			timedOut = true;
+			if (t.searchRunning && t.runToken === token) { t.proceedWithMap(token, rslt, {}); }
+		}, 30000);
+		getOnline(uList, function (r) {
+			clearTimeout(timeout);
+			if (timedOut) { return; }
+			if (t.searchRunning && t.runToken === token) { t.proceedWithMap(token, rslt, r); }
+		});
 	},
 
-	mapCallback: function (uList) {
+	proceedWithMap: function (token, rslt, uList) {
+		var t = Tabs.Search;
+		if (!t.searchRunning || t.runToken !== token) { return; }
+		t.activeRequests--;
+		try {
+			t.mapCallback(uList, rslt);
+		}
+		catch (e) {
+			logerr(e);
+			if (t.searchRunning && t.runToken === token) { t.armNextBatch(token); }
+		}
+	},
+
+	armNextBatch: function (token) {
+		var t = Tabs.Search;
+		if (!t.searchRunning || t.runToken !== token) { return; }
+		if (t.BlockList.length == 0) {
+			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true); }
+			return;
+		}
+
+		// pace: esperar a que se libere la ventana del throttle global (MAP_DELAY_WATCH)
+		// + un pequeño stagger para que los workers no colisionen en el mismo instante.
+		if (MAP_DELAY_WATCH > Number(uW.unixtime())) {
+			var wait = (MAP_DELAY_WATCH - Number(uW.unixtime())) * 1000 + Math.floor(Math.random() * 200);
+			t.SearchTimer = setTimeout(function () { t.armNextBatch(token); }, wait);
+			return;
+		}
+
+		var blocks = [];
+		for (var i = 0; i < t.reqBatch; i++) {
+			var b = t.BlockList.shift();
+			if (!b) { break; }
+			blocks.push(b);
+			t.blocksSearched++;
+		}
+		if (blocks.length == 0) {
+			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true); }
+			return;
+		}
+
+		var nextblock = blocks[0];
+		var curX = nextblock.split("_")[1];
+		var curY = nextblock.split("_")[3];
+		ById('pbStatStatus').innerHTML = tx('Searching at ') + curX + ',' + curY;
+		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
+
+		var blockString = blocks.join("%2C");
+		t.activeRequests++;
+		t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(token, blockString, rslt); });
+	},
+
+	mapCallback: function (uList, rslt) {
 		var t = Tabs.Search;
 		btBusy(false);
 
-		var rslt = t.SearchList;
-		var map = rslt.data;
-		var userInfo = rslt.userInfo;
-		var alliance = rslt.allianceNames;
+		var map = (rslt && rslt.data) ? rslt.data : {};
+		var userInfo = (rslt && rslt.userInfo) ? rslt.userInfo : {};
+		var alliance = (rslt && rslt.allianceNames) ? rslt.allianceNames : {};
 		var dOrigin = t.distOrigin();
+		var OData = (uList && uList.data) ? uList.data : {};
 
 		for (var k in map) {
 			var xOK = false;
@@ -31384,7 +31461,7 @@ t.setupFilterDisplay();
 				}
 
 
-				t.mapDat.push([map[k].xCoord, map[k].yCoord, dist, map[k].tileType, parseIntNan(map[k].tileLevel), map[k].tileCityId, u, city, name, might, alli, aID, uList.data[u] ? 1 : 0, misted, map[k].isPrestige, map[k].prestigeLevel, map[k].prestigeType, map[k].tileId, map[k].tileProvinceId, false, map[k].premiumTile, hqId, lastLoginStr]);
+				t.mapDat.push([map[k].xCoord, map[k].yCoord, dist, map[k].tileType, parseIntNan(map[k].tileLevel), map[k].tileCityId, u, city, name, might, alli, aID, OData[u] ? 1 : 0, misted, map[k].isPrestige, map[k].prestigeLevel, map[k].prestigeType, map[k].tileId, map[k].tileProvinceId, false, map[k].premiumTile, hqId, lastLoginStr]);
 				++t.tilesFound;
 			}
 		}
@@ -31395,26 +31472,7 @@ t.setupFilterDisplay();
 		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
 		t.throttledRender();
 
-		var counter = t.BlockList.length;
-		if (counter == 0) {
-			t.stopSearch(tx('Completed!'), true);
-			return;
-
-		}
-		if (counter > MAX_BLOCKS) { counter = MAX_BLOCKS; }
-
-		var nextblock = t.BlockList[0];
-		var curX = nextblock.split("_")[1];
-		var curY = nextblock.split("_")[3];
-		ById('pbStatStatus').innerHTML = tx('Searching at ') + curX + ',' + curY;
-
-		t.Blocks = [];
-		for (var i = 1; i <= counter; i++) {
-			t.Blocks.push(t.BlockList.shift());
-			t.blocksSearched++;
-		}
-		var blockString = t.Blocks.join("%2C");
-		t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(blockString, rslt); }) }, MAP_DELAY);
+		t.armNextBatch(t.runToken);
 	},
 
 	throttledRender: function () {

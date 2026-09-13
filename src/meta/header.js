@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Corregido el alto del Dashboard (ahora se ajusta al contenido, ya no 5000px) y el iframe del juego en el portal (100% de ancho y alto con scroll automático, ya no 2000px/3000px fijos)
+// @releasenotes        Search: botón Actualizar de la columna de Último inicio de sesión junto a Iniciar/Detener (con tooltip e ícono explicativo), la búsqueda ya no se cuelga ante fallos del servidor (reintentos con backoff) y es mucho más rápida (lotes de 60 bloques con workers en paralelo)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
