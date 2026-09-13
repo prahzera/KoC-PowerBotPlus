@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.26.6
-// @releasenotes        Search: eliminado el botón "QuickAttack Selected" de la barra de resultados, redundante con el que ya existe en el tab Player
+// @version			4.26.7
+// @releasenotes        Search: corregido Highlight Defenders, que no llegaba a comprobar defensores cuando había candidatos (un error al iniciar dejaba el botón colgado en "Checking..."); ahora vuelve a resaltar y marcar las ciudades que se defienden
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +129,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.26.6';
+var Version = '4.26.7';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -32228,7 +32228,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 			return;
 		}
 
-		this.updateDefendProgress();
+		t.updateDefendProgress();
 		var workers = Math.min(t.defendWorkers, t.defendTotal);
 		for (var w = 0; w < workers; w++) {
 			t.defendWorker(w * 150);

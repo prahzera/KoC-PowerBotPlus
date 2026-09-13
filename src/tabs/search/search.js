@@ -2021,7 +2021,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 			return;
 		}
 
-		this.updateDefendProgress();
+		t.updateDefendProgress();
 		var workers = Math.min(t.defendWorkers, t.defendTotal);
 		for (var w = 0; w < workers; w++) {
 			t.defendWorker(w * 150);
