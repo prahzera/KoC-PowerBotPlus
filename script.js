@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.26.5
-// @releasenotes        Search: Highlight Defenders ahora es mucho más rápido (5 consultas en paralelo en lugar de una cada 250 ms, con contador de progreso real y un watchdog para que nunca se quede bloqueado) y, al terminar, añade un botón de ojo junto a Highlight Defenders para mostrar solo los defensores encontrados
+// @version			4.26.6
+// @releasenotes        Search: eliminado el botón "QuickAttack Selected" de la barra de resultados, redundante con el que ya existe en el tab Player
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +129,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.26.5';
+var Version = '4.26.6';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30259,7 +30259,6 @@ Tabs.Search = {
 	lastY: 0,
 	LastSearch: {},
 	QSMarching: {},
-	QAMarching: {},
 	ReqSent: {},
 	mists: 0,
 	scouted: 0,
@@ -32118,7 +32117,6 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		if (Tabs.BulkScout) m += strButton20(tx('Add to Scout List'), 'id=pbScoutExport') + '&nbsp;';
 		if (Tabs.BulkAttack) m += strButton20(tx('Add to Attack List'), 'id=pbBulkAttackExport') + '&nbsp;';
 		if (Tabs.Attack) m += strButton20(tx('Add to Auto-Attack'), 'id=pbAttackExport') + '&nbsp;';
-		if (Options.OneClickAttackPreset != 0) m += strButton20(tx('QuickAttack Selected'), 'id=pbQuickAttackExport') + '&nbsp;';
 		m += '&nbsp;</div>&nbsp;';
 
 		ById('pbSearchMessages').innerHTML = m;
@@ -32126,7 +32124,6 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		if (ById('pbScoutExport')) ById('pbScoutExport').addEventListener('click', t.ExportScoutList, false);
 		if (ById('pbBulkAttackExport')) ById('pbBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
 		if (ById('pbAttackExport')) ById('pbAttackExport').addEventListener('click', t.ExportAttack, false);
-		if (ById('pbQuickAttackExport')) ById('pbQuickAttackExport').addEventListener('click', t.QuickAttackSelected, false);
 		ById('pbCoordCopy').addEventListener('click', t.CopyCoords, false);
 		if (ById('pbHighDefenders')) ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
 
@@ -32182,27 +32179,6 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		if (sel) {
 			Tabs.Attack.NewRoute();
 			ById('bttcAttack').click();
-		}
-	},
-
-	QuickAttackSelected: function () {
-		var t = Tabs.Search;
-		var qadelay = 0;
-		var count = 0;
-		for (var k = 0; k < t.dat.length; k++) {
-			var coords = t.dat[k][0].toString() + '_' + t.dat[k][1].toString();
-			var cb = ById('pbSearchScout_' + coords);
-			if (cb && cb.checked) {
-				if (!t.QAMarching[coords] || t.QAMarching[coords] == 0) {
-					t.QAMarching[coords] = 1;
-					setTimeout(uW.quickattacksearch, (5000 * qadelay), t.dat[k][0], t.dat[k][1], t.ModelCityId, true);
-					qadelay = qadelay + 1;
-					count++;
-				}
-			}
-		}
-		if (count > 0) {
-			ById('pbStatStatus').innerHTML = tx('QuickAttacking') + ': ' + count + ' ' + tx('tiles');
 		}
 	},
 

@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: Highlight Defenders ahora es mucho más rápido (5 consultas en paralelo en lugar de una cada 250 ms, con contador de progreso real y un watchdog para que nunca se quede bloqueado) y, al terminar, añade un botón de ojo junto a Highlight Defenders para mostrar solo los defensores encontrados
+// @releasenotes        Search: eliminado el botón "QuickAttack Selected" de la barra de resultados, redundante con el que ya existe en el tab Player
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
