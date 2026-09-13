@@ -34,7 +34,8 @@ Tabs.Search = {
 	failStreak: 0,
 	runToken: 0,
 	searchWorkers: 3,
-	reqBatch: 60,
+	reqBatch: 20,
+	workerLastReq: {},
 	firstX: 0,
 	firstY: 0,
 	lastX: 0,
@@ -565,8 +566,9 @@ Tabs.Search = {
 		t.activeRequests = 0;
 		t.failStreak = 0;
 		t.runToken++;
+		t.workerLastReq = {};
 		for (var wN = 0; wN < t.searchWorkers; wN++) {
-			t.SearchTimer = setTimeout(function (token) { return function () { Tabs.Search.armNextBatch(token); }; }(t.runToken), wN * 300);
+			t.SearchTimer = setTimeout(function (job) { return function () { Tabs.Search.armNextBatch(job); }; }({ id: t.runToken, w: wN }), wN * 400);
 		}
 	},
 
@@ -1076,9 +1078,9 @@ t.setupFilterDisplay();
 		});
 	},
 
-	eventGetPlayerOnline: function (token, blockString, rslt) {
+	eventGetPlayerOnline: function (job, blockString, rslt) {
 		var t = Tabs.Search;
-		if (!t.searchRunning || t.runToken !== token) { return; }
+		if (!t.searchRunning || t.runToken !== job.id) { return; }
 		if (!rslt || !rslt.ok) {
 			if (rslt && rslt.BotCode && rslt.BotCode == 999) { // map captcha
 				t.stopSearch('<span class=boldRed>' + tx('Server returning "green map". You should stop searching for about 20 minutes - Aborting search :(') + '</span>', true);
@@ -1097,7 +1099,7 @@ t.setupFilterDisplay();
 			if (ById('pbStatStatus') && t.failStreak >= 5) {
 				ById('pbStatStatus').innerHTML = tx('Server is not responding, retrying') + '... (' + t.failStreak + ')';
 			}
-			t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(token, blockString, rslt); }) }, backoff);
+			t.SearchTimer = setTimeout(function () { t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(job, blockString, rslt); }, true); }, backoff);
 			return;
 		}
 
@@ -1110,49 +1112,53 @@ t.setupFilterDisplay();
 			}
 		}
 		if (uList.length == 0) {
-			t.proceedWithMap(token, rslt, {});
+			t.proceedWithMap(job, rslt, {});
 			return;
 		}
 		var timedOut = false;
 		var timeout = setTimeout(function () {
 			timedOut = true;
-			if (t.searchRunning && t.runToken === token) { t.proceedWithMap(token, rslt, {}); }
+			if (t.searchRunning && t.runToken === job.id) { t.proceedWithMap(job, rslt, {}); }
 		}, 30000);
 		getOnline(uList, function (r) {
 			clearTimeout(timeout);
 			if (timedOut) { return; }
-			if (t.searchRunning && t.runToken === token) { t.proceedWithMap(token, rslt, r); }
+			if (t.searchRunning && t.runToken === job.id) { t.proceedWithMap(job, rslt, r); }
 		});
 	},
 
-	proceedWithMap: function (token, rslt, uList) {
+	proceedWithMap: function (job, rslt, uList) {
 		var t = Tabs.Search;
-		if (!t.searchRunning || t.runToken !== token) { return; }
+		if (!t.searchRunning || t.runToken !== job.id) { return; }
 		t.activeRequests--;
 		try {
-			t.mapCallback(uList, rslt);
+			t.mapCallback(uList, rslt, job);
 		}
 		catch (e) {
 			logerr(e);
-			if (t.searchRunning && t.runToken === token) { t.armNextBatch(token); }
+			if (t.searchRunning && t.runToken === job.id) { t.armNextBatch(job); }
 		}
 	},
 
-	armNextBatch: function (token) {
+	armNextBatch: function (job) {
 		var t = Tabs.Search;
-		if (!t.searchRunning || t.runToken !== token) { return; }
+		if (!t.searchRunning || t.runToken !== job.id) { return; }
 		if (t.BlockList.length == 0) {
 			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true); }
 			return;
 		}
 
-		// pace: esperar a que se libere la ventana del throttle global (MAP_DELAY_WATCH)
-		// + un pequeño stagger para que los workers no colisionen en el mismo instante.
-		if (MAP_DELAY_WATCH > Number(uW.unixtime())) {
-			var wait = (MAP_DELAY_WATCH - Number(uW.unixtime())) * 1000 + Math.floor(Math.random() * 200);
-			t.SearchTimer = setTimeout(function () { t.armNextBatch(token); }, wait);
+		// pace: cada worker espera al menos MAP_DELAY desde su propio último envío
+		// (no el throttle global, para que los workers corran en paralelo de verdad)
+		var now = Number(uW.unixtime());
+		var last = t.workerLastReq[job.w] || 0;
+		var needed = Number(MAP_DELAY) / 1000;
+		if (last && (now - last) < needed) {
+			var wait = (needed - (now - last)) * 1000 + Math.floor(Math.random() * 200);
+			t.SearchTimer = setTimeout(function () { t.armNextBatch(job); }, wait);
 			return;
 		}
+		t.workerLastReq[job.w] = now;
 
 		var blocks = [];
 		for (var i = 0; i < t.reqBatch; i++) {
@@ -1174,10 +1180,10 @@ t.setupFilterDisplay();
 
 		var blockString = blocks.join("%2C");
 		t.activeRequests++;
-		t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(token, blockString, rslt); });
+		t.MapAjax.LookupMap(blockString, function (rslt) { t.eventGetPlayerOnline(job, blockString, rslt); }, true);
 	},
 
-	mapCallback: function (uList, rslt) {
+	mapCallback: function (uList, rslt, job) {
 		var t = Tabs.Search;
 		btBusy(false);
 
@@ -1265,7 +1271,7 @@ t.setupFilterDisplay();
 		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
 		t.throttledRender();
 
-		t.armNextBatch(t.runToken);
+		t.armNextBatch(job);
 	},
 
 	throttledRender: function () {

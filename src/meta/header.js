@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: botón Actualizar de la columna de Último inicio de sesión junto a Iniciar/Detener (con tooltip e ícono explicativo), la búsqueda ya no se cuelga ante fallos del servidor (reintentos con backoff) y es mucho más rápida (lotes de 60 bloques con workers en paralelo)
+// @releasenotes        Search: búsqueda más rápida con 3 workers en paralelo (20 bloques por request, el límite que acepta el servidor; corregido el error "Invalid Parameters"), la búsqueda ya no se cuelga ante fallos del servidor (reintentos con backoff), y el botón Actualizar de la columna de Último inicio de sesión ahora está junto a Iniciar/Detener con tooltip e ícono explicativo
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
