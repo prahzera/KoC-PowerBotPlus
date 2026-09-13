@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: corregido Highlight Defenders para que compruebe TODAS las ciudades del resultado y no solo las 5 primeras (los workers ahora se reabastecen de la cola al recibir cada respuesta, y se limpian los candados obsoletos que quedaban de ejecuciones anteriores)
+// @releasenotes        Search: new city blacklist to skip long-inactive cities (last login older than a configurable number of days) from search results, defender highlighting and last-login fetching, with one-click add/remove from the results bar and auto-suggestions
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

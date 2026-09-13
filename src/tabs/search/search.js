@@ -65,6 +65,8 @@ Tabs.Search = {
 	lastLoginTotal: 0,
 	lastLoginRunning: false,
 	lastLoginTimer: null,
+	blacklist: {},
+	blacklistDirty: false,
 
 	Options: {
 		SearchType: 0, // 0 - city, 1 - barb camp, 2 - wild, 3 - dark forest, 4 - merc camp, 5 - nomad camp, 6 - alliance HQ - anything greater than 1, treat like wild!
@@ -89,6 +91,9 @@ Tabs.Search = {
 		ShowLastLogin: false,
 		LastLoginMinDays: '',
 		LastLoginMaxDays: '',
+		BlacklistEnabled: true,
+		BlacklistDays: 365,
+		ShowBlacklisted: false,
 		sortColNum: 2,
 		sortDir: 1,
 	},
@@ -246,6 +251,7 @@ Tabs.Search = {
 		}, 0);
 
 		t.readlastlogins();
+		t.readblacklist();
 
 		//		window.addEventListener('unload', t.onUnload, false);
 		//		setTimeout (t.readoldmists, 0);
@@ -383,6 +389,99 @@ Tabs.Search = {
 		if (matTypeof(l) == 'object') {
 			for (var k in l) { t.lastLogin[k] = l[k]; }
 		}
+	},
+
+	saveblacklist: function () {
+		var t = Tabs.Search;
+		if (!t.blacklistDirty) return;
+		t.blacklistDirty = false;
+		var serverID = getServerId();
+		setTimeout(function () { GM_setValue('SearchBlacklist_' + serverID + '_' + uW.tvuid, JSON2.stringify(t.blacklist)); }, 0);
+	},
+
+	readblacklist: function () {
+		var t = Tabs.Search;
+		var l = JSON2.parse(GM_getValue('SearchBlacklist_' + getServerId() + '_' + uW.tvuid, '{}'));
+		if (matTypeof(l) == 'object') { t.blacklist = l; }
+	},
+
+	blacklistToggle: function (row, add) {
+		var t = Tabs.Search;
+		var ck = row[0] + '_' + row[1];
+		if (add) {
+			if (!t.blacklist[ck]) { t.blacklist[ck] = 1; t.blacklistDirty = true; }
+		}
+		else {
+			if (t.blacklist[ck]) { delete t.blacklist[ck]; t.blacklistDirty = true; }
+		}
+		t.saveblacklist();
+	},
+
+	getSelectedRows: function () {
+		var t = Tabs.Search;
+		var out = [];
+		for (var k = 0; k < t.dat.length; k++) {
+			var ck = t.dat[k][0] + '_' + t.dat[k][1];
+			if (ById('pbSearchScout_' + ck).checked) { out.push(t.dat[k]); }
+		}
+		return out;
+	},
+
+	BlacklistSelected: function () {
+		var t = Tabs.Search;
+		var rows = t.getSelectedRows();
+		for (var i = 0; i < rows.length; i++) {
+			t.blacklistToggle(rows[i], true);
+			var ck = rows[i][0] + '_' + rows[i][1];
+			var cb = ById('pbSearchScout_' + ck);
+			if (cb) { cb.checked = false; }
+		}
+		t.dispMapTable();
+	},
+
+	UnblacklistSelected: function () {
+		var t = Tabs.Search;
+		var rows = t.getSelectedRows();
+		for (var i = 0; i < rows.length; i++) {
+			t.blacklistToggle(rows[i], false);
+		}
+		t.dispMapTable();
+	},
+
+	blacklistCandidates: function () {
+		var t = Tabs.Search;
+		if (Options.SearchOptions.SearchType != 0) return [];
+		var days = parseIntNan(Options.SearchOptions.BlacklistDays) || 365;
+		var out = [];
+		for (var i = 0; i < t.dat.length; i++) {
+			var row = t.dat[i];
+			var ck = row[0] + '_' + row[1];
+			if (t.blacklist[ck]) continue;
+			if (row[12] == 1) continue; // really online - never blacklist
+			var uid = row[6];
+			if (!uid || uid == 0) continue;
+			var dl = row[22] || t.lastLogin[uid];
+			if (!dl) continue;
+			var daysL = (unixTime() - convertTime(new Date(dl.replace(' ', 'T') + 'Z'))) / 86400;
+			if (daysL >= days) { out.push(row); }
+		}
+		return out;
+	},
+
+	BlacklistInactive: function () {
+		var t = Tabs.Search;
+		var cand = t.blacklistCandidates();
+		for (var i = 0; i < cand.length; i++) {
+			t.blacklistToggle(cand[i], true);
+		}
+		t.dispMapTable();
+	},
+
+	BlacklistDaysChange: function (e) {
+		var t = Tabs.Search;
+		Options.SearchOptions.BlacklistDays = parseIntNan(e.target.value) || 365;
+		saveOptions();
+		t.dispMapTable();
 	},
 
 	clearoldmists: function () {
@@ -647,6 +746,9 @@ Tabs.Search = {
 		m += '<tr id=pbslastlogin1><td colspan=2 align=center><INPUT id=pbSearchShowLastLogin type=checkbox ' + (Options.SearchOptions.ShowLastLogin ? 'CHECKED' : '') + '/>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</td></tr>';
 		m += '<tr id=pbslastlogin2><td colspan=2 align=center style="padding-top:5px;">' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ' (' + t.lastLoginUnit() + '):</td></tr>';
 		m += '<tr id=pbslastlogin3><td colspan=2 align=center><INPUT id=pbSearchLastLoginMinDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMinDays + '>&nbsp;-&nbsp;<INPUT id=pbSearchLastLoginMaxDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMaxDays + '></td></tr>';
+		m += '<tr id=pbsblacklist1><td colspan=2 align=center style="padding-top:5px;"><INPUT id=pbSearchBlacklistEnabled type=checkbox ' + (Options.SearchOptions.BlacklistEnabled ? 'CHECKED' : '') + '/>' + tx('City Blacklist') + '</td></tr>';
+		m += '<tr id=pbsblacklist2><td colspan=2 align=center style="padding-top:2px;">' + tx('Inactive after') + ':&nbsp;<INPUT id=pbSearchBlacklistDays class=btInput size=3 value=' + Options.SearchOptions.BlacklistDays + '></td></tr>';
+		m += '<tr id=pbsblacklist3><td colspan=2 align=center><INPUT id=pbSearchShowBlacklisted type=checkbox ' + (Options.SearchOptions.ShowBlacklisted ? 'CHECKED' : '') + '/>' + tx('Show blacklisted') + '</td></tr>';
 		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Shape') + ':</td></tr>';
 		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx("Square"), 1: tx("Circle") }, Options.SearchOptions.SearchShape, 'id=pbSearchShape class=btInput') + '</td></tr>';
 		m += '</table>';
@@ -704,6 +806,11 @@ t.setupFilterDisplay();
 
 		ById('pbSearchLastLoginMaxDays').addEventListener('change', t.LastLoginMaxDaysChange, false);
 		ById('pbSearchLastLoginMaxDays').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.LastLoginMaxDaysChange); }, false);
+
+		ToggleOption('SearchOptions', 'pbSearchBlacklistEnabled', 'BlacklistEnabled', function () { t.setupFilterDisplay(); });
+		ToggleOption('SearchOptions', 'pbSearchShowBlacklisted', 'ShowBlacklisted', t.dispMapTable);
+		ById('pbSearchBlacklistDays').addEventListener('change', t.BlacklistDaysChange, false);
+		ById('pbSearchBlacklistDays').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.BlacklistDaysChange); }, false);
 
 		ToggleOption('SearchOptions', 'pbSearchUnowned', 'Unowned', t.dispMapTable);
 		ToggleOption('SearchOptions', 'pbSearchMisted', 'Misted', function () { t.setupFilterDisplay(); t.dispMapTable(); });
@@ -957,6 +1064,23 @@ t.setupFilterDisplay();
 				}
 			}
 			if (!t.lastLoginUsable() && Options.SearchOptions.sortColNum == 22) { Options.SearchOptions.sortColNum = 2; }
+		}
+		catch (e) { logerr(e); }
+
+		try {
+			var blCityType = (stype == 0);
+			if (ById('pbsblacklist1')) {
+				if (blCityType) { jQuery('#pbsblacklist1').removeClass('divHide'); }
+				else { jQuery('#pbsblacklist1').addClass('divHide'); }
+			}
+			if (ById('pbsblacklist2')) {
+				if (blCityType && Options.SearchOptions.BlacklistEnabled) { jQuery('#pbsblacklist2').removeClass('divHide'); }
+				else { jQuery('#pbsblacklist2').addClass('divHide'); }
+			}
+			if (ById('pbsblacklist3')) {
+				if (blCityType && Options.SearchOptions.BlacklistEnabled) { jQuery('#pbsblacklist3').removeClass('divHide'); }
+				else { jQuery('#pbsblacklist3').addClass('divHide'); }
+			}
 		}
 		catch (e) { logerr(e); }
 
@@ -1333,6 +1457,7 @@ t.setupFilterDisplay();
 		if (!t.lastLoginUsable()) return;
 		for (var i = t.lastLoginEnqLen; i < t.mapDat.length; i++) {
 			var uid = t.mapDat[i][6];
+			if (Options.SearchOptions.BlacklistEnabled && !Options.SearchOptions.ShowBlacklisted && t.blacklist[t.mapDat[i][0] + '_' + t.mapDat[i][1]]) continue;
 			if (!uid || uid == 0 || uid == "0") continue;
 			if (t.lastLoginIdx[uid]) { t.lastLoginIdx[uid].push(i); }
 			else { t.lastLoginIdx[uid] = [i]; }
@@ -1668,6 +1793,10 @@ t.setupFilterDisplay();
 				TileOK = (t.mapDat[i][19] === true);
 			}
 
+			if (TileOK && Options.SearchOptions.BlacklistEnabled && !Options.SearchOptions.ShowBlacklisted) {
+				if (t.blacklist[t.mapDat[i][0] + '_' + t.mapDat[i][1]]) { TileOK = false; }
+			}
+
 			if (TileOK) {
 				t.dat.push(t.mapDat[i]);
 			}
@@ -1750,6 +1879,7 @@ t.setupFilterDisplay();
 				}
 				if (playername == "" && HQ) playername = "???";
 				if (parseIntNan(t.dat[i][9]) != 0) { might = addCommas(t.dat[i][9]); }
+				var bl = (Options.SearchOptions.ShowBlacklisted && t.blacklist[t.dat[i][0] + '_' + t.dat[i][1]]) ? true : false;
 
 				if (t.dat[i][13] && !HQ) {
 					t.mists++;
@@ -1769,6 +1899,11 @@ t.setupFilterDisplay();
 						rowStyle = 'style="opacity:0.5;"'; // misted
 						mistedtext = tx("MISTED");
 					}
+				}
+
+				if (bl) {
+					rowStyle = 'style="opacity:0.5;"';
+					cityname += ' <span style="color:#f60;font-size:9px;">[' + tx('Blacklisted') + ']</span>';
 				}
 
 				if (++r % 2) { rowClass = 'evenRow'; }
@@ -1908,6 +2043,16 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		var m = '<DIV align=right style="max-width:' + Number(GlobalOptions.btWinSize.x - 170) + 'px;overflow-x:auto;">';
 		m += strButton20(tx('Highlight Defenders'), 'id=pbHighDefenders') + '&nbsp;';
 		m += strButton20(tx('Copy Co-ordinates'), 'id=pbCoordCopy') + '&nbsp;';
+		if (Options.SearchOptions.SearchType == 0) {
+			m += strButton20(tx('Blacklist'), 'id=pbSearchBlacklist') + '&nbsp;';
+			m += strButton20(tx('Unblacklist'), 'id=pbSearchUnblacklist') + '&nbsp;';
+			if (Options.SearchOptions.BlacklistEnabled && !Options.SearchOptions.ShowBlacklisted) {
+				var blCand = t.blacklistCandidates().length;
+				if (blCand != 0) {
+					m += strButton20(tx('Blacklist inactive') + ' (' + blCand + ')', 'id=pbSearchBlacklistInactive') + '&nbsp;';
+				}
+			}
+		}
 		if (Tabs.BulkScout) m += strButton20(tx('Add to Scout List'), 'id=pbScoutExport') + '&nbsp;';
 		if (Tabs.BulkAttack) m += strButton20(tx('Add to Attack List'), 'id=pbBulkAttackExport') + '&nbsp;';
 		if (Tabs.Attack) m += strButton20(tx('Add to Auto-Attack'), 'id=pbAttackExport') + '&nbsp;';
@@ -1919,6 +2064,9 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		if (ById('pbBulkAttackExport')) ById('pbBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
 		if (ById('pbAttackExport')) ById('pbAttackExport').addEventListener('click', t.ExportAttack, false);
 		ById('pbCoordCopy').addEventListener('click', t.CopyCoords, false);
+		if (ById('pbSearchBlacklist')) ById('pbSearchBlacklist').addEventListener('click', t.BlacklistSelected, false);
+		if (ById('pbSearchUnblacklist')) ById('pbSearchUnblacklist').addEventListener('click', t.UnblacklistSelected, false);
+		if (ById('pbSearchBlacklistInactive')) ById('pbSearchBlacklistInactive').addEventListener('click', t.BlacklistInactive, false);
 		if (ById('pbHighDefenders')) ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
 
 		if (Options.SearchOptions.SearchType != 0) {
