@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Optimizada la auto-construcción (AutoBuild): procesa todas las ciudades en paralelo de forma asíncrona reduciendo el tiempo entre colas
+// @releasenotes        Corregido el alto del Dashboard (ahora se ajusta al contenido, ya no 5000px) y el iframe del juego en el portal (100% de ancho y alto con scroll automático, ya no 2000px/3000px fijos)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

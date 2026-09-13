@@ -46,7 +46,8 @@ function SetGameScreen() {
 		}
 
 		kocFrame.style.width = '100%';
-		kocFrame.style.height = '3000px';
+		kocFrame.style.height = '100%';
+		kocFrame.style.overflow = 'auto';
 		if (GlobalOptions.btWideScreenStyle == "wide") kocFrame.style.width = '1520px';
 		if (GlobalOptions.btWideScreenStyle == "ultra") kocFrame.style.width = '1900px';
 		var style = document.createElement('style');

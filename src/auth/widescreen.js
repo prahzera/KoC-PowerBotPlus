@@ -187,7 +187,7 @@ var WideScreen = {
 			Dash.style.position = 'absolute';
 			Dash.style.width = (Options.DashboardOptions.DashWidth + 20) + 'px';
 			Dash.style.top = "0px";
-			Dash.style.height = "5000px";
+			Dash.style.height = 'auto';
 			ById('kocContainer').appendChild(Dash);
 			t.CheckDashPosition();
 			t.CheckChatPosition();

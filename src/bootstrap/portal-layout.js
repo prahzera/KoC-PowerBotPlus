@@ -10,6 +10,8 @@
 
 GM_addStyle("main:has(#game-frame) {max-width:none !important; width:100% !important; margin-left:0 !important; margin-right:0 !important;} \
 main:has(#game-frame) ~ footer.site-footer {display:none !important;} \
+#game-frame {width:100% !important; height:100% !important; max-width:100% !important; min-height:100vh !important; overflow:auto !important;} \
+body.pbp-portal-header-hidden #game-frame {min-height:100vh !important;} \
 #pbp-header-toggle {display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; flex-shrink:0; margin-left:0.5rem; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); cursor:pointer; padding:0; transition:color .2s,border-color .2s;} \
 #pbp-header-toggle:hover {color:var(--primary); border-color:var(--primary);} \
 #pbp-header-restore {position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:1001; display:none; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:var(--surface); border:1px solid var(--border); box-shadow:var(--glass-shadow); color:var(--text-main); cursor:pointer; padding:0; transition:color .2s,border-color .2s;} \
@@ -30,6 +32,17 @@ function InitPortalLayout() {
 	// Footer: oculto del todo, sin ocupar espacio
 	var footer = document.querySelector('footer.site-footer');
 	if (footer) footer.style.display = 'none';
+
+	// Iframe del juego: 100% de ancho y alto con scroll automático.
+	// Sobrescribe los 2000px fijos que el portal deja en el atributo style.
+	var gameFrame = document.getElementById('game-frame');
+	if (gameFrame) {
+		gameFrame.style.width = '100%';
+		gameFrame.style.height = '100%';
+		gameFrame.style.maxWidth = '100%';
+		gameFrame.style.overflow = 'auto';
+		gameFrame.scrolling = 'auto';
+	}
 
 	// Botón de colapso del header (dentro del propio header)
 	var inner = document.querySelector('header.hero .hero-inner');

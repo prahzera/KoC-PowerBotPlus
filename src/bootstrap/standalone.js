@@ -14,7 +14,8 @@ function StandAloneInstance() {
 		}
 
 		iFrames.style.width = '100%';
-		iFrames.style.height = '3000px';
+		iFrames.style.height = '100%';
+		iFrames.style.overflow = 'auto';
 		if (GlobalOptions.btWideScreenStyle == "wide") iFrames.style.width = '1520px';
 		if (GlobalOptions.btWideScreenStyle == "ultra") iFrames.style.width = '1900px';
 		while ((iFrames = iFrames.parentNode) != null && iFrames.tagName !== "BODY") {
