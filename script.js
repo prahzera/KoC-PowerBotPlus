@@ -2,7 +2,7 @@
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
-// @icon			https://koc-cdn.popreach.com/fb/e2/src/img/items/70/363.jpg
+// @icon			https://koc.playgardencitygames.com/fb/e2/src/img/items/70/363.jpg
 // @include			*.rycamelot.com/*main_src.php*
 // @include			*.beta.rycamelot.com/*main_src.php*
 // @include			*.playgardencitygames.com/kingdomsofcamelot*
@@ -17,12 +17,13 @@
 // @exclude 	    *sharethis*
 // @require			https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require			https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
-// @resource        sound_files         https://koc-cdn.popreach.com/fb/e2/src/pb/resource/sound_files.js
-// @resource		image_files			https://koc-cdn.popreach.com/fb/e2/src/pb/resource/image_files.js
-// @resource		champion_uniques	https://koc-cdn.popreach.com/fb/e2/src/pb/resource/champion_uniques.js
-// @resource		emoticons			https://koc-cdn.popreach.com/fb/e2/src/pb/resource/emoticons.js
+// @resource        sound_files         https://koc.playgardencitygames.com/fb/e2/src/pb/resource/sound_files.js
+// @resource		image_files			https://koc.playgardencitygames.com/fb/e2/src/pb/resource/image_files.js
+// @resource		champion_uniques	https://koc.playgardencitygames.com/fb/e2/src/pb/resource/champion_uniques.js
+// @resource		emoticons			https://koc.playgardencitygames.com/fb/e2/src/pb/resource/emoticons.js
 // @connect			*
 // @connect	greasyfork.org
+// @connect	koc.playgardencitygames.com
 // @grant	GM_getValue
 // @grant	GM_setValue
 // @grant	GM_deleteValue
@@ -40,8 +41,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.29.0
-// @releasenotes        Added a Translate button to every chat message (global, alliance and whispers). Click it to auto-detect and translate the message into your chosen language via the free MyMemory API. Results are cached in memory for the session and failures are silent (they never break the chat).
+// @version			4.29.1
+// @releasenotes        Migrated the script resources (emoticons, images, sounds, champion uniques), the icon and all bot assets (alarm sounds, SWF player and extra tabs) to the new game CDN koc.playgardencitygames.com because the old koc-cdn.popreach.com is gone, which blocked the installation in Violentmonkey (error loading dependencies).
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -127,7 +128,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.29.0';
+var Version = '4.29.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -142,7 +143,7 @@ var FFVersion = getFirefoxVersion();
 var GMVersion = getGMVersion();
 var NoRegEx = (FFVersion.Mozilla && (parseIntNan(FFVersion.Version) <= 16));
 var http = window.location.protocol + "\/\/";
-var EXTERNAL_RESOURCE = 'https://koc-cdn.popreach.com/fb/e2/src/pb/';
+var EXTERNAL_RESOURCE = 'https://koc.playgardencitygames.com/fb/e2/src/pb/';
 var KOCMON_LOGO = '';
 var KOCMON_ON = false;
 var GameURL = 'www.rycamelot.com';
