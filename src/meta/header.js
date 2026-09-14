@@ -41,7 +41,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        The game now always loads from the Garden City Games portal (playgardencitygames.com/kingdomsofcamelot) instead of Facebook: reloads, token-collection redirects and the Treasure Chest link builder point to the portal keeping the ?s= server parameter, and the userscript no longer runs on apps.facebook.com or Facebook feed dialogs
+// @releasenotes        Added a page-level guard that blocks the new windows the game opens to publish on Facebook (feed dialog / sharer / apps.facebook.com). Chat links, the Excel export and the config save fallback keep working because only Facebook-publish popup URLs are intercepted
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

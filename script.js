@@ -40,8 +40,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.28.3
-// @releasenotes        The game now always loads from the Garden City Games portal (playgardencitygames.com/kingdomsofcamelot) instead of Facebook: reloads, token-collection redirects and the Treasure Chest link builder point to the portal keeping the ?s= server parameter, and the userscript no longer runs on apps.facebook.com or Facebook feed dialogs
+// @version			4.28.4
+// @releasenotes        Added a page-level guard that blocks the new windows the game opens to publish on Facebook (feed dialog / sharer / apps.facebook.com). Chat links, the Excel export and the config save fallback keep working because only Facebook-publish popup URLs are intercepted
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -127,7 +127,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.28.3';
+var Version = '4.28.4';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -2252,6 +2252,27 @@ function CheckHideFBDialogs() {
 	_massSalvageObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
 })();
 
+/** Block Facebook publish popups (feed dialog / sharer / apps.facebook.com) **/
+
+function BlockPublishPopups() {
+	try {
+		var _origOpen = uW.open;
+		var _fbPublishRe = /facebook\.com\/(dialog\/feed|sharer\/|sharer\.php)|apps\.facebook\.com/i;
+		uW.open = function () {
+			var url = arguments.length ? arguments[0] : '';
+			if (typeof url == 'string' && _fbPublishRe.test(url)) {
+				logit('Blocked Facebook publish popup: ' + url);
+				return null;
+			}
+			return _origOpen.apply(uW, arguments);
+		};
+	}
+	catch (err) {
+		logerr(err);
+	}
+}
+
+BlockPublishPopups();
 function CheckTokenCollection() {
 	LoadChecker(false);
 	var user_id = uW.user_id;
