@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: new "Search Speed" option (Normal/Turbo - Turbo scans the map several times faster with auto-downgrade and a cooldown if the server returns a green map), online status is now fetched in bulk off the scan's critical path, and interrupted searches can be resumed with the new "Resume search" button (also persisted across page reloads)
+// @releasenotes        Search: removed the "Search Speed" option (the Turbo mode was causing issues with the server), and fixed the progressive slowdown while searching - new results are now filtered incrementally instead of re-scanning all accumulated data on every render, and online status updates only touch the affected rows instead of scanning the whole result list
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.28.0
-// @releasenotes        Search: new "Search Speed" option (Normal/Turbo - Turbo scans the map several times faster with auto-downgrade and a cooldown if the server returns a green map), online status is now fetched in bulk off the scan's critical path, and interrupted searches can be resumed with the new "Resume search" button (also persisted across page reloads)
+// @version			4.28.1
+// @releasenotes        Search: removed the "Search Speed" option (the Turbo mode was causing issues with the server), and fixed the progressive slowdown while searching - new results are now filtered incrementally instead of re-scanning all accumulated data on every render, and online status updates only touch the affected rows instead of scanning the whole result list
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +129,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.28.0';
+var Version = '4.28.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30245,12 +30245,13 @@ Tabs.Search = {
 	workerLastReq: {},
 	searchDelay: MAP_DELAY,
 	workerStagger: 400,
-	speedParams: null,
-	turboDowngraded: false,
 	onlineQueue: [],
 	onlineQueued: {},
+	onlineRows: {},
 	onlineTimer: null,
 	resumeSnapshot: null,
+	lastFilterIdx: 0,
+	lastRenderedLen: 0,
 	defendWorkers: 5,
 	defending: false,
 	defendQueue: [],
@@ -30309,7 +30310,6 @@ Tabs.Search = {
 		BlacklistEnabled: true,
 		BlacklistDays: 365,
 		ShowBlacklisted: false,
-		SearchSpeed: 0, // 0 - normal, 1 - turbo
 		sortColNum: 2,
 		sortDir: 1,
 	},
@@ -30809,36 +30809,19 @@ Tabs.Search = {
 			if (!t.searchRunning) { t.dispMapTable(); return; }
 			var list = r.data || {};
 			var changed = false;
-			for (var m = 0; m < t.mapDat.length; m++) {
-				var uid = t.mapDat[m][6];
-				if (!uid || uid == 0 || list[uid] == null) { continue; }
+			for (var q = 0; q < uids.length; q++) { // solo las filas con esos uids, no todo mapDat
+				uid = uids[q];
+				if (list[uid] == null) { continue; }
+				var rows = t.onlineRows[uid];
+				if (!rows) { continue; }
 				var v = list[uid] ? 1 : 0;
-				if (t.mapDat[m][12] != v) { t.mapDat[m][12] = v; changed = true; }
+				for (var q2 = 0; q2 < rows.length; q2++) {
+					var idx = rows[q2];
+					if (t.mapDat[idx] && t.mapDat[idx][12] != v) { t.mapDat[idx][12] = v; changed = true; }
+				}
 			}
 			if (changed && !t.searchRunning) { t.dispMapTable(); }
 		});
-	},
-
-	getSpeedParams: function (downgraded) {
-		var t = Tabs.Search;
-		downgraded = downgraded || !!(t.turboDowngraded);
-		if (parseIntNan(Options.SearchOptions.SearchSpeed) == 1 && !downgraded && !t.turboCooldown()) {
-			return { workers: 5, batch: 30, delay: 1000, stagger: 250 };
-		}
-		return { workers: 3, batch: 20, delay: MAP_DELAY, stagger: 400 };
-	},
-
-	applySpeedParams: function (p) {
-		var t = Tabs.Search;
-		t.speedParams = p || t.getSpeedParams(false);
-		t.searchWorkers = t.speedParams.workers;
-		t.reqBatch = t.speedParams.batch;
-		t.searchDelay = t.speedParams.delay;
-		t.workerStagger = t.speedParams.stagger;
-	},
-
-	turboCooldown: function () {
-		return parseIntNan(GM_getValue('SearchTurboCooldown_' + getServerId() + '_' + uW.tvuid, 0)) > unixTime();
 	},
 
 	startWorkers: function () {
@@ -30847,8 +30830,10 @@ Tabs.Search = {
 		t.failStreak = 0;
 		t.runToken++;
 		t.workerLastReq = {};
-		t.turboDowngraded = false;
-		t.applySpeedParams(t.getSpeedParams(false));
+		t.searchWorkers = 3;
+		t.reqBatch = 20;
+		t.searchDelay = MAP_DELAY;
+		t.workerStagger = 400;
 		for (var wN = 0; wN < t.searchWorkers; wN++) {
 			t.SearchTimer = setTimeout(function (job) { return function () { Tabs.Search.armNextBatch(job); }; }({ id: t.runToken, w: wN }), wN * t.workerStagger);
 		}
@@ -30929,7 +30914,11 @@ Tabs.Search = {
 		t.defendActive = 0;
 		t.onlineQueue = [];
 		t.onlineQueued = {};
+		t.onlineRows = {};
 		if (t.onlineTimer) { clearTimeout(t.onlineTimer); t.onlineTimer = null; }
+		t.dat = [];
+		t.lastFilterIdx = 0;
+		t.lastRenderedLen = 0;
 		var curX = t.BlockList.length ? t.BlockList[0].split("_")[1] : t.firstX;
 		var curY = t.BlockList.length ? t.BlockList[0].split("_")[3] : t.firstY;
 		ById('pbStatStatus').innerHTML = tx('Searching at ') + curX + ',' + curY;
@@ -31005,8 +30994,12 @@ Tabs.Search = {
 		t.mapDat = [];
 		t.lastLoginIdx = {};
 		t.lastLoginEnqLen = 0;
+		t.dat = [];
+		t.lastFilterIdx = 0;
+		t.lastRenderedLen = 0;
 		t.onlineQueue = [];
 		t.onlineQueued = {};
+		t.onlineRows = {};
 		if (t.onlineTimer) { clearTimeout(t.onlineTimer); t.onlineTimer = null; }
 		if (t.opt.province == -1) { // whole map: cover the full 0..749 grid with 5x5 blocks
 			t.firstX = 0;
@@ -31120,8 +31113,6 @@ Tabs.Search = {
 		m += '<tr id=pbsblacklist1><td colspan=2 align=center style="padding-top:5px;"><INPUT id=pbSearchBlacklistEnabled type=checkbox ' + (Options.SearchOptions.BlacklistEnabled ? 'CHECKED' : '') + '/>' + tx('City Blacklist') + '</td></tr>';
 		m += '<tr id=pbsblacklist2><td colspan=2 align=center style="padding-top:2px;">' + tx('Inactive after') + ':&nbsp;<INPUT id=pbSearchBlacklistDays class=btInput size=3 value=' + Options.SearchOptions.BlacklistDays + '></td></tr>';
 		m += '<tr id=pbsblacklist3><td colspan=2 align=center><INPUT id=pbSearchShowBlacklisted type=checkbox ' + (Options.SearchOptions.ShowBlacklisted ? 'CHECKED' : '') + '/>' + tx('Show blacklisted') + '</td></tr>';
-		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Speed') + ':</td></tr>';
-		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx('Normal'), 1: tx('Turbo') }, Options.SearchOptions.SearchSpeed, 'id=pbSearchSpeed class=btInput') + '</td></tr>';
 		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Shape') + ':</td></tr>';
 		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx("Square"), 1: tx("Circle") }, Options.SearchOptions.SearchShape, 'id=pbSearchShape class=btInput') + '</td></tr>';
 		m += '</table>';
@@ -31142,7 +31133,6 @@ Tabs.Search = {
 
 		ChangeOption('SearchOptions', 'pbSearchWildType', 'WildType', t.dispMapTable);
 		ChangeOption('SearchOptions', 'pbSearchShape', 'SearchShape', t.dispMapTable);
-		ChangeOption('SearchOptions', 'pbSearchSpeed', 'SearchSpeed');
 
 		ById('pbSearchMinLevel').addEventListener('change', t.MinLevelChange, false);
 		ById('pbSearchMinLevel').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.MinLevelChange); }, false);
@@ -31597,9 +31587,6 @@ t.setupFilterDisplay();
 		if (!t.searchRunning || t.runToken !== job.id) { return; }
 		if (!rslt || !rslt.ok) {
 			if (rslt && rslt.BotCode && rslt.BotCode == 999) { // map captcha
-				if (t.speedParams && t.speedParams.workers > 3) {
-					GM_setValue('SearchTurboCooldown_' + getServerId() + '_' + uW.tvuid, unixTime() + 1200);
-				}
 				t.stopSearch('<span class=boldRed>' + tx('Server returning "green map". You should stop searching for about 20 minutes - Aborting search :(') + '</span>', true);
 				return;
 			}
@@ -31608,13 +31595,6 @@ t.setupFilterDisplay();
 				return;
 			}
 			t.failStreak++;
-			if (!t.turboDowngraded && t.speedParams && t.speedParams.workers > 3 && t.failStreak >= 3) {
-				t.turboDowngraded = true;
-				t.applySpeedParams(t.getSpeedParams(true));
-				if (ById('pbStatStatus')) {
-					ById('pbStatStatus').innerHTML = tx('Reduced speed to avoid server issues');
-				}
-			}
 			if (t.failStreak >= 50) {
 				t.stopSearch('<span class=boldRed>' + tx('Server is not responding - Aborting search') + '</span>', true);
 				return;
@@ -31773,17 +31753,30 @@ t.setupFilterDisplay();
 
 
 				t.mapDat.push([map[k].xCoord, map[k].yCoord, dist, map[k].tileType, parseIntNan(map[k].tileLevel), map[k].tileCityId, u, city, name, might, alli, aID, OData[u] ? 1 : 0, misted, map[k].isPrestige, map[k].prestigeLevel, map[k].prestigeType, map[k].tileId, map[k].tileProvinceId, false, map[k].premiumTile, hqId, lastLoginStr]);
+				if (u != 0) { // índice de fila para aplicar online sin recorrer todo mapDat
+					var ridx = t.mapDat.length - 1;
+					if (t.onlineRows[u]) { t.onlineRows[u].push(ridx); }
+					else { t.onlineRows[u] = [ridx]; }
+				}
 				++t.tilesFound;
 			}
 		}
 
 
 		t.enqueueLastLogins();
+		t.appendDat();
 
 		ById('pbStatSearched').innerHTML = tx('Searched: ') + Math.round((t.blocksSearched / t.blocksTotal) * 100) + '%';
 		t.throttledRender();
 
 		t.armNextBatch(job);
+	},
+
+	appendDat: function () { // solo filas nuevas: el scan no re-filtra todo mapDat en cada render
+		var t = Tabs.Search;
+		t._filterAll(t.lastFilterIdx, t.mapDat.length);
+		t.lastFilterIdx = t.mapDat.length;
+		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
 	},
 
 	throttledRender: function () {
@@ -31792,7 +31785,7 @@ t.setupFilterDisplay();
 		if (t.renderTimer) return;
 		t.renderTimer = setTimeout(function () {
 			t.renderTimer = null;
-			if (t.searchRunning) { t.dispMapTable(); }
+			if (t.searchRunning) { t.renderTable(true); }
 		}, 2000);
 	},
 
@@ -31990,39 +31983,21 @@ t.setupFilterDisplay();
 	dispMapTable: function () {
 		var t = Tabs.Search;
 
-		function sortFunc(a, b) {
-			var t = Tabs.Search;
-			var ci = Options.SearchOptions.sortColNum;
-			if (ci == 22) {
-				var aOn = (a[12] == 1) ? 1 : 0;
-				var bOn = (b[12] == 1) ? 1 : 0;
-				if (Options.SearchOptions.sortDir > 0) {
-					if (aOn != bOn) return bOn - aOn;
-					return t.sortLastLoginVal(b) - t.sortLastLoginVal(a);
-				}
-				else {
-					if (aOn != bOn) return aOn - bOn;
-					return t.sortLastLoginVal(a) - t.sortLastLoginVal(b);
-				}
-			}
-			if (typeof (a[ci]) == 'number') {
-				if (Options.SearchOptions.sortDir > 0)
-					return a[ci] - b[ci];
-				else
-					return b[ci] - a[ci];
-			} else if (typeof (a[ci]) == 'boolean') {
-				return 0;
-			} else {
-				if (Options.SearchOptions.sortDir > 0)
-					return a[ci].localeCompare(b[ci]);
-				else
-					return b[ci].localeCompare(a[ci]);
-			}
-		}
+		t.buildDat();
+		t.renderTable();
+	},
 
+	buildDat: function () {
+		var t = Tabs.Search;
 		t.dat = [];
+		t._filterAll(0, t.mapDat.length);
+		t.lastFilterIdx = t.mapDat.length;
+		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
+	},
 
-		for (var i = 0; i < t.mapDat.length; i++) {
+	_filterAll: function (from, to) {
+		var t = Tabs.Search;
+		for (var i = from; i < to; i++) {
 			var TileOK = (Options.SearchOptions.SearchShape == 0 || distance(t.opt.startX, t.opt.startY, t.mapDat[i][0], t.mapDat[i][1]) <= t.opt.maxDistance); // check distance on circle search
 
 			if (TileOK) { // check type
@@ -32173,11 +32148,46 @@ t.setupFilterDisplay();
 				t.dat.push(t.mapDat[i]);
 			}
 		}
+	},
+
+	renderTable: function (skipIfSame) {
+		var t = Tabs.Search;
+		if (skipIfSame && t.searchRunning && t.lastRenderedLen == t.dat.length) { return; }
+		t.lastRenderedLen = t.dat.length;
+
+		function sortFunc(a, b) {
+			var t = Tabs.Search;
+			var ci = Options.SearchOptions.sortColNum;
+			if (ci == 22) {
+				var aOn = (a[12] == 1) ? 1 : 0;
+				var bOn = (b[12] == 1) ? 1 : 0;
+				if (Options.SearchOptions.sortDir > 0) {
+					if (aOn != bOn) return bOn - aOn;
+					return t.sortLastLoginVal(b) - t.sortLastLoginVal(a);
+				}
+				else {
+					if (aOn != bOn) return aOn - bOn;
+					return t.sortLastLoginVal(a) - t.sortLastLoginVal(b);
+				}
+			}
+			if (typeof (a[ci]) == 'number') {
+				if (Options.SearchOptions.sortDir > 0)
+					return a[ci] - b[ci];
+				else
+					return b[ci] - a[ci];
+			} else if (typeof (a[ci]) == 'boolean') {
+				return 0;
+			} else {
+				if (Options.SearchOptions.sortDir > 0)
+					return a[ci].localeCompare(b[ci]);
+				else
+					return b[ci].localeCompare(a[ci]);
+			}
+		}
 
 		t.mists = 0;
 		t.scouted = 0;
 
-		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
 		var m = btEmptyState(tx('No tiles found matching search criteria'), 'info');
 		if (t.dat.length != 0) {
 			if (!t.searchRunning) { t.dat.sort(sortFunc); }
