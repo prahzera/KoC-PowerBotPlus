@@ -40,8 +40,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.28.4
-// @releasenotes        Added a page-level guard that blocks the new windows the game opens to publish on Facebook (feed dialog / sharer / apps.facebook.com). Chat links, the Excel export and the config save fallback keep working because only Facebook-publish popup URLs are intercepted
+// @version			4.29.0
+// @releasenotes        Added a Translate button to every chat message (global, alliance and whispers). Click it to auto-detect and translate the message into your chosen language via the free MyMemory API. Results are cached in memory for the session and failures are silent (they never break the chat).
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -127,7 +127,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.28.4';
+var Version = '4.29.0';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -376,6 +376,7 @@ var UniqueJewels = {};
 var boxmightarray = {};
 var AlertSounds = { allianceattack: 'Submarine', alert: 'Honk Honk Honk', airraid: 'Air Raid Siren' };
 var WhisperSounds = { timeout: 'Arrow', monitor: 'Doorbell' };
+var TranslateLangs = { es: 'Spanish', en: 'English', fr: 'French', de: 'German', it: 'Italian', pt: 'Portuguese', ru: 'Russian', nl: 'Dutch', pl: 'Polish', tr: 'Turkish', cs: 'Czech', ar: 'Arabic', zh: 'Chinese', ja: 'Japanese', ko: 'Korean', sv: 'Swedish', da: 'Danish', fi: 'Finnish', el: 'Greek', he: 'Hebrew', hi: 'Hindi', ur: 'Urdu' };
 
 var Smileys = {};
 var ChatStyles = { '[#0]': 'color:black', '[#1]': 'color:red', '[#2]': 'color:green', '[#3]': 'color:blue', '[#4]': 'color:magenta', '[#5]': 'color:cyan', '[#6]': 'color:yellow', '[#7]': 'color:white', '[#8]': 'font-weight:bold', '[#9]': 'font-style:italic' };
@@ -15522,6 +15523,16 @@ function ChatComOverlay() {
 	}
 };
 
+function truncateUTF8(str, max) {
+	var enc = encodeURIComponent(str).replace(/%[0-9A-F]{2}/g, 'x');
+	if (enc.length <= max) return str;
+	for (var i = 0; i < str.length; i++) {
+		var l = encodeURIComponent(str.substr(0, i)).replace(/%[0-9A-F]{2}/g, 'x').length;
+		if (l > max) return str.substr(0, i - 1);
+	}
+	return str;
+}
+
 function OSendChat() {
 	if (Options.ChatOptions.filter)
 		ById('mod_comm_input').value = BtFilter(ById('bot_comm_input'));
@@ -15784,6 +15795,7 @@ var ChatStuff = {
 	getChatFunc: null,
 	leaders: {},
 	ChatIcons: {},
+	ChatTranslations: {},
 	Colors: {
 		ChatLeaders: '#B8B8B8',
 		ChatGlobal: '#CCCCFF',
@@ -15817,6 +15829,7 @@ var ChatStuff = {
 			uWExportFunction('ptfetchmarch', t.fetchmarchcaller);
 			uWExportFunction('btSelectSmiley', ChatStuff.SelectSmiley);
 			uWExportFunction('btSelectText', SelectText);
+			uWExportFunction('btTranslateMsg', t.btTranslateMsg);
 
 			t.setEnable(Options.ChatOptions.chatEnhance);
 			if (Options.ChatOptions.chatGlobal) {
@@ -16060,7 +16073,64 @@ var ChatStuff = {
 			}
 		}
 
+		if (Options.ChatOptions.TranslateMsg) {
+			var btnHtml = '<a class="btTranslateMsg" title="' + tx('Translate') + '" onclick="btTranslateMsg(this);return false;" style="cursor:pointer;margin-left:5px;font-size:9px;">' + tx('Translate') + '</a>';
+			msg = msg.replace(/<div class=[\"\']chatIcon[\"\']/i, btnHtml + '<div class="chatIcon" ');
+		}
+
 		return msg;
+	},
+
+	btTranslateMsg: function (elm) {
+		var t = ChatStuff;
+		if (!elm || !elm.parentNode) return;
+		var msgWrap = elm.parentNode;
+		var txelem = msgWrap.querySelector('.tx');
+		if (!txelem) return;
+		var existing = msgWrap.querySelector('.btTranslated');
+		if (existing) {
+			msgWrap.removeChild(existing);
+			return;
+		}
+		var text = txelem.innerText.trim();
+		if (!text) return;
+		if (t.ChatTranslations[text]) {
+			t.showTranslation(msgWrap, txelem, t.ChatTranslations[text]);
+			return;
+		}
+		var target = Options.ChatOptions.TranslateTarget || 'es';
+		var q = truncateUTF8(text, 450);
+		GM_xmlhttpRequest({
+			method: 'GET',
+			url: 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(q) + '&langpair=Autodetect|' + target,
+			onload: function (xpr) {
+				try {
+					var rslt = JSON2.parse(xpr.responseText);
+					if (rslt && rslt.responseStatus == 200 && rslt.responseData && rslt.responseData.translatedText) {
+						var trans = rslt.responseData.translatedText;
+						t.ChatTranslations[text] = trans;
+						t.showTranslation(msgWrap, txelem, trans);
+					} else if (rslt && rslt.quotaFinished) {
+						logit('MyMemory translation quota finished');
+					} else {
+						logit('MyMemory translation failed: ' + ((rslt && rslt.responseDetails) || 'unknown error'));
+					}
+				} catch (e) {
+					logerr(e);
+				}
+			},
+			onerror: function () {
+				logit('MyMemory translation request failed');
+			}
+		});
+	},
+
+	showTranslation: function (msgWrap, txelem, translatedText) {
+		var div = document.createElement('div');
+		div.className = 'btTranslated';
+		div.style.cssText = 'font-style:italic;font-size:9px;color:#FF9;padding-left:10px;';
+		div.innerHTML = translatedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		txelem.parentNode.insertBefore(div, txelem.nextSibling);
 	},
 
 	getAllianceLeaders: function () {
@@ -20372,6 +20442,8 @@ Tabs.Options = {
 		GloryLeaderGlory: 0,
 		Rainbow: false,
 		Styles: true,
+		TranslateMsg: true,
+		TranslateTarget: 'es',
 	},
 	TowerOptions: {
 		aChat: true,
@@ -22307,6 +22379,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=togChatStyles type=checkbox /></td><TD class=xtab>' + tx("Show text styles in chat") + '&nbsp;<INPUT class=btInput id=pbChatStyleHelp type=submit value="' + tx('HELP') + '!"></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togChatImages type=checkbox /></td><TD class=xtab colspan=2>' + tx("Show linked image previews in chat") + '&nbsp;<INPUT class=btInput id=pbIMGLinkHelp type=submit value="' + tx('HELP') + '!"></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbChatHelpRequest type=checkbox /></td><TD class=xtab>' + tx("Help alliance build/research posts") + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=togChatTranslate type=checkbox /></td><TD class=xtab>' + tx("Show Translate button on chat messages") + '</td><TD width=50% class=xtab>' + tx('Translate to') + ':&nbsp;' + htmlSelector(TranslateLangs, Options.ChatOptions.TranslateTarget, 'id=pbTranslateTarget') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbDeletegAl type=checkbox /></td><TD class=xtab>' + tx("Hide alliance chat from global chat") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbDeleteRequest type=checkbox /></td><TD class=xtab>' + tx("Hide alliance requests in chat") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbDeleteReport type=checkbox /></td><TD class=xtab colspan=2>' + tx("Hide alliance report scanner posts in chat") + '</td></tr>';
@@ -22402,6 +22475,8 @@ Tabs.Options = {
 		ChangeOption('ChatOptions', 'pbfilter', 'fchar');
 
 		ToggleOption('ChatOptions', 'pbChatHelpRequest', 'HelpRequest');
+		ToggleOption('ChatOptions', 'togChatTranslate', 'TranslateMsg');
+		ChangeOption('ChatOptions', 'pbTranslateTarget', 'TranslateTarget');
 		ToggleOption('ChatOptions', 'pbDeleteRequest', 'DeleteRequest');
 		ToggleOption('ChatOptions', 'pbDeletegAl', 'DeletegAl');
 		ToggleOption('ChatOptions', 'pbDeleteFood', 'DeleteFood');

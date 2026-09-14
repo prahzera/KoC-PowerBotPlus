@@ -89,6 +89,8 @@ Tabs.Options = {
 		GloryLeaderGlory: 0,
 		Rainbow: false,
 		Styles: true,
+		TranslateMsg: true,
+		TranslateTarget: 'es',
 	},
 	TowerOptions: {
 		aChat: true,
@@ -2024,6 +2026,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=togChatStyles type=checkbox /></td><TD class=xtab>' + tx("Show text styles in chat") + '&nbsp;<INPUT class=btInput id=pbChatStyleHelp type=submit value="' + tx('HELP') + '!"></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=togChatImages type=checkbox /></td><TD class=xtab colspan=2>' + tx("Show linked image previews in chat") + '&nbsp;<INPUT class=btInput id=pbIMGLinkHelp type=submit value="' + tx('HELP') + '!"></td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbChatHelpRequest type=checkbox /></td><TD class=xtab>' + tx("Help alliance build/research posts") + '</td></tr>';
+		m += '<TR><TD class=xtab><INPUT id=togChatTranslate type=checkbox /></td><TD class=xtab>' + tx("Show Translate button on chat messages") + '</td><TD width=50% class=xtab>' + tx('Translate to') + ':&nbsp;' + htmlSelector(TranslateLangs, Options.ChatOptions.TranslateTarget, 'id=pbTranslateTarget') + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbDeletegAl type=checkbox /></td><TD class=xtab>' + tx("Hide alliance chat from global chat") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbDeleteRequest type=checkbox /></td><TD class=xtab>' + tx("Hide alliance requests in chat") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=pbDeleteReport type=checkbox /></td><TD class=xtab colspan=2>' + tx("Hide alliance report scanner posts in chat") + '</td></tr>';
@@ -2119,6 +2122,8 @@ Tabs.Options = {
 		ChangeOption('ChatOptions', 'pbfilter', 'fchar');
 
 		ToggleOption('ChatOptions', 'pbChatHelpRequest', 'HelpRequest');
+		ToggleOption('ChatOptions', 'togChatTranslate', 'TranslateMsg');
+		ChangeOption('ChatOptions', 'pbTranslateTarget', 'TranslateTarget');
 		ToggleOption('ChatOptions', 'pbDeleteRequest', 'DeleteRequest');
 		ToggleOption('ChatOptions', 'pbDeletegAl', 'DeletegAl');
 		ToggleOption('ChatOptions', 'pbDeleteFood', 'DeleteFood');

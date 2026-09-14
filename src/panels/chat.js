@@ -35,6 +35,16 @@ function ChatComOverlay() {
 	}
 };
 
+function truncateUTF8(str, max) {
+	var enc = encodeURIComponent(str).replace(/%[0-9A-F]{2}/g, 'x');
+	if (enc.length <= max) return str;
+	for (var i = 0; i < str.length; i++) {
+		var l = encodeURIComponent(str.substr(0, i)).replace(/%[0-9A-F]{2}/g, 'x').length;
+		if (l > max) return str.substr(0, i - 1);
+	}
+	return str;
+}
+
 function OSendChat() {
 	if (Options.ChatOptions.filter)
 		ById('mod_comm_input').value = BtFilter(ById('bot_comm_input'));
@@ -297,6 +307,7 @@ var ChatStuff = {
 	getChatFunc: null,
 	leaders: {},
 	ChatIcons: {},
+	ChatTranslations: {},
 	Colors: {
 		ChatLeaders: '#B8B8B8',
 		ChatGlobal: '#CCCCFF',
@@ -330,6 +341,7 @@ var ChatStuff = {
 			uWExportFunction('ptfetchmarch', t.fetchmarchcaller);
 			uWExportFunction('btSelectSmiley', ChatStuff.SelectSmiley);
 			uWExportFunction('btSelectText', SelectText);
+			uWExportFunction('btTranslateMsg', t.btTranslateMsg);
 
 			t.setEnable(Options.ChatOptions.chatEnhance);
 			if (Options.ChatOptions.chatGlobal) {
@@ -573,7 +585,64 @@ var ChatStuff = {
 			}
 		}
 
+		if (Options.ChatOptions.TranslateMsg) {
+			var btnHtml = '<a class="btTranslateMsg" title="' + tx('Translate') + '" onclick="btTranslateMsg(this);return false;" style="cursor:pointer;margin-left:5px;font-size:9px;">' + tx('Translate') + '</a>';
+			msg = msg.replace(/<div class=[\"\']chatIcon[\"\']/i, btnHtml + '<div class="chatIcon" ');
+		}
+
 		return msg;
+	},
+
+	btTranslateMsg: function (elm) {
+		var t = ChatStuff;
+		if (!elm || !elm.parentNode) return;
+		var msgWrap = elm.parentNode;
+		var txelem = msgWrap.querySelector('.tx');
+		if (!txelem) return;
+		var existing = msgWrap.querySelector('.btTranslated');
+		if (existing) {
+			msgWrap.removeChild(existing);
+			return;
+		}
+		var text = txelem.innerText.trim();
+		if (!text) return;
+		if (t.ChatTranslations[text]) {
+			t.showTranslation(msgWrap, txelem, t.ChatTranslations[text]);
+			return;
+		}
+		var target = Options.ChatOptions.TranslateTarget || 'es';
+		var q = truncateUTF8(text, 450);
+		GM_xmlhttpRequest({
+			method: 'GET',
+			url: 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(q) + '&langpair=Autodetect|' + target,
+			onload: function (xpr) {
+				try {
+					var rslt = JSON2.parse(xpr.responseText);
+					if (rslt && rslt.responseStatus == 200 && rslt.responseData && rslt.responseData.translatedText) {
+						var trans = rslt.responseData.translatedText;
+						t.ChatTranslations[text] = trans;
+						t.showTranslation(msgWrap, txelem, trans);
+					} else if (rslt && rslt.quotaFinished) {
+						logit('MyMemory translation quota finished');
+					} else {
+						logit('MyMemory translation failed: ' + ((rslt && rslt.responseDetails) || 'unknown error'));
+					}
+				} catch (e) {
+					logerr(e);
+				}
+			},
+			onerror: function () {
+				logit('MyMemory translation request failed');
+			}
+		});
+	},
+
+	showTranslation: function (msgWrap, txelem, translatedText) {
+		var div = document.createElement('div');
+		div.className = 'btTranslated';
+		div.style.cssText = 'font-style:italic;font-size:9px;color:#FF9;padding-left:10px;';
+		div.innerHTML = translatedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		txelem.parentNode.insertBefore(div, txelem.nextSibling);
 	},
 
 	getAllianceLeaders: function () {

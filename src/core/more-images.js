@@ -16,6 +16,7 @@ var UniqueJewels = {};
 var boxmightarray = {};
 var AlertSounds = { allianceattack: 'Submarine', alert: 'Honk Honk Honk', airraid: 'Air Raid Siren' };
 var WhisperSounds = { timeout: 'Arrow', monitor: 'Doorbell' };
+var TranslateLangs = { es: 'Spanish', en: 'English', fr: 'French', de: 'German', it: 'Italian', pt: 'Portuguese', ru: 'Russian', nl: 'Dutch', pl: 'Polish', tr: 'Turkish', cs: 'Czech', ar: 'Arabic', zh: 'Chinese', ja: 'Japanese', ko: 'Korean', sv: 'Swedish', da: 'Danish', fi: 'Finnish', el: 'Greek', he: 'Hebrew', hi: 'Hindi', ur: 'Urdu' };
 
 var Smileys = {};
 var ChatStyles = { '[#0]': 'color:black', '[#1]': 'color:red', '[#2]': 'color:green', '[#3]': 'color:blue', '[#4]': 'color:magenta', '[#5]': 'color:cyan', '[#6]': 'color:yellow', '[#7]': 'color:white', '[#8]': 'font-weight:bold', '[#9]': 'font-style:italic' };

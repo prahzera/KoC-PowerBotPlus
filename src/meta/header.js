@@ -41,7 +41,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Added a page-level guard that blocks the new windows the game opens to publish on Facebook (feed dialog / sharer / apps.facebook.com). Chat links, the Excel export and the config save fallback keep working because only Facebook-publish popup URLs are intercepted
+// @releasenotes        Added a Translate button to every chat message (global, alliance and whispers). Click it to auto-detect and translate the message into your chosen language via the free MyMemory API. Results are cached in memory for the session and failures are silent (they never break the chat).
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
