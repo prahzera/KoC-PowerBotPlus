@@ -5,13 +5,11 @@
 // @icon			https://koc-cdn.popreach.com/fb/e2/src/img/items/70/363.jpg
 // @include			*.rycamelot.com/*main_src.php*
 // @include			*.beta.rycamelot.com/*main_src.php*
-// @include			*apps.facebook.com/kingdomsofcamelot/*
 // @include			*.playgardencitygames.com/kingdomsofcamelot*
 // @match			https://*.playgardencitygames.com/kingdomsofcamelot*
 // @match			https://*.playgardencitygames.com/*
 // @include			file:///*Garden City Games Portal*.html
 // @include			*.rockyou.com/rya/*
-// @include			*facebook.com/*dialog/feed*
 // @include			*rycamelot.com/*acceptToken_src.php*
 // @include			*rycamelot.com/*helpFriend_src.php*
 // @include			*rycamelot.com/*claimVictoryToken_src.php*
@@ -43,7 +41,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: online status is now fetched with parallel workers (drained from the queue in small chunks like Highlight Defenders) so the full result list is up to date the moment the search completes, instead of a single slow bulk request
+// @releasenotes        The game now always loads from the Garden City Games portal (playgardencitygames.com/kingdomsofcamelot) instead of Facebook: reloads, token-collection redirects and the Treasure Chest link builder point to the portal keeping the ?s= server parameter, and the userscript no longer runs on apps.facebook.com or Facebook feed dialogs
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

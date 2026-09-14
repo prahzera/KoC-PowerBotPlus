@@ -1473,8 +1473,7 @@ Tabs.Options = {
 				}
 			}
 		}
-		var goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/';
-		if (CheckStandAlone()) goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/play';
+		var goto = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/';
 		goto += '?page=friendFeed' + '&s=' + c_serverId + '&in=' + c_playerId + '&f=' + c_feedId + '&t=118&m=' + c_tokenId + '&si=118' + '&token_s=' + getServerId();
 		if (GlobalOptions.TokenEnabled) {
 			UserOptions.TokenRequest = 'CHEST';

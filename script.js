@@ -5,13 +5,11 @@
 // @icon			https://koc-cdn.popreach.com/fb/e2/src/img/items/70/363.jpg
 // @include			*.rycamelot.com/*main_src.php*
 // @include			*.beta.rycamelot.com/*main_src.php*
-// @include			*apps.facebook.com/kingdomsofcamelot/*
 // @include			*.playgardencitygames.com/kingdomsofcamelot*
 // @match			https://*.playgardencitygames.com/kingdomsofcamelot*
 // @match			https://*.playgardencitygames.com/*
 // @include			file:///*Garden City Games Portal*.html
 // @include			*.rockyou.com/rya/*
-// @include			*facebook.com/*dialog/feed*
 // @include			*rycamelot.com/*acceptToken_src.php*
 // @include			*rycamelot.com/*helpFriend_src.php*
 // @include			*rycamelot.com/*claimVictoryToken_src.php*
@@ -42,8 +40,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.28.2
-// @releasenotes        Search: online status is now fetched with parallel workers (drained from the queue in small chunks like Highlight Defenders) so the full result list is up to date the moment the search completes, instead of a single slow bulk request
+// @version			4.28.3
+// @releasenotes        The game now always loads from the Garden City Games portal (playgardencitygames.com/kingdomsofcamelot) instead of Facebook: reloads, token-collection redirects and the Treasure Chest link builder point to the portal keeping the ?s= server parameter, and the userscript no longer runs on apps.facebook.com or Facebook feed dialogs
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +127,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.28.2';
+var Version = '4.28.3';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -2039,8 +2037,7 @@ function ReloadKOC(timer, params) {
 	if (serverId == '??') { window.location.reload(true); return; }
 
 	params = (params ? params : '');
-	var goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + serverId + params;
-	if (CheckStandAlone()) { goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + serverId + params; }
+	var goto = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?s=' + serverId + params;
 
 	if (timer && GlobalOptions.TokenEnabled && UserOptions.TokenAuto && serverId == UserOptions.TokenDomain) {
 		// check for token collection
@@ -2321,8 +2318,7 @@ function CheckTokenCollection() {
 						if (claim_help_bdy) { claim_help_bdy.appendChild(a); }
 						else { claim_gift.appendChild(a); }
 
-						var goto1 = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain;
-						if (CheckStandAlone(GlobalOptions.LastTopURL)) { goto1 = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain; }
+						var goto1 = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?s=' + UserDomain;
 
 						if (document.URL.search(/page=friendFeed/i) > 0) {
 							if (claim_gift.textContent.indexOf("Someone else has claimed this bonus.") > -1 ||
@@ -2348,11 +2344,9 @@ function CheckTokenCollection() {
 						if (domain_selector == null && (typeof unsafeWindow.checkServer == 'function')) {
 							logit("Suspected Blank Decree page...");
 							var FeedID = getFeedId();
-							var goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain;
-							if (CheckStandAlone(GlobalOptions.LastTopURL)) { goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain; }
+							var goto_null = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?s=' + UserDomain;
 							if (FeedID != 'n/a') {
-								goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?f=' + FeedID + '&t=118&lang=en&f=' + FeedID + '&t=118&in=' + getFeedUserId() + '&si=118&s=' + UserDomain;
-								if (CheckStandAlone(GlobalOptions.LastTopURL)) { goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?f=' + FeedID + '&t=118&lang=en&f=' + FeedID + '&t=118&in=' + getFeedUserId() + '&si=118&s=' + UserDomain; }
+								goto_null = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?f=' + FeedID + '&t=118&lang=en&f=' + FeedID + '&t=118&in=' + getFeedUserId() + '&si=118&s=' + UserDomain;
 								logit("Merlins Token collected :)");
 								giftAccepted = true;
 								CheckTokenDay(user_id);
@@ -21741,8 +21735,7 @@ Tabs.Options = {
 				}
 			}
 		}
-		var goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/';
-		if (CheckStandAlone()) goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/play';
+		var goto = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/';
 		goto += '?page=friendFeed' + '&s=' + c_serverId + '&in=' + c_playerId + '&f=' + c_feedId + '&t=118&m=' + c_tokenId + '&si=118' + '&token_s=' + getServerId();
 		if (GlobalOptions.TokenEnabled) {
 			UserOptions.TokenRequest = 'CHEST';

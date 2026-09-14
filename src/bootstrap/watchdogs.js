@@ -77,8 +77,7 @@ function ReloadKOC(timer, params) {
 	if (serverId == '??') { window.location.reload(true); return; }
 
 	params = (params ? params : '');
-	var goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + serverId + params;
-	if (CheckStandAlone()) { goto = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + serverId + params; }
+	var goto = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?s=' + serverId + params;
 
 	if (timer && GlobalOptions.TokenEnabled && UserOptions.TokenAuto && serverId == UserOptions.TokenDomain) {
 		// check for token collection

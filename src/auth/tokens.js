@@ -64,8 +64,7 @@ function CheckTokenCollection() {
 						if (claim_help_bdy) { claim_help_bdy.appendChild(a); }
 						else { claim_gift.appendChild(a); }
 
-						var goto1 = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain;
-						if (CheckStandAlone(GlobalOptions.LastTopURL)) { goto1 = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain; }
+						var goto1 = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?s=' + UserDomain;
 
 						if (document.URL.search(/page=friendFeed/i) > 0) {
 							if (claim_gift.textContent.indexOf("Someone else has claimed this bonus.") > -1 ||
@@ -91,11 +90,9 @@ function CheckTokenCollection() {
 						if (domain_selector == null && (typeof unsafeWindow.checkServer == 'function')) {
 							logit("Suspected Blank Decree page...");
 							var FeedID = getFeedId();
-							var goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain;
-							if (CheckStandAlone(GlobalOptions.LastTopURL)) { goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?s=' + UserDomain; }
+							var goto_null = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?s=' + UserDomain;
 							if (FeedID != 'n/a') {
-								goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?f=' + FeedID + '&t=118&lang=en&f=' + FeedID + '&t=118&in=' + getFeedUserId() + '&si=118&s=' + UserDomain;
-								if (CheckStandAlone(GlobalOptions.LastTopURL)) { goto_null = window.location.protocol + '//apps.facebook.com/kingdomsofcamelot/?f=' + FeedID + '&t=118&lang=en&f=' + FeedID + '&t=118&in=' + getFeedUserId() + '&si=118&s=' + UserDomain; }
+								goto_null = window.location.protocol + '//www.playgardencitygames.com/kingdomsofcamelot/?f=' + FeedID + '&t=118&lang=en&f=' + FeedID + '&t=118&in=' + getFeedUserId() + '&si=118&s=' + UserDomain;
 								logit("Merlins Token collected :)");
 								giftAccepted = true;
 								CheckTokenDay(user_id);
