@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.27.0
-// @releasenotes        Search: new city blacklist to skip long-inactive cities (last login older than a configurable number of days) from search results, defender highlighting and last-login fetching, with one-click add/remove from the results bar and auto-suggestions
+// @version			4.28.0
+// @releasenotes        Search: new "Search Speed" option (Normal/Turbo - Turbo scans the map several times faster with auto-downgrade and a cooldown if the server returns a green map), online status is now fetched in bulk off the scan's critical path, and interrupted searches can be resumed with the new "Resume search" button (also persisted across page reloads)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +129,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.27.0';
+var Version = '4.28.0';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30243,6 +30243,14 @@ Tabs.Search = {
 	searchWorkers: 3,
 	reqBatch: 20,
 	workerLastReq: {},
+	searchDelay: MAP_DELAY,
+	workerStagger: 400,
+	speedParams: null,
+	turboDowngraded: false,
+	onlineQueue: [],
+	onlineQueued: {},
+	onlineTimer: null,
+	resumeSnapshot: null,
 	defendWorkers: 5,
 	defending: false,
 	defendQueue: [],
@@ -30301,6 +30309,7 @@ Tabs.Search = {
 		BlacklistEnabled: true,
 		BlacklistDays: 365,
 		ShowBlacklisted: false,
+		SearchSpeed: 0, // 0 - normal, 1 - turbo
 		sortColNum: 2,
 		sortDir: 1,
 	},
@@ -30459,6 +30468,8 @@ Tabs.Search = {
 
 		t.readlastlogins();
 		t.readblacklist();
+		t.readresume();
+		if (t.resumeSnapshot) { setTimeout(function () { Tabs.Search.showResumeButton(); }, 0); }
 
 		//		window.addEventListener('unload', t.onUnload, false);
 		//		setTimeout (t.readoldmists, 0);
@@ -30771,6 +30782,161 @@ Tabs.Search = {
 		t.clickedSearch();
 	},
 
+	// online status is fetched off the critical path: we enqueue uids per batch and
+	// bulk-query them with a single getOnline call every few seconds
+	enqueueOnline: function (map) {
+		var t = Tabs.Search;
+		for (var k in map) {
+			var uid = map[k].tileUserId;
+			if (!uid || uid <= 0) { continue; }
+			if (t.onlineQueued[uid]) { continue; }
+			t.onlineQueued[uid] = 1;
+			t.onlineQueue.push(uid);
+		}
+		if (t.onlineQueue.length != 0 && !t.onlineTimer) {
+			t.onlineTimer = setTimeout(function () { Tabs.Search.flushOnline(); }, 2500);
+		}
+	},
+
+	flushOnline: function () {
+		var t = Tabs.Search;
+		t.onlineTimer = null;
+		if (t.onlineQueue.length == 0) { return; }
+		var uids = t.onlineQueue.slice();
+		t.onlineQueue = [];
+		getOnline(uids, function (r) {
+			if (!r) { return; }
+			if (!t.searchRunning) { t.dispMapTable(); return; }
+			var list = r.data || {};
+			var changed = false;
+			for (var m = 0; m < t.mapDat.length; m++) {
+				var uid = t.mapDat[m][6];
+				if (!uid || uid == 0 || list[uid] == null) { continue; }
+				var v = list[uid] ? 1 : 0;
+				if (t.mapDat[m][12] != v) { t.mapDat[m][12] = v; changed = true; }
+			}
+			if (changed && !t.searchRunning) { t.dispMapTable(); }
+		});
+	},
+
+	getSpeedParams: function (downgraded) {
+		var t = Tabs.Search;
+		downgraded = downgraded || !!(t.turboDowngraded);
+		if (parseIntNan(Options.SearchOptions.SearchSpeed) == 1 && !downgraded && !t.turboCooldown()) {
+			return { workers: 5, batch: 30, delay: 1000, stagger: 250 };
+		}
+		return { workers: 3, batch: 20, delay: MAP_DELAY, stagger: 400 };
+	},
+
+	applySpeedParams: function (p) {
+		var t = Tabs.Search;
+		t.speedParams = p || t.getSpeedParams(false);
+		t.searchWorkers = t.speedParams.workers;
+		t.reqBatch = t.speedParams.batch;
+		t.searchDelay = t.speedParams.delay;
+		t.workerStagger = t.speedParams.stagger;
+	},
+
+	turboCooldown: function () {
+		return parseIntNan(GM_getValue('SearchTurboCooldown_' + getServerId() + '_' + uW.tvuid, 0)) > unixTime();
+	},
+
+	startWorkers: function () {
+		var t = Tabs.Search;
+		t.activeRequests = 0;
+		t.failStreak = 0;
+		t.runToken++;
+		t.workerLastReq = {};
+		t.turboDowngraded = false;
+		t.applySpeedParams(t.getSpeedParams(false));
+		for (var wN = 0; wN < t.searchWorkers; wN++) {
+			t.SearchTimer = setTimeout(function (job) { return function () { Tabs.Search.armNextBatch(job); }; }({ id: t.runToken, w: wN }), wN * t.workerStagger);
+		}
+	},
+
+	saveResume: function () {
+		var t = Tabs.Search;
+		if (!t.BlockList.length) { return; }
+		t.resumeSnapshot = {
+			opt: jQuery.extend({}, t.opt),
+			blocks: t.BlockList.slice(),
+			blocksTotal: t.blocksTotal,
+			blocksSearched: t.blocksSearched
+		};
+		var serverID = getServerId();
+		setTimeout(function () { GM_setValue('SearchResume_' + serverID + '_' + uW.tvuid, JSON2.stringify(t.resumeSnapshot)); }, 0);
+		t.showResumeButton();
+	},
+
+	clearResume: function () {
+		var t = Tabs.Search;
+		t.resumeSnapshot = null;
+		var serverID = getServerId();
+		setTimeout(function () { GM_setValue('SearchResume_' + serverID + '_' + uW.tvuid, ''); }, 0);
+		if (ById('pbresumesearch')) {
+			var p = ById('pbresumesearch').parentNode;
+			if (p) { p.removeChild(ById('pbresumesearch')); }
+		}
+	},
+
+	readresume: function () {
+		var t = Tabs.Search;
+		var s = GM_getValue('SearchResume_' + getServerId() + '_' + uW.tvuid);
+		if (s) {
+			try { t.resumeSnapshot = JSON2.parse(s); }
+			catch (e) { t.resumeSnapshot = null; }
+		}
+	},
+
+	showResumeButton: function () {
+		var t = Tabs.Search;
+		var sb = ById('pbsavedsearch');
+		if (!sb || !t.resumeSnapshot || !t.resumeSnapshot.blocks.length) { return; }
+		if (ById('pbresumesearch')) { return; }
+		var link = '<a class=xlink id=pbresumesearch style="cursor:pointer;">' + tx('Resume search') + ' (' + t.resumeSnapshot.blocks.length + ')</a>&nbsp;&nbsp;';
+		sb.innerHTML = link + sb.innerHTML;
+		ById('pbresumesearch').addEventListener('click', function () { t.ResumeSearch(); }, false);
+	},
+
+	ResumeSearch: function () {
+		var t = Tabs.Search;
+		if (t.searchRunning || !t.resumeSnapshot) { return; }
+		var snap = t.resumeSnapshot;
+		t.opt = jQuery.extend({}, snap.opt);
+		t.searchRunning = true;
+		t.pageNum = 1;
+		document.body.classList.add('pb-search-running');
+		btBusy(true, tx('Searching map...'));
+		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
+		t.setupResultsPanel(false);
+		t.BlockList = snap.blocks.slice();
+		t.blocksTotal = snap.blocksTotal;
+		t.blocksSearched = snap.blocksSearched;
+		t.tilesFound = t.mapDat.length;
+		t.lastLoginIdx = {};
+		t.lastLoginEnqLen = 0;
+		clearTimeout(t.lastLoginTimer);
+		t.lastLoginRunning = false;
+		t.lastLoginQueue = [];
+		t.lastLoginPending = {};
+		t.lastLoginFetched = 0;
+		t.lastLoginTotal = 0;
+		t.showOnlyDefenders = false;
+		clearTimeout(t.defendTimer);
+		t.defendTimer = null;
+		t.defending = false;
+		t.defendQueue = [];
+		t.defendActive = 0;
+		t.onlineQueue = [];
+		t.onlineQueued = {};
+		if (t.onlineTimer) { clearTimeout(t.onlineTimer); t.onlineTimer = null; }
+		var curX = t.BlockList.length ? t.BlockList[0].split("_")[1] : t.firstX;
+		var curY = t.BlockList.length ? t.BlockList[0].split("_")[3] : t.firstY;
+		ById('pbStatStatus').innerHTML = tx('Searching at ') + curX + ',' + curY;
+		t.startWorkers();
+		if (t.lastLoginUsable() && t.mapDat.length != 0) { t.enqueueLastLogins(); }
+	},
+
 	clickedSearch: function () {
 		var t = Tabs.Search;
 
@@ -30834,10 +31000,14 @@ Tabs.Search = {
 			}
 		}
 		t.saveoldmists();
+		t.clearResume();
 
 		t.mapDat = [];
 		t.lastLoginIdx = {};
 		t.lastLoginEnqLen = 0;
+		t.onlineQueue = [];
+		t.onlineQueued = {};
+		if (t.onlineTimer) { clearTimeout(t.onlineTimer); t.onlineTimer = null; }
 		if (t.opt.province == -1) { // whole map: cover the full 0..749 grid with 5x5 blocks
 			t.firstX = 0;
 			t.firstY = 0;
@@ -30885,13 +31055,7 @@ Tabs.Search = {
 		var curY = t.firstY;
 		ById('pbStatStatus').innerHTML = tx('Searching at ') + curX + ',' + curY;
 
-		t.activeRequests = 0;
-		t.failStreak = 0;
-		t.runToken++;
-		t.workerLastReq = {};
-		for (var wN = 0; wN < t.searchWorkers; wN++) {
-			t.SearchTimer = setTimeout(function (job) { return function () { Tabs.Search.armNextBatch(job); }; }({ id: t.runToken, w: wN }), wN * 400);
-		}
+		t.startWorkers();
 	},
 
 	setupResultsPanel: function (Previous) {
@@ -30956,6 +31120,8 @@ Tabs.Search = {
 		m += '<tr id=pbsblacklist1><td colspan=2 align=center style="padding-top:5px;"><INPUT id=pbSearchBlacklistEnabled type=checkbox ' + (Options.SearchOptions.BlacklistEnabled ? 'CHECKED' : '') + '/>' + tx('City Blacklist') + '</td></tr>';
 		m += '<tr id=pbsblacklist2><td colspan=2 align=center style="padding-top:2px;">' + tx('Inactive after') + ':&nbsp;<INPUT id=pbSearchBlacklistDays class=btInput size=3 value=' + Options.SearchOptions.BlacklistDays + '></td></tr>';
 		m += '<tr id=pbsblacklist3><td colspan=2 align=center><INPUT id=pbSearchShowBlacklisted type=checkbox ' + (Options.SearchOptions.ShowBlacklisted ? 'CHECKED' : '') + '/>' + tx('Show blacklisted') + '</td></tr>';
+		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Speed') + ':</td></tr>';
+		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx('Normal'), 1: tx('Turbo') }, Options.SearchOptions.SearchSpeed, 'id=pbSearchSpeed class=btInput') + '</td></tr>';
 		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Shape') + ':</td></tr>';
 		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx("Square"), 1: tx("Circle") }, Options.SearchOptions.SearchShape, 'id=pbSearchShape class=btInput') + '</td></tr>';
 		m += '</table>';
@@ -30976,6 +31142,7 @@ Tabs.Search = {
 
 		ChangeOption('SearchOptions', 'pbSearchWildType', 'WildType', t.dispMapTable);
 		ChangeOption('SearchOptions', 'pbSearchShape', 'SearchShape', t.dispMapTable);
+		ChangeOption('SearchOptions', 'pbSearchSpeed', 'SearchSpeed');
 
 		ById('pbSearchMinLevel').addEventListener('change', t.MinLevelChange, false);
 		ById('pbSearchMinLevel').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.MinLevelChange); }, false);
@@ -31430,6 +31597,9 @@ t.setupFilterDisplay();
 		if (!t.searchRunning || t.runToken !== job.id) { return; }
 		if (!rslt || !rslt.ok) {
 			if (rslt && rslt.BotCode && rslt.BotCode == 999) { // map captcha
+				if (t.speedParams && t.speedParams.workers > 3) {
+					GM_setValue('SearchTurboCooldown_' + getServerId() + '_' + uW.tvuid, unixTime() + 1200);
+				}
 				t.stopSearch('<span class=boldRed>' + tx('Server returning "green map". You should stop searching for about 20 minutes - Aborting search :(') + '</span>', true);
 				return;
 			}
@@ -31438,6 +31608,13 @@ t.setupFilterDisplay();
 				return;
 			}
 			t.failStreak++;
+			if (!t.turboDowngraded && t.speedParams && t.speedParams.workers > 3 && t.failStreak >= 3) {
+				t.turboDowngraded = true;
+				t.applySpeedParams(t.getSpeedParams(true));
+				if (ById('pbStatStatus')) {
+					ById('pbStatStatus').innerHTML = tx('Reduced speed to avoid server issues');
+				}
+			}
 			if (t.failStreak >= 50) {
 				t.stopSearch('<span class=boldRed>' + tx('Server is not responding - Aborting search') + '</span>', true);
 				return;
@@ -31452,26 +31629,9 @@ t.setupFilterDisplay();
 
 		t.failStreak = 0;
 		var map = (rslt.data) ? rslt.data : {};
-		var uList = [];
-		for (var k in map) {
-			if (map[k].tileUserId != null) {
-				uList.push(map[k].tileUserId);
-			}
-		}
-		if (uList.length == 0) {
-			t.proceedWithMap(job, rslt, {});
-			return;
-		}
-		var timedOut = false;
-		var timeout = setTimeout(function () {
-			timedOut = true;
-			if (t.searchRunning && t.runToken === job.id) { t.proceedWithMap(job, rslt, {}); }
-		}, 30000);
-		getOnline(uList, function (r) {
-			clearTimeout(timeout);
-			if (timedOut) { return; }
-			if (t.searchRunning && t.runToken === job.id) { t.proceedWithMap(job, rslt, r); }
-		});
+		// online status goes off the critical path: bulk query later, don't block the next batch
+		t.enqueueOnline(map);
+		t.proceedWithMap(job, rslt, {});
 	},
 
 	proceedWithMap: function (job, rslt, uList) {
@@ -31495,17 +31655,22 @@ t.setupFilterDisplay();
 			return;
 		}
 
-		// pace: cada worker espera al menos MAP_DELAY desde su propio último envío
+		// pace: cada worker espera al menos su delay desde su propio último envío
 		// (no el throttle global, para que los workers corran en paralelo de verdad)
 		var now = Number(uW.unixtime());
 		var last = t.workerLastReq[job.w] || 0;
-		var needed = Number(MAP_DELAY) / 1000;
+		var needed = Number(t.searchDelay || MAP_DELAY) / 1000;
 		if (last && (now - last) < needed) {
 			var wait = (needed - (now - last)) * 1000 + Math.floor(Math.random() * 200);
 			t.SearchTimer = setTimeout(function () { t.armNextBatch(job); }, wait);
 			return;
 		}
 		t.workerLastReq[job.w] = now;
+
+		if (t.activeRequests >= t.searchWorkers) { // cap de requests en vuelo
+			t.SearchTimer = setTimeout(function () { t.armNextBatch(job); }, 250 + Math.floor(Math.random() * 150));
+			return;
+		}
 
 		var blocks = [];
 		for (var i = 0; i < t.reqBatch; i++) {
@@ -32245,6 +32410,12 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 				t.displaylastsearch();
 			}
 			t.savelastsearch();
+			if (t.BlockList.length > 0) { // interrupted before finishing -> offer to resume
+				t.saveResume();
+			}
+			else {
+				t.clearResume();
+			}
 		}
 
 		var m = '<DIV align=right style="max-width:' + Number(GlobalOptions.btWinSize.x - 170) + 'px;overflow-x:auto;">';

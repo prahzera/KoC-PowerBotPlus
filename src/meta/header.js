@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: new city blacklist to skip long-inactive cities (last login older than a configurable number of days) from search results, defender highlighting and last-login fetching, with one-click add/remove from the results bar and auto-suggestions
+// @releasenotes        Search: new "Search Speed" option (Normal/Turbo - Turbo scans the map several times faster with auto-downgrade and a cooldown if the server returns a green map), online status is now fetched in bulk off the scan's critical path, and interrupted searches can be resumed with the new "Resume search" button (also persisted across page reloads)
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
