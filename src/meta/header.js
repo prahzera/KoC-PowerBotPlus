@@ -43,7 +43,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Search: removed the "Search Speed" option (the Turbo mode was causing issues with the server), and fixed the progressive slowdown while searching - new results are now filtered incrementally instead of re-scanning all accumulated data on every render, and online status updates only touch the affected rows instead of scanning the whole result list
+// @releasenotes        Search: online status is now fetched with parallel workers (drained from the queue in small chunks like Highlight Defenders) so the full result list is up to date the moment the search completes, instead of a single slow bulk request
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

@@ -42,8 +42,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.28.1
-// @releasenotes        Search: removed the "Search Speed" option (the Turbo mode was causing issues with the server), and fixed the progressive slowdown while searching - new results are now filtered incrementally instead of re-scanning all accumulated data on every render, and online status updates only touch the affected rows instead of scanning the whole result list
+// @version			4.28.2
+// @releasenotes        Search: online status is now fetched with parallel workers (drained from the queue in small chunks like Highlight Defenders) so the full result list is up to date the moment the search completes, instead of a single slow bulk request
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -129,7 +129,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.28.1';
+var Version = '4.28.2';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -30248,7 +30248,10 @@ Tabs.Search = {
 	onlineQueue: [],
 	onlineQueued: {},
 	onlineRows: {},
-	onlineTimer: null,
+	onlineWorkers: 5,
+	onlineChunkSize: 100,
+	onlineRunning: false,
+	onlineActive: 0,
 	resumeSnapshot: null,
 	lastFilterIdx: 0,
 	lastRenderedLen: 0,
@@ -30783,7 +30786,7 @@ Tabs.Search = {
 	},
 
 	// online status is fetched off the critical path: we enqueue uids per batch and
-	// bulk-query them with a single getOnline call every few seconds
+	// drain the queue with parallel workers (chunks of onlineChunkSize), like HighlightDefenders
 	enqueueOnline: function (map) {
 		var t = Tabs.Search;
 		for (var k in map) {
@@ -30793,35 +30796,52 @@ Tabs.Search = {
 			t.onlineQueued[uid] = 1;
 			t.onlineQueue.push(uid);
 		}
-		if (t.onlineQueue.length != 0 && !t.onlineTimer) {
-			t.onlineTimer = setTimeout(function () { Tabs.Search.flushOnline(); }, 2500);
+		t.pumpOnline();
+	},
+
+	pumpOnline: function () {
+		var t = Tabs.Search;
+		if (t.onlineRunning || t.onlineQueue.length == 0) { return; }
+		t.onlineRunning = true;
+		var workers = Math.min(t.onlineWorkers, Math.ceil(t.onlineQueue.length / t.onlineChunkSize));
+		for (var w = 0; w < workers; w++) {
+			t.onlineNext(w * 150);
 		}
 	},
 
-	flushOnline: function () {
+	onlineNext: function (delay) {
 		var t = Tabs.Search;
-		t.onlineTimer = null;
-		if (t.onlineQueue.length == 0) { return; }
-		var uids = t.onlineQueue.slice();
-		t.onlineQueue = [];
-		getOnline(uids, function (r) {
-			if (!r) { return; }
-			if (!t.searchRunning) { t.dispMapTable(); return; }
-			var list = r.data || {};
-			var changed = false;
-			for (var q = 0; q < uids.length; q++) { // solo las filas con esos uids, no todo mapDat
-				uid = uids[q];
-				if (list[uid] == null) { continue; }
-				var rows = t.onlineRows[uid];
-				if (!rows) { continue; }
-				var v = list[uid] ? 1 : 0;
-				for (var q2 = 0; q2 < rows.length; q2++) {
-					var idx = rows[q2];
-					if (t.mapDat[idx] && t.mapDat[idx][12] != v) { t.mapDat[idx][12] = v; changed = true; }
-				}
+		setTimeout(function () {
+			var t = Tabs.Search;
+			if (!t.onlineRunning || t.onlineQueue.length == 0) {
+				if (t.onlineActive == 0) { t.onlineRunning = false; }
+				return;
 			}
-			if (changed && !t.searchRunning) { t.dispMapTable(); }
-		});
+			var uids = t.onlineQueue.splice(0, t.onlineChunkSize);
+			t.onlineActive++;
+			getOnline(uids, function (r) {
+				var t = Tabs.Search;
+				if (t.onlineActive > 0) { t.onlineActive--; }
+				var changed = false;
+				if (r && r.data) {
+					var list = r.data;
+					for (var q = 0; q < uids.length; q++) { // solo las filas con esos uids, no todo mapDat
+						var uid = uids[q];
+						if (list[uid] == null) { continue; }
+						var rows = t.onlineRows[uid];
+						if (!rows) { continue; }
+						var v = list[uid] ? 1 : 0;
+						for (var q2 = 0; q2 < rows.length; q2++) {
+							var idx = rows[q2];
+							if (t.mapDat[idx] && t.mapDat[idx][12] != v) { t.mapDat[idx][12] = v; changed = true; }
+						}
+					}
+				}
+				if (changed && !t.searchRunning) { t.dispMapTable(); }
+				if (t.onlineActive == 0 && t.onlineQueue.length == 0) { t.onlineRunning = false; }
+				else if (t.onlineQueue.length > 0) { t.onlineNext(0); }
+			});
+		}, delay || 0);
 	},
 
 	startWorkers: function () {
@@ -30915,7 +30935,8 @@ Tabs.Search = {
 		t.onlineQueue = [];
 		t.onlineQueued = {};
 		t.onlineRows = {};
-		if (t.onlineTimer) { clearTimeout(t.onlineTimer); t.onlineTimer = null; }
+		t.onlineRunning = false;
+		t.onlineActive = 0;
 		t.dat = [];
 		t.lastFilterIdx = 0;
 		t.lastRenderedLen = 0;
@@ -31000,7 +31021,8 @@ Tabs.Search = {
 		t.onlineQueue = [];
 		t.onlineQueued = {};
 		t.onlineRows = {};
-		if (t.onlineTimer) { clearTimeout(t.onlineTimer); t.onlineTimer = null; }
+		t.onlineRunning = false;
+		t.onlineActive = 0;
 		if (t.opt.province == -1) { // whole map: cover the full 0..749 grid with 5x5 blocks
 			t.firstX = 0;
 			t.firstY = 0;
