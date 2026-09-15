@@ -33,7 +33,6 @@ var GlobalOptions = {
 	ExtraTabsVersion: '0',
 	TabAutoCheck: true,
 	ExtraTabs: [
-		{ "source": EXTERNAL_RESOURCE + "tabs/AutoDF.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/BulkAttack.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Defend.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Raid.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },

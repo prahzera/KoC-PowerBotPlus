@@ -167,6 +167,7 @@ const MANIFEST = [
   'tabs/overview/overview.js', // /** Overview Tab **/ (28380) + Tabs.OverView
   'tabs/search/search.js', // /** Search Tab **/ (29188) + Tabs.Search
   'tabs/research/research.js', // /** Research Tab **/ + Tabs.Research
+  'tabs/autodf/autodf.js', // /** AutoDF Tab **/ + Tabs.Barb
   'tabs/notes/notes.js', // /** Notes Tab **/ (30996) + Tabs.Notes
   'tabs/whisper/whisper.js', // /** Whisper Tab **/ (31299) + Tabs.Whisper
   'tabs/messages/messages.js', // /** Messages Tab **/ (31583) + Tabs.Messages

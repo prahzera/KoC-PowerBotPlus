@@ -42,7 +42,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Research tab improvements: "Select All / Deselect All" button for the auto research list and tab relocated next to the other brown tabs (between Build and Revive).
+// @releasenotes        Added a native Auto Dark Forest tab (Search and Attack) that replaces the AutoDF extra tab, with several bugfixes for Chromium compatibility.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
