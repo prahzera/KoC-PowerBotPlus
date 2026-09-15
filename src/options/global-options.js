@@ -41,7 +41,6 @@ var GlobalOptions = {
 		{ "source": EXTERNAL_RESOURCE + "tabs/Tournament.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Megalith.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Aport.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
-		{ "source": EXTERNAL_RESOURCE + "tabs/Throne.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Champ.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Boss.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Resources.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },

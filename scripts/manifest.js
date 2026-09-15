@@ -168,6 +168,7 @@ const MANIFEST = [
   'tabs/search/search.js', // /** Search Tab **/ (29188) + Tabs.Search
   'tabs/research/research.js', // /** Research Tab **/ + Tabs.Research
   'tabs/autodf/autodf.js', // /** AutoDF Tab **/ + Tabs.Barb
+  'tabs/throne/throne.js', // /** Throne Tab **/ + Tabs.Throne
   'tabs/notes/notes.js', // /** Notes Tab **/ (30996) + Tabs.Notes
   'tabs/whisper/whisper.js', // /** Whisper Tab **/ (31299) + Tabs.Whisper
   'tabs/messages/messages.js', // /** Messages Tab **/ (31583) + Tabs.Messages

@@ -42,7 +42,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Auto Dark Forest: level-based troop editor with presets, collapsible sections, and theme-colored tables.
+// @releasenotes        Added a native Throne tab (Throne Room) that replaces the Throne extra tab, with Chromium compatibility fixes.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
