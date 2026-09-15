@@ -28,6 +28,8 @@ function InitPortalLayout() {
 
 	GM_log('PBP: layout del portal aplicado');
 	document.body.classList.add('pbp-portal');
+	// El header inicia contraído para más espacio de juego; el botón flotante permite desplegarlo.
+	document.body.classList.add('pbp-portal-header-hidden');
 
 	// Footer: oculto del todo, sin ocupar espacio
 	var footer = document.querySelector('footer.site-footer');

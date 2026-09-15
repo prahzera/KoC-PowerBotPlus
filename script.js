@@ -41,8 +41,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.31.0
-// @releasenotes        Added a native Auto Dark Forest tab (Search and Attack) that replaces the AutoDF extra tab, with several bugfixes for Chromium compatibility.
+// @version			4.31.1
+// @releasenotes        GCG portal: the header now starts collapsed on init for more game screen space (toggle button stays in the portal header).
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -77,6 +77,8 @@ function InitPortalLayout() {
 
 	GM_log('PBP: layout del portal aplicado');
 	document.body.classList.add('pbp-portal');
+	// El header inicia contraído para más espacio de juego; el botón flotante permite desplegarlo.
+	document.body.classList.add('pbp-portal-header-hidden');
 
 	// Footer: oculto del todo, sin ocupar espacio
 	var footer = document.querySelector('footer.site-footer');
@@ -128,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.31.0';
+var Version = '4.31.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }

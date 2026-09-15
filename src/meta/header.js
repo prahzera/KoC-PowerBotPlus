@@ -42,7 +42,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Added a native Auto Dark Forest tab (Search and Attack) that replaces the AutoDF extra tab, with several bugfixes for Chromium compatibility.
+// @releasenotes        GCG portal: the header now starts collapsed on init for more game screen space (toggle button stays in the portal header).
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
