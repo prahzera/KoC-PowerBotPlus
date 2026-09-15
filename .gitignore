@@ -13,6 +13,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# opencode local skills (not tracked)
+.opencode/
+
 # Node modules (if any dev tooling is added)
 node_modules/
 
