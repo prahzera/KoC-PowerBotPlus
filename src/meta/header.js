@@ -42,7 +42,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Migrated the script resources (emoticons, images, sounds, champion uniques), the icon and all bot assets (alarm sounds, SWF player and extra tabs) to the new game CDN koc.playgardencitygames.com because the old koc-cdn.popreach.com is gone, which blocked the installation in Violentmonkey (error loading dependencies).
+// @releasenotes        Added the Research tab (auto research per city, priority list, speedups with hourglasses and help requests), which replaces the unused Target Finder tab.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==

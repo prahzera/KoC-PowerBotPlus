@@ -44,7 +44,6 @@ var GlobalOptions = {
 		{ "source": EXTERNAL_RESOURCE + "tabs/Aport.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Throne.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Champ.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
-		{ "source": EXTERNAL_RESOURCE + "tabs/Research.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Boss.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Resources.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/MAR.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },

@@ -326,7 +326,7 @@ var TabIcons = {
 	Alliance: '<path d="M4 22 V3 M4 3 H18 L15 7 L18 11 H4"/>',
 	Inventory: '<path d="M6 6 H18 A2 2 0 0 1 20 8 V19 A2 2 0 0 1 18 21 H6 A2 2 0 0 1 4 19 V8 A2 2 0 0 1 6 6 Z"/><path d="M12 6 V4 A2 2 0 0 1 16 4"/><path d="M6 14 H18"/>',
 	Messages: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7 L12 13 L21 7"/>',
-	GloryFarm: '<path d="M12 2 L14.5 8.5 L21 9 L16 13.5 L17.5 20 L12 16.5 L6.5 20 L8 13.5 L3 9 L9.5 8.5 Z"/>',
+	Research: '<path d="M9 3 H15 M10 3 V8 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L14 8 V3"/><path d="M8 16 H16"/><path d="M12 10 V13"/>',
 	Knights: '<path d="M12 2 V19"/><path d="M8 5 H16"/><path d="M9 19 H15"/>',
 	Notes: '<path d="M4 20 L5 15 L16 4 L20 8 L9 19 Z"/><path d="M14 6 L18 10"/>',
 	Monitor: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21 H16 M12 17 V21"/>',

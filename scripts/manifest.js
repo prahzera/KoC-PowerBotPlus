@@ -166,7 +166,7 @@ const MANIFEST = [
   'tabs/player/player.js', // /** Player Tab **/ (26794) + Tabs.Player
   'tabs/overview/overview.js', // /** Overview Tab **/ (28380) + Tabs.OverView
   'tabs/search/search.js', // /** Search Tab **/ (29188) + Tabs.Search
-  'tabs/gloryfarm/gloryfarm.js', // /** GloryFarm Tab **/ (30634) + Tabs.GloryFarm
+  'tabs/research/research.js', // /** Research Tab **/ + Tabs.Research
   'tabs/notes/notes.js', // /** Notes Tab **/ (30996) + Tabs.Notes
   'tabs/whisper/whisper.js', // /** Whisper Tab **/ (31299) + Tabs.Whisper
   'tabs/messages/messages.js', // /** Messages Tab **/ (31583) + Tabs.Messages
