@@ -30,6 +30,13 @@ Tabs.Barb = {
 	maplag: 0,
 	blocksSearched: 0,
 	troopDef: [],
+	selLevel: 1,
+	refCity: 1,
+	DefaultPresets: {
+		'1-5 starter': { levels: [1, 2, 3, 4, 5], troops: [100, 100, 100, 100, 100, 75, 75, 50, 50, 50, 25, 25], mindist: 0, maxdist: 750 },
+		'6-10 medium': { levels: [6, 7, 8, 9, 10], troops: [250, 250, 250, 200, 200, 150, 150, 100, 100, 100, 50, 50], mindist: 0, maxdist: 750 },
+		'11-15 strong': { levels: [11, 12, 13, 14, 15], troops: [500, 500, 500, 400, 400, 300, 300, 200, 200, 200, 100, 100], mindist: 0, maxdist: 750 }
+	},
 	Options: {
 		dfbtns: false,
 		Method: "distance",
@@ -57,6 +64,7 @@ Tabs.Barb = {
 		Update: { 1: [0, 0], 2: [0, 0], 3: [0, 0], 4: [0, 0], 5: [0, 0], 6: [0, 0], 7: [0, 0], 8: [0, 0] },
 		UpdateEnabled: true,
 		UpdateInterval: 30,
+		Presets: {},
 		stopsearch: 1,
 		knightselector: 0,
 		barbMinKnight: 50,
@@ -91,50 +99,39 @@ Tabs.Barb = {
 
 		var m = '<DIV id=pbTowrtDivF class=divHeader align=center>AUTOMATED FOREST FUNCTION</div><TABLE id=pbbarbingfunctions width=100% height=0% class=pbTab><TR align="center">';
 		if (Options.DFOptions.Running == false) {
-			m += '<TD><INPUT id=AttSearch type=submit value="Attack = OFF"></td>';
+			m += '<TD><a id=AttSearch class="inlineButton btButton red14"><span>Attack = OFF</span></a></td>';
 			if (document.getElementById('DFToggleTab')) document.getElementById('DFToggleTab').innerHTML = '<span style="color: #CCC">' + tx('Dark Forest') + ': Off</span>';
 		} else {
-			m += '<TD><INPUT id=AttSearch type=submit value="Attack = ON"></td>';
+			m += '<TD><a id=AttSearch class="inlineButton btButton green20"><span>Attack = ON</span></a></td>';
 			if (document.getElementById('DFToggleTab')) document.getElementById('DFToggleTab').innerHTML = '<span style="color: #FFFF00">' + tx('Dark Forest') + ': On</span>';
 		}
-		m += '<TD><INPUT id=troopselect type=submit value="Select troops"></td>';
-		m += '<TD><INPUT id=Options type=submit value="Options"></td>';
-		m += '<TD><INPUT id=StopSearch type=submit value="Stop Current Search"></td>';
+		m += '<TD><a id=troopselect class="inlineButton btButton brown11"><span>Select troops</span></a></td>';
+		m += '<TD><a id=Options class="inlineButton btButton brown11"><span>Options</span></a></td>';
+		m += '<TD><a id=StopSearch class="inlineButton btButton brown11"><span>Stop Current Search</span></a></td>';
 		m += '</tr></table></div>';
 
-		m += '<DIV id=pbTraderDivD class=divHeader align=center>FOREST STATS</div>';
-
-		m += '<TABLE id=pbbarbstats width=95% height=0% class=pbTab><TR align="left"><TR>';
+		// Stats colapsables
+		var shrink = '<img height="10" src="' + DownArrow + '">';
+		var closed = '<img height="10" src="' + RightArrow + '">';
+		m += '<DIV id=pbStatHeader><a id=StatToggle class=divLink><div class=divHeader align="center">FOREST STATS&nbsp;<img id=StatArrow height="10" src="' + DownArrow + '"></div></a></div>';
+		m += '<TABLE id=pbStatWrap width=95% height=0% class=pbTab><TR align="left">';
 		for (var i = 0; i < Seed.cities.length; i++) {
-			m += '<TD>' + Seed.cities[i][1] + '</td>';
+			m += '<TD align=center style="border:1px solid #000;padding:2px;"><b>' + Seed.cities[i][1] + '</b><br><span id=pdtotalcity' + i + '></span><br><span id=pddatacity' + i + '></span><br><span id=pddataarray' + i + '></span></td>';
 		}
-		m += '</tr><TR>';
-		for (var i = 0; i < Seed.cities.length; i++) {
-			m += '<TD><DIV><span id=' + 'pdtotalcity' + i + '></span></div></td>';
-		}
-		m += '</tr><TR>';
-		for (var i = 0; i < Seed.cities.length; i++) {
-			m += '<TD><DIV><span id=' + 'pddatacity' + i + '></span></div></td>';
-		}
-		m += '</tr><TR>'
-		for (var i = 0; i < Seed.cities.length; i++) {
-			m += '<TD><DIV><span id=' + 'pddataarray' + i + '></span></div></td>';
-		}
-		m += '</tr></table><TABLE id=pbbarbstats width=95% height=0% class=pbTab><TR align="left"><TR>';
+		m += '</tr></table><TABLE id=pbErrWrap width=95% height=0% class=pbTab><TR align="left">';
 		for (var i = 0; i <= 6; i++) {
-			m += '<TD><DIV><span id=' + 'pberror' + i + '></span></div></td>';
+			m += '<TD><DIV><span id=pberror' + i + '></span></div></td>';
 		}
 		m += '</tr></table>';
 		m += '<div id="dferrorlog">&nbsp;</div>';
-		m += '<DIV id=pbTraderDivD class=divHeader align=center>FOREST OPTIONS</div>';
-		m += '<TABLE width=95% height=0% class=ptTab><TR align="left">';
+		m += '<DIV id=pbOptHeader><a id=OptToggle class=divLink><div class=divHeader align=center>FOREST OPTIONS&nbsp;<img id=OptArrow height="10" src="' + DownArrow + '"></div></a></div>';
+		m += '<TABLE id=pbOptWrap width=95% height=0% class=ptTab>';
 		for (var i = 0; i < Seed.cities.length; i++) {
+			var rg = t.levelRange(i + 1);
 			m += '<TR><TD>' + Seed.cities[i][1] + '</td>';
-			for (var w = 1; w <= 15; w++) {
-				m += '<TD class=pblevelopt><INPUT id=pbcity' + i + 'level' + w + ' type=checkbox unchecked=true>Lvl:' + w + '</td>';
-			}
+			m += '<TD>Niveles: <SELECT id=pbcityMin' + i + ' class=btInput>' + t.levelOptions(rg[0]) + '</SELECT> a <SELECT id=pbcityMax' + i + ' class=btInput>' + t.levelOptions(rg[1]) + '</SELECT></td></tr>';
 		}
-		m += '</table><br>'
+		m += '</table><br>';
 		t.myDiv.innerHTML = m;
 
 		saveOptions();
@@ -146,33 +143,59 @@ Tabs.Barb = {
 			else document.getElementById(element).innerHTML = 'Forests:' + t.barbArray[i + 1].length;
 		}
 
-		for (var i = 0; i < Seed.cities.length; i++) {
-			for (var w = 1; w <= 15; w++) {
-				document.getElementById('pbcity' + i + 'level' + w).checked = Options.DFOptions.Levels[i + 1][w];
-			}
-		}
-
 		document.getElementById('AttSearch').addEventListener('click', function () { t.toggleBarbState(this); }, false);
 		document.getElementById('Options').addEventListener('click', t.barbOptions, false);
 		document.getElementById('StopSearch').addEventListener('click', t.callStop, false);
 		document.getElementById('troopselect').addEventListener('click', t.troopOptions, false);
-		var element_class = document.getElementsByClassName('pblevelopt');
-		for (var k = 0; k < element_class.length; k++) {
-			element_class[k].addEventListener('click', t.saveLevelOptions, false);
+		document.getElementById('StatToggle').addEventListener('click', function () { t.toggleSection('pbStatWrap', 'pbErrWrap', 'StatArrow'); }, false);
+		document.getElementById('OptToggle').addEventListener('click', function () { t.toggleSection('pbOptWrap', null, 'OptArrow'); }, false);
+		for (var i = 0; i < Seed.cities.length; i++) {
+			document.getElementById('pbcityMin' + i).addEventListener('change', t.rangeLevelChange, false);
+			document.getElementById('pbcityMax' + i).addEventListener('change', t.rangeLevelChange, false);
 		}
 	},
 
-	saveLevelOptions: function () {
+	toggleSection: function (wrapId, errId, arrowId) {
+		var sw = document.getElementById(wrapId);
+		if (!sw) return;
+		var hidden = (sw.style.display == 'none');
+		if (errId && document.getElementById(errId)) document.getElementById(errId).style.display = hidden ? '' : 'none';
+		sw.style.display = hidden ? '' : 'none';
+		if (document.getElementById(arrowId)) document.getElementById(arrowId).src = hidden ? DownArrow : RightArrow;
+	},
+
+	levelRange: function (citynum) {
+		var min = 0, max = 0;
+		for (var w = 1; w <= 15; w++) {
+			if (Options.DFOptions.Levels[citynum][w]) {
+				if (min == 0) min = w;
+				max = w;
+			}
+		}
+		return [min, max];
+	},
+
+	levelOptions: function (sel) {
+		var o = '';
+		for (var w = 0; w <= 15; w++) {
+			o += '<option value=' + w + (w == sel ? ' selected' : '') + '>' + (w == 0 ? 'None' : w) + '</option>';
+		}
+		return o;
+	},
+
+	rangeLevelChange: function () {
+		var t = Tabs.Barb;
 		for (var i = 0; i < Seed.cities.length; i++) {
+			var min = parseIntNan(document.getElementById('pbcityMin' + i).value);
+			var max = parseIntNan(document.getElementById('pbcityMax' + i).value);
 			Options.DFOptions.Levels[i + 1][0] = false;
 			for (var w = 1; w <= 15; w++) {
-				var ele = document.getElementById('pbcity' + i + 'level' + w);
-				Options.DFOptions.Levels[i + 1][w] = ele.checked;
-				if (ele.checked)
-					Options.DFOptions.Levels[i + 1][0] = true;
+				Options.DFOptions.Levels[i + 1][w] = (w >= min && w <= max);
+				if (Options.DFOptions.Levels[i + 1][w]) Options.DFOptions.Levels[i + 1][0] = true;
 			}
 		}
 		saveOptions();
+		t.checkBarbData();
 	},
 
 	troopOptions: function () {
@@ -181,34 +204,203 @@ Tabs.Barb = {
 		if (t.troopselect == null)
 			t.troopselect = new CPopup('pbtroopselect', 0, 0, 980, 650, true, function () { t.saveTroops(); });
 		t.troopselect.centerMe(mainPop.getMainDiv());
-		var z = '<DIV id=pbTraderDivD class=divHeader align=center>TROOP SELECTION</div><TABLE width=100%><TR>';
-		z += '<TD></td>';
-		for (var j = 0; j < 15; j++)
-			z += '<TD>Level ' + (j + 1) + '</td>';
-		z += '</tr>';
+		t.renderTroopSelect();
+	},
+
+	renderTroopSelect: function () {
+		var t = Tabs.Barb;
+		var troopDef = t.troopDef;
+		var lv = t.selLevel;
+		if (!Options.DFOptions.Troops[lv]) Options.DFOptions.Troops[lv] = {};
+		if (!Options.DFOptions.MinDistance) Options.DFOptions.MinDistance = {};
+		if (!Options.DFOptions.Distance) Options.DFOptions.Distance = {};
+		var cityID = 'city' + Seed.cities[t.refCity - 1][0];
+		var availTroops = {};
+		var cityUnits = Seed.units[cityID];
+		for (var i = 0; i < t.troopDef.length; i++) {
+			var unit = t.troopDef[i][1];
+			availTroops[i] = (cityUnits && cityUnits['unt' + unit]) ? parseIntNan(cityUnits['unt' + unit]) : 0;
+		}
+
+		var z = '<DIV id=pbTraderDivD class=divHeader align=center>TROOP SELECTION</div>';
+		z += '<TABLE width=100%><TR><TD align=center>';
+		for (var l = 1; l <= 15; l++) {
+			z += '<a id=lvlnav' + l + ' class="inlineButton btButton ' + (l == lv ? 'green20' : 'brown8') + '" style="margin:1px;"><span>L' + l + '</span></a>';
+		}
+		z += '</TD></TR><TR><TD align=center>Ciudad: <SELECT id=trpCity class=btInput>';
+		for (var c = 0; c < Seed.cities.length; c++) {
+			z += '<option value=' + (c + 1) + (c + 1 == t.refCity ? ' selected' : '') + '>' + Seed.cities[c][1] + '</option>';
+		}
+		z += '</SELECT></TD></TR></TABLE>';
+
+		z += '<TABLE width=100% cellpadding=2 cellspacing=1 class=xtab>';
+		z += '<TR class=xtabHD><TD>Unidad</TD><TD align=center>Disponible</TD><TD align=center>Cantidad</TD><TD align=center>Distancia M&#237;n</TD><TD align=center>Distancia M&#225;x</TD></TR>';
 
 		for (var i = 0; i < troopDef.length; i++) {
-			z += '<TR><TD align=center><img src="' + IMGURL + 'units/unit_' + troopDef[i][1] + '_30.jpg" title="' + troopDef[i][0] + '"></td>';
-			for (var j = 0; j < 15; j++) {
-				if (!Options.DFOptions.Troops[j + 1]) Options.DFOptions.Troops[j + 1] = {};
-				z += '<TD><INPUT id="level' + j + 'troop' + i + '" type=text size=5 maxlength=6 value="' + (Options.DFOptions.Troops[j + 1][i + 1] ? Options.DFOptions.Troops[j + 1][i + 1] : 0) + '" /></td>';
-			}
-			z += '</tr>';
+			z += '<TR><TD><B>' + troopDef[i][0] + '</b></td>';
+			z += '<TD align=center>' + addCommas(availTroops[i]) + '</td>';
+			z += '<TD align=center><INPUT id=trprd' + t.troopDef[i][1] + ' type=text size=5 maxlength=6 class=btInput value="' + (Options.DFOptions.Troops[lv][i + 1] ? Options.DFOptions.Troops[lv][i + 1] : 0) + '" data-troopidx=' + i + ' /> <a id=minus' + t.troopDef[i][1] + ' class="inlineButton btButton brown8"><span>-</span></a> <a id=plus' + t.troopDef[i][1] + ' class="inlineButton btButton brown8"><span>+</span></a> <a id=max' + t.troopDef[i][1] + ' class="inlineButton btButton green20"><span>MAX</span></a></td>';
+			z += '<TD align=center><INPUT id=mindist' + i + ' type=text size=3 maxlength=3 class=btInput value="' + Options.DFOptions.MinDistance[lv] + '"></td>';
+			z += '<TD align=center><INPUT id=maxdist' + i + ' type=text size=3 maxlength=3 class=btInput value="' + Options.DFOptions.Distance[lv] + '"></td>';
+			z += '</TR>';
 		}
 
-		z += '<TR><TD>MIN dist</td>';
-		for (var j = 0; j < 15; j++) {
-			z += '<TD><INPUT id=Mindist' + j + ' type=text size=3 maxlength=3 value="' + Options.DFOptions.MinDistance[j + 1] + '"</td>';
-		}
-		z += '</tr>';
-		z += '<TR><TD>MAX dist</td>';
-		for (var j = 0; j < 15; j++) {
-			z += '<TD><INPUT id=dist' + j + ' type=text size=3 maxlength=3 value="' + Options.DFOptions.Distance[j + 1] + '"</td>';
-		}
-		z += '</tr>';
-		z += '</table>';
+		z += '<TR><TD colspan=5 align=center style="padding-top:6px;">';
+		z += '<a id=allLevels class="inlineButton btButton green20"><span>Aplicar a todos los niveles</span></a> ';
+		z += '<a id=presetLoad class="inlineButton btButton brown11"><span>Cargar preset</span></a> ';
+		z += '<SELECT id=presetSel class=btInput>' + t.presetOptions() + '</SELECT> ';
+		z += '<a id=presetSave class="inlineButton btButton brown11"><span>Guardar preset</span></a> ';
+		z += '<INPUT id=presetName type=text size=12 maxlength=30 class=btInput placeholder="Nombre preset">';
+		z += '</TD></TR></TABLE>';
 		t.troopselect.getMainDiv().innerHTML = z;
 		t.troopselect.show(true);
+		t.bindTroopEvents(lv, availTroops);
+	},
+
+	bindTroopEvents: function (lv, availTroops) {
+		var t = Tabs.Barb;
+		var troopDef = t.troopDef;
+		var cityID = 'city' + Seed.cities[t.refCity - 1][0];
+		var cityUnits = Seed.units[cityID];
+
+		for (var l = 1; l <= 15; l++) {
+			document.getElementById('lvlnav' + l).addEventListener('click', function (e) {
+				t.selLevel = parseInt(e.currentTarget.id.replace('lvlnav', ''));
+				t.renderTroopSelect();
+			}, false);
+		}
+
+		for (var i = 0; i < troopDef.length; i++) {
+			var unit = troopDef[i][1];
+			var input = document.getElementById('trprd' + unit);
+			var mindst = document.getElementById('mindist' + i);
+			var maxdst = document.getElementById('maxdist' + i);
+			(function (i, unit, input, mindst, maxdst) {
+				input.addEventListener('change', function () {
+					Options.DFOptions.Troops[lv][i + 1] = parseIntNan(input.value);
+					saveOptions();
+				}, false);
+				document.getElementById('minus' + unit).addEventListener('click', function () {
+					var v = parseIntNan(input.value) - 10;
+					if (v < 0) v = 0;
+					input.value = v;
+					Options.DFOptions.Troops[lv][i + 1] = v;
+					saveOptions();
+				}, false);
+				document.getElementById('plus' + unit).addEventListener('click', function () {
+					var v = parseIntNan(input.value) + 10;
+					input.value = v;
+					Options.DFOptions.Troops[lv][i + 1] = v;
+					saveOptions();
+				}, false);
+				document.getElementById('max' + unit).addEventListener('click', function () {
+					var v = cityUnits ? parseIntNan(cityUnits['unt' + unit]) : 0;
+					input.value = v;
+					Options.DFOptions.Troops[lv][i + 1] = v;
+					saveOptions();
+				}, false);
+				mindst.addEventListener('change', function () {
+					Options.DFOptions.MinDistance[lv] = parseIntNan(mindst.value);
+					saveOptions();
+				}, false);
+				maxdst.addEventListener('change', function () {
+					Options.DFOptions.Distance[lv] = parseIntNan(maxdst.value);
+					if (parseInt(Options.DFOptions.Distance[lv]) > Options.DFOptions.MaxDistance) {
+						Options.DFOptions.Distance[lv] = parseInt(Options.DFOptions.MaxDistance);
+						maxdst.value = Options.DFOptions.Distance[lv];
+					}
+					saveOptions();
+				}, false);
+			})(i, unit, input, mindst, maxdst);
+		}
+
+		document.getElementById('trpCity').addEventListener('change', function () {
+			t.refCity = parseIntNan(document.getElementById('trpCity').value);
+			t.renderTroopSelect();
+		}, false);
+
+		document.getElementById('allLevels').addEventListener('click', function () {
+			for (var w = 1; w <= 15; w++) {
+				for (var x = 1; x <= troopDef.length; x++) {
+					Options.DFOptions.Troops[w][x] = Options.DFOptions.Troops[lv][x];
+				}
+				Options.DFOptions.MinDistance[w] = Options.DFOptions.MinDistance[lv];
+				Options.DFOptions.Distance[w] = Options.DFOptions.Distance[lv];
+			}
+			saveOptions();
+		}, false);
+
+		document.getElementById('presetLoad').addEventListener('click', function () {
+			t.loadPreset(document.getElementById('presetSel').value);
+		}, false);
+
+		document.getElementById('presetSave').addEventListener('click', function () {
+			var name = document.getElementById('presetName').value;
+			if (name) {
+				if (!Options.DFOptions.Presets) Options.DFOptions.Presets = {};
+				Options.DFOptions.Presets[name] = { Troops: {}, MinDistance: {}, Distance: {} };
+				for (var w = 1; w <= 15; w++) {
+					Options.DFOptions.Presets[name].Troops[w] = {};
+					Options.DFOptions.Presets[name].MinDistance[w] = Options.DFOptions.MinDistance[w];
+					Options.DFOptions.Presets[name].Distance[w] = Options.DFOptions.Distance[w];
+					for (var x = 1; x <= troopDef.length; x++) {
+						Options.DFOptions.Presets[name].Troops[w][x] = Options.DFOptions.Troops[w][x];
+					}
+				}
+				saveOptions();
+				document.getElementById('presetSel').innerHTML = t.presetOptions();
+				document.getElementById('presetName').value = '';
+			}
+		}, false);
+	},
+
+	presetOptions: function () {
+		var z = '<option value="">Selecciona preset...</option>';
+		for (var p in Tabs.Barb.DefaultPresets) {
+			z += '<option value="' + p + '">' + p + '</option>';
+		}
+		for (var p in Options.DFOptions.Presets) {
+			z += '<option value="' + p + '">' + p + '</option>';
+		}
+		return z;
+	},
+
+	loadPreset: function (name) {
+		var t = Tabs.Barb;
+		var preset = t.DefaultPresets[name] || Options.DFOptions.Presets[name];
+		if (!preset) return;
+		if (preset.levels) {
+			for (var k = 0; k < preset.levels.length; k++) {
+				var lv = preset.levels[k];
+				for (var i = 0; i < preset.troops.length && i < t.troopDef.length; i++) {
+					Options.DFOptions.Troops[lv][i + 1] = preset.troops[i];
+				}
+				Options.DFOptions.MinDistance[lv] = preset.mindist;
+				Options.DFOptions.Distance[lv] = preset.maxdist;
+			}
+		} else {
+			for (var w = 1; w <= 15; w++) {
+				for (var x = 1; x <= t.troopDef.length; x++) {
+					Options.DFOptions.Troops[w][x] = preset.Troops[w] ? preset.Troops[w][x] : 0;
+				}
+				Options.DFOptions.MinDistance[w] = preset.MinDistance ? preset.MinDistance[w] : 0;
+				Options.DFOptions.Distance[w] = preset.Distance ? preset.Distance[w] : 750;
+			}
+		}
+		saveOptions();
+		t.checkBarbData();
+		t.renderTroopSelect();
+	},
+
+	saveTroops: function () {
+		var t = Tabs.Barb;
+		for (var w = 1; w <= 15; w++) {
+			for (var x = 1; x <= t.troopDef.length; x++) {
+				if (!Options.DFOptions.Troops[w]) Options.DFOptions.Troops[w] = {};
+				if (!Options.DFOptions.Troops[w][x]) Options.DFOptions.Troops[w][x] = 0;
+			}
+		}
+		saveOptions();
 	},
 
 	barbOptions: function () {
@@ -380,20 +572,6 @@ Tabs.Barb = {
 		//reloadKOC();
 	},
 
-	saveTroops: function () {
-		var t = Tabs.Barb;
-		for (var i = 0; i < 15; i++) {
-			for (var w = 0; w < t.troopDef.length; w++) {
-				Options.DFOptions.Troops[i + 1][w + 1] = parseIntNan(document.getElementById('level' + i + 'troop' + w).value);
-			}
-			if (parseIntNan(document.getElementById('dist' + i).value) > Options.DFOptions.MaxDistance)
-				document.getElementById('dist' + i).value = Options.DFOptions.MaxDistance;
-			Options.DFOptions.MinDistance[i + 1] = parseIntNan(document.getElementById('Mindist' + i).value);
-			Options.DFOptions.Distance[i + 1] = parseIntNan(document.getElementById('dist' + i).value);
-		}
-		saveOptions();
-	},
-
 	deletebarbs: function () {
 		for (var i = 1; i <= Seed.cities.length; i++) {
 			Options.DFOptions.Update[i][1] = 0;
@@ -438,13 +616,15 @@ Tabs.Barb = {
 		var t = Tabs.Barb;
 		if (Options.DFOptions.Running == true) {
 			Options.DFOptions.Running = false;
-			obj.value = "Attack = OFF";
+			obj.innerHTML = '<span>Attack = OFF</span>';
+			obj.className = 'inlineButton btButton red14';
 			if (document.getElementById('DFToggleTab')) document.getElementById('DFToggleTab').innerHTML = '<span style="color: #CCC">' + tx('Dark Forest') + ': Off</span>';
 			saveOptions();
 			t.nextattack = null;
 		} else {
 			Options.DFOptions.Running = true;
-			obj.value = "Attack = ON";
+			obj.innerHTML = '<span>Attack = ON</span>';
+			obj.className = 'inlineButton btButton green20';
 			if (document.getElementById('DFToggleTab')) document.getElementById('DFToggleTab').innerHTML = '<span style="color: #FFFF00">' + tx('Dark Forest') + ': On</span>';
 			saveOptions();
 			t.checkBarbData();

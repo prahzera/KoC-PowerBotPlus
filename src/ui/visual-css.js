@@ -78,7 +78,10 @@ function BotVisualCSS() {
 		.btPopup *::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 5px; }\n\
 		.btPopup *::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.4); }\n\
 		.btPopup *::-webkit-scrollbar-track { background: rgba(0,0,0,.05); }\n\
-		body.btDarkTheme .btPopup { background: ' + (Options.Colors.Panel || '#fff') + ' !important; }\
+		body.btDarkTheme .btPopup { background: ' + (Options.Colors.Panel || '#fff') + ' !important; }\n\
+		table.pbTab, table.ptTab { background-color:' + Options.Colors.Panel + ' !important; }\n\
+		table.pbTab th, table.pbTab td, table.ptTab th, table.ptTab td { background-color:' + Options.Colors.Panel + ' !important; color:' + Options.Colors.PanelText + '; }\n\
+		.btPopMain table.xtab td, .btPopMain table td { background-color:' + Options.Colors.Panel + ' !important; color:' + Options.Colors.PanelText + '; }\n\
 		body[data-bt-reduce="1"] *, body[data-bt-anim="off"] * { animation: none !important; transition: none !important; }\
 		body[data-bt-anim="smooth"] .tab, body[data-bt-anim="smooth"] a.buttonv2.std, body[data-bt-anim="smooth"] a.inlineButton.btButton, body[data-bt-anim="smooth"] .btPopupTop, body[data-bt-anim="smooth"] tr[id$="_bar"] {\
 			transition-duration: .25s;\

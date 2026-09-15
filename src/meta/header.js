@@ -42,7 +42,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        GCG portal: the header now starts collapsed on init for more game screen space (toggle button stays in the portal header).
+// @releasenotes        Auto Dark Forest: level-based troop editor with presets, collapsible sections, and theme-colored tables.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
