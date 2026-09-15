@@ -2,7 +2,7 @@
 
 Tabs.Research = {
 	tabLabel: 'Research',
-	tabOrder: 1025,
+	tabOrder: 2065,
 	tabColor: 'brown',
 	myDiv: null,
 	timer: null,
@@ -173,7 +173,7 @@ Tabs.Research = {
 
 		m += '<div id=btResearchList style="width:' + GlobalOptions.btWinSize.x + 'px;">';
 
-		m += '<TABLE cellpadding=1 cellspacing=0 width=100% class=xtab align=center><TR><td width=50% valign=top><div align=center><b>' + tx('Research') + '</b></div>';
+		m += '<TABLE cellpadding=1 cellspacing=0 width=100% class=xtab align=center><TR><td width=50% valign=top><div align=center>' + strButton8(tx('Select All'), 'id=btResearchMarkAll') + '&nbsp;' + tx('Research') + '</div>';
 		m += '<table cellspacing=0 class=xtab width=100%><tr><th width=25 class=xtabHD>&nbsp;</th><th class=xtabHD>' + uW.g_js_strings.commonstr.technology + '</th><th width=40 class=xtabHD>' + tx('Next Level') + '</th><th width=40 class=xtabHD>' + tx('Auto') + '</th>';
 		var r = 0;
 		for (var h in t.researchinfo) {
@@ -254,8 +254,31 @@ Tabs.Research = {
 			}, false);
 		}
 
+		ById('btResearchMarkAll').addEventListener('click', function () {
+			t.MarkAll('btRsc_Auto', 'ResearchNumbers');
+			t.MarkAll('btRbt_Auto', 'BritonNumbers');
+			saveOptions();
+		}, false);
+
 		if (Options.ResearchOptions.Running) {
 			t.timer = setTimeout(function () { t.doAutoLoop(1, false); }, (10 * 1000));
+		}
+	},
+
+	MarkAll: function (prefix, optkey) {
+		var t = Tabs.Research;
+		var list = (optkey == 'ResearchNumbers') ? t.researchinfo : t.britoninfo;
+		var allChecked = true;
+		for (var h in list) {
+			var box = ById(prefix + h);
+			if (box && box.style.display != 'none' && !box.checked) { allChecked = false; break; }
+		}
+		for (var h in list) {
+			var box = ById(prefix + h);
+			if (box && box.style.display != 'none') {
+				box.checked = !allChecked;
+				Options.ResearchOptions[optkey][h] = !allChecked;
+			}
 		}
 	},
 

@@ -41,8 +41,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.30.0
-// @releasenotes        Added the Research tab (auto research per city, priority list, speedups with hourglasses and help requests), which replaces the unused Target Finder tab.
+// @version			4.30.1
+// @releasenotes        Research tab improvements: "Select All / Deselect All" button for the auto research list and tab relocated next to the other brown tabs (between Build and Revive).
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -128,7 +128,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.30.0';
+var Version = '4.30.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -32798,7 +32798,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 
 Tabs.Research = {
 	tabLabel: 'Research',
-	tabOrder: 1025,
+	tabOrder: 2065,
 	tabColor: 'brown',
 	myDiv: null,
 	timer: null,
@@ -32969,7 +32969,7 @@ Tabs.Research = {
 
 		m += '<div id=btResearchList style="width:' + GlobalOptions.btWinSize.x + 'px;">';
 
-		m += '<TABLE cellpadding=1 cellspacing=0 width=100% class=xtab align=center><TR><td width=50% valign=top><div align=center><b>' + tx('Research') + '</b></div>';
+		m += '<TABLE cellpadding=1 cellspacing=0 width=100% class=xtab align=center><TR><td width=50% valign=top><div align=center>' + strButton8(tx('Select All'), 'id=btResearchMarkAll') + '&nbsp;' + tx('Research') + '</div>';
 		m += '<table cellspacing=0 class=xtab width=100%><tr><th width=25 class=xtabHD>&nbsp;</th><th class=xtabHD>' + uW.g_js_strings.commonstr.technology + '</th><th width=40 class=xtabHD>' + tx('Next Level') + '</th><th width=40 class=xtabHD>' + tx('Auto') + '</th>';
 		var r = 0;
 		for (var h in t.researchinfo) {
@@ -33050,8 +33050,31 @@ Tabs.Research = {
 			}, false);
 		}
 
+		ById('btResearchMarkAll').addEventListener('click', function () {
+			t.MarkAll('btRsc_Auto', 'ResearchNumbers');
+			t.MarkAll('btRbt_Auto', 'BritonNumbers');
+			saveOptions();
+		}, false);
+
 		if (Options.ResearchOptions.Running) {
 			t.timer = setTimeout(function () { t.doAutoLoop(1, false); }, (10 * 1000));
+		}
+	},
+
+	MarkAll: function (prefix, optkey) {
+		var t = Tabs.Research;
+		var list = (optkey == 'ResearchNumbers') ? t.researchinfo : t.britoninfo;
+		var allChecked = true;
+		for (var h in list) {
+			var box = ById(prefix + h);
+			if (box && box.style.display != 'none' && !box.checked) { allChecked = false; break; }
+		}
+		for (var h in list) {
+			var box = ById(prefix + h);
+			if (box && box.style.display != 'none') {
+				box.checked = !allChecked;
+				Options.ResearchOptions[optkey][h] = !allChecked;
+			}
 		}
 	},
 
