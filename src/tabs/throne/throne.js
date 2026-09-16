@@ -6,7 +6,7 @@ Tabs.Throne = {
 	MinVersion: '3.38',
 	tabOrder: 2130,
 	tabLabel: 'Throne',
-	tabColor : 'orange',
+	tabColor : 'brown',
 	activepanel: '',
 	myDiv: null,
 	ThroneTemplates: null,

@@ -41,8 +41,8 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.33.0
-// @releasenotes        Added a native Throne tab (Throne Room) that replaces the Throne extra tab, with Chromium compatibility fixes.
+// @version			4.33.1
+// @releasenotes        Added full Spanish translations for the native Throne tab and unified its tab color with the rest of the tabs.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.33.0';
+var Version = '4.33.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -34902,7 +34902,7 @@ Tabs.Throne = {
 	MinVersion: '3.38',
 	tabOrder: 2130,
 	tabLabel: 'Throne',
-	tabColor : 'orange',
+	tabColor : 'brown',
 	activepanel: '',
 	myDiv: null,
 	ThroneTemplates: null,

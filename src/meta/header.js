@@ -42,7 +42,7 @@
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
 // @version			3.86
-// @releasenotes        Added a native Throne tab (Throne Room) that replaces the Throne extra tab, with Chromium compatibility fixes.
+// @releasenotes        Added full Spanish translations for the native Throne tab and unified its tab color with the rest of the tabs.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
