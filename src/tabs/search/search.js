@@ -44,6 +44,7 @@ Tabs.Search = {
 	onlineWorkers: 5,
 	onlineChunkSize: 100,
 	onlineRunning: false,
+	lastLoginWorkers: 3,
 	onlineActive: 0,
 	resumeSnapshot: null,
 	lastFilterIdx: 0,
@@ -72,6 +73,7 @@ Tabs.Search = {
 	LoopCounter: 1,
 	lastLogin: {},
 	lastLoginPending: {},
+	lastLoginRetry: {},
 	lastLoginQueue: [],
 	lastLoginFetched: 0,
 	lastLoginTotal: 0,
@@ -101,6 +103,7 @@ Tabs.Search = {
 		AllianceName: '',
 		PlayerName: '',
 		ShowLastLogin: false,
+		LastLoginWorkers: 3,
 		LastLoginMinDays: '',
 		LastLoginMaxDays: '',
 		BlacklistEnabled: true,
@@ -925,6 +928,7 @@ Tabs.Search = {
 		m += '<tr id=pbslastlogin1><td colspan=2 align=center><INPUT id=pbSearchShowLastLogin type=checkbox ' + (Options.SearchOptions.ShowLastLogin ? 'CHECKED' : '') + '/>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</td></tr>';
 		m += '<tr id=pbslastlogin2><td colspan=2 align=center style="padding-top:5px;">' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ' (' + t.lastLoginUnit() + '):</td></tr>';
 		m += '<tr id=pbslastlogin3><td colspan=2 align=center><INPUT id=pbSearchLastLoginMinDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMinDays + '>&nbsp;-&nbsp;<INPUT id=pbSearchLastLoginMaxDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMaxDays + '></td></tr>';
+		m += '<tr id=pbslastlogin4><td colspan=2 align=center style="padding-top:5px;">' + tx('Last Login Workers') + ':&nbsp;' + htmlSelector({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 }, parseIntNan(Options.SearchOptions.LastLoginWorkers) || 3, 'id=pbSearchLastLoginWorkers class=btInput') + '</td></tr>';
 		m += '<tr id=pbsblacklist1><td colspan=2 align=center style="padding-top:5px;"><INPUT id=pbSearchBlacklistEnabled type=checkbox ' + (Options.SearchOptions.BlacklistEnabled ? 'CHECKED' : '') + '/>' + tx('City Blacklist') + '</td></tr>';
 		m += '<tr id=pbsblacklist2><td colspan=2 align=center style="padding-top:2px;">' + tx('Inactive after') + ':&nbsp;<INPUT id=pbSearchBlacklistDays class=btInput size=3 value=' + Options.SearchOptions.BlacklistDays + '></td></tr>';
 		m += '<tr id=pbsblacklist3><td colspan=2 align=center><INPUT id=pbSearchShowBlacklisted type=checkbox ' + (Options.SearchOptions.ShowBlacklisted ? 'CHECKED' : '') + '/>' + tx('Show blacklisted') + '</td></tr>';
@@ -985,6 +989,13 @@ t.setupFilterDisplay();
 
 		ById('pbSearchLastLoginMaxDays').addEventListener('change', t.LastLoginMaxDaysChange, false);
 		ById('pbSearchLastLoginMaxDays').addEventListener('keyup', function (e) { StartKeyTimer(e.target, t.LastLoginMaxDaysChange); }, false);
+
+		ById('pbSearchLastLoginWorkers').addEventListener('change', function (e) {
+			var t = Tabs.Search;
+			Options.SearchOptions.LastLoginWorkers = parseIntNan(e.target.value) || 3;
+			saveOptions();
+			if (t.lastLoginQueue.length != 0 && !t.lastLoginRunning) { t.processLastLoginQueue(); }
+		}, false);
 
 		ToggleOption('SearchOptions', 'pbSearchBlacklistEnabled', 'BlacklistEnabled', function () { t.setupFilterDisplay(); });
 		ToggleOption('SearchOptions', 'pbSearchShowBlacklisted', 'ShowBlacklisted', t.dispMapTable);
@@ -1704,44 +1715,68 @@ t.setupFilterDisplay();
 	processLastLoginQueue: function () {
 		var t = Tabs.Search;
 		if (!t.lastLoginUsable()) { t.lastLoginRunning = false; return; }
-		if (t.lastLoginQueue.length == 0) {
-			t.lastLoginRunning = false;
-			t.lastLoginPending = {};
-			t.savelastlogins();
-			if (ById('pbStatStatus') && !t.searchRunning) {
-				ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
-			}
-			if (Options.SearchOptions.sortColNum == 22 || parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0) { t.dispMapTable(); }
-			return;
-		}
-		var uid = t.lastLoginQueue.shift();
+		if (t.lastLoginQueue.length == 0) { t.finishLastLoginQueue(); return; }
+		if (t.lastLoginRunning) { return; }
 		t.lastLoginRunning = true;
-		fetchPlayerCourt(uid, function (rslt) {
-			if (rslt && rslt.ok && rslt.playerInfo && rslt.playerInfo.lastLogin) {
-				var dl = rslt.playerInfo.lastLogin;
-				t.lastLogin[uid] = dl;
-				t.lastLoginFetched++;
-				var ri = t.lastLoginIdx[uid];
-				if (ri) {
-					for (var k = 0; k < ri.length; k++) {
-						var row = t.mapDat[ri[k]];
-						if (!row) continue;
-						row[22] = dl;
-						var d = ById('pll_' + row[0] + '_' + row[1]);
-						if (d) { d.innerHTML = t.lastLoginText(dl); }
+		var workers = Math.min(parseIntNan(Options.SearchOptions.LastLoginWorkers) || 3, t.lastLoginQueue.length);
+		for (var wN = 0; wN < workers; wN++) { t.lastLoginNext(wN * 150); }
+	},
+
+	lastLoginNext: function (delay) {
+		var t = Tabs.Search;
+		setTimeout(function () {
+			var t = Tabs.Search;
+			if (!t.lastLoginRunning || t.lastLoginQueue.length == 0) {
+				if (t.lastLoginActive == 0) { t.lastLoginRunning = false; }
+				return;
+			}
+			var uid = t.lastLoginQueue.shift();
+			t.lastLoginActive++;
+			fetchPlayerCourt(uid, function (rslt) {
+				var t = Tabs.Search;
+				if (t.lastLoginActive > 0) { t.lastLoginActive--; }
+				if (rslt && rslt.ok && rslt.playerInfo && rslt.playerInfo.lastLogin) {
+					var dl = rslt.playerInfo.lastLogin;
+					delete t.lastLoginRetry[uid];
+					t.lastLogin[uid] = dl;
+					t.lastLoginFetched++;
+					var ri = t.lastLoginIdx[uid];
+					if (ri) {
+						for (var k = 0; k < ri.length; k++) {
+							var row = t.mapDat[ri[k]];
+							if (!row) continue;
+							row[22] = dl;
+							var d = ById('pll_' + row[0] + '_' + row[1]);
+							if (d) { d.innerHTML = t.lastLoginText(dl); }
+						}
 					}
+					if (t.lastLoginFetched - t.lastLoginSaved >= 50 || unixTime() - t.lastLoginSaveAt > 60) {
+						t.lastLoginSaved = t.lastLoginFetched;
+						t.lastLoginSaveAt = unixTime();
+						t.savelastlogins();
+					}
+				} else {
+					t.lastLoginRetry[uid] = (t.lastLoginRetry[uid] || 0) + 1;
+					if (t.lastLoginRetry[uid] <= 3) { t.lastLoginQueue.push(uid); }
 				}
-				if (t.lastLoginFetched - t.lastLoginSaved >= 50 || unixTime() - t.lastLoginSaveAt > 60) {
-					t.lastLoginSaved = t.lastLoginFetched;
-					t.lastLoginSaveAt = unixTime();
-					t.savelastlogins();
+				if (ById('pbStatStatus') && !t.searchRunning) {
+					ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
 				}
-			}
-			if (ById('pbStatStatus') && !t.searchRunning) {
-				ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
-			}
-			t.lastLoginTimer = setTimeout(t.processLastLoginQueue, 350);
-		});
+				if (t.lastLoginActive == 0 && t.lastLoginQueue.length == 0) { t.finishLastLoginQueue(); }
+				else if (t.lastLoginQueue.length > 0) { t.lastLoginNext(0); }
+			});
+		}, delay || 0);
+	},
+
+	finishLastLoginQueue: function () {
+		var t = Tabs.Search;
+		t.lastLoginRunning = false;
+		t.lastLoginPending = {};
+		t.savelastlogins();
+		if (ById('pbStatStatus') && !t.searchRunning) {
+			ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
+		}
+		if (Options.SearchOptions.sortColNum == 22 || parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginWorkers) != 0) { t.dispMapTable(); }
 	},
 
 	LookupMists: function (prov, notify) {
