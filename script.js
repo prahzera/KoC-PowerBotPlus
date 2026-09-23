@@ -41,7 +41,7 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.33.2
+// @version			4.35.0
 // @releasenotes        Added full Spanish translations for the native Throne tab and unified its tab color with the rest of the tabs.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.33.2';
+var Version = '4.35.0';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }

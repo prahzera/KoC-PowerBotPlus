@@ -57,6 +57,26 @@ equivalente nativo.
   Configuración → Tabs Adicionales → Add Tab con la URL, o setear
   `"enabled": true` en el seed + bump de versión (el loader hace merge y lo evalúa).
 
+## Reglas de actualización de versión (obligatorias al tocar tabs)
+
+La versión es **una sola fuente de verdad: `package.json` (`version: X.Y.Z`)**.
+`build.js` la inyecta en LOS TRES sitios de salida (banner `// @version` de `script.js`,
+`script.meta.js` y `var Version = ...` en el arranque, `src/core/version.js`). Por eso:
+
+- **Nunca** corrijas la versión a mano en `script.js` ni en ningún `@version` del fuente:
+  el build es el único autor y los sobreescribe en cada compilación.
+- Todo cambio de tabs cuenta como:
+  - **Feature** (nuevo tab nativo, port de un externo a nativo como Throne, icono/UI nuevo) →
+    `npm run version:feature` (sube Y, Z=0).
+  - **Arreglo o mejora** (checkbox, icono, texto, bug sin feature nueva) →
+    `npm run version:fix` (sube Z).
+- Tras bumpear, el script `scripts/bump-version.js` ya regenera `script.js` +
+  `script.meta.js` y corre `--check`; igualmente verifica que no quede la versión
+  anterior en los outputs (grep del número viejo en `script.js`/`script.meta.js` → 0).
+- El mensaje de commit de release DEBE reflejar la versión REAL de `package.json`
+  (después del bump), no un número inventado: si agregaste un tab bumpeaste featu­re y
+  el nombre de commit DEBE coincidir con la `X.Y.Z` compilada.
+
 ## Comandos
 
 - Build: `node build.js` (genera `script.js` + `script.meta.js` desde `src/`).
