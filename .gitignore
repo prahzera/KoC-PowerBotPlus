@@ -22,3 +22,6 @@ node_modules/
 # Generated release artifacts (created by build.js / CI)
 script.user.js
 script.meta.js
+
+# Local reference: catalog of optional external tabs (do not version)
+EXTRA_TABS.md
