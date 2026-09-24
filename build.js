@@ -45,6 +45,11 @@ if (!VERSION_RE.test(VERSION)) {
   );
 }
 
+if (!PKG.releasenotes || !PKG.releasenotes.trim()) {
+  fail('Falta la propiedad "releasenotes" en package.json, que da el texto de // @releasenotes.');
+}
+const RELEASENOTES = PKG.releasenotes.trim();
+
 function fail(msg) {
   console.error(`✗ ${msg}`);
   process.exit(1);
@@ -144,15 +149,34 @@ function replaceOnce(text, re, replacer, label) {
   return out;
 }
 
-/** Inject the centralized version (from package.json) into the two known spots. */
+/**
+ * Asegura que el banner tenga "// @<key> <value>": reemplaza la línea si ya
+ * existe, o la INSERTA justo después de // ==UserScript== si no está. Esto
+ * permite que @version y @releasenotes vivan SOLO en package.json y el build
+ * las ponga solas en el banner (el header fuente ya no las lleva hardcodeadas).
+ */
+function ensureBannerField(content, key, value, eol) {
+  const re = new RegExp(`^(\\\\/\\\\/ @${key}\\\\s+).*$`, 'm');
+  let count = 0;
+  const out = content.replace(re, (_full, prefix) => {
+    count++;
+    return `${prefix}${value}`;
+  });
+  if (count === 0) {
+    return content.replace(/^(\/\/ ==UserScript==)$/m, (_line, banner) => {
+      return `${banner}${eol}// @${key}\t\t${value}`;
+    });
+  }
+  if (count > 1) fail(`Se encontraron ${count} coincidencias de "// @${key}" en el banner (debe ser única).`);
+  return out;
+}
+
+/** Inject version + releasenotes (both from package.json) into the banner spots. */
 function injectVersion(content) {
   let out = content;
-  out = replaceOnce(
-    out,
-    /^(\/\/ @version\s+)[0-9][0-9.]*$/m,
-    (_full, prefix) => `${prefix}${VERSION}`,
-    'banner // @version'
-  );
+  const eol = out.includes('\r\n') ? '\r\n' : '\n';
+  out = ensureBannerField(out, 'version', VERSION, eol);
+  out = ensureBannerField(out, 'releasenotes', RELEASENOTES, eol);
   out = replaceOnce(
     out,
     /^(var Version = ')[^']*(';)$/m,
@@ -172,11 +196,8 @@ function build() {
   // Tampermonkey lee el @version viejo del meta y nunca detecta actualizaciones.
   // No usamos injectVersion() aquí porque buscaría 'var Version =' y fallaría (0 coincidencias).
   let meta = sections[0].content + eol; // header banner, como el sed del workflow
-  meta = meta.replace(
-    /^(\/\/ @version\s+)[0-9][0-9.]*$/m,
-    (_full, prefix) => `${prefix}${VERSION}`,
-    'meta // @version'
-  );
+  meta = ensureBannerField(meta, 'version', VERSION, eol);
+  meta = ensureBannerField(meta, 'releasenotes', RELEASENOTES, eol);
   return { script, meta, sections };
 }
 

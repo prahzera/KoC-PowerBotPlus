@@ -1,4 +1,6 @@
 // ==UserScript==
+// @releasenotes		Arreglo: selector de fuente de actualización reducido a SOLO GitHub (UpdateLocation default 2, @downloadURL/@updateURL de script.meta.js y script.js apuntan a prahzera/KoC-PowerBotPlus releases/latest). La versión y las release notes viven SOLO en package.json y el build las inyecta en @version/@releasenotes/var Version de script.js y script.meta.js.
+// @version		4.35.1
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -41,8 +43,6 @@
 // @original-license            http://creativecommons.org/licenses/by/4.0/
 // @original-changes            Updated to include latest items from KoC
 // @original-author             barbarossa69
-// @version			4.35.0
-// @releasenotes        Added full Spanish translations for the native Throne tab and unified its tab color with the rest of the tabs.
 // @downloadURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.user.js
 // @updateURL https://github.com/prahzera/KoC-PowerBotPlus/releases/latest/download/script.meta.js
 // ==/UserScript==
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.35.0';
+var Version = '4.35.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -480,7 +480,7 @@ var GlobalOptions = {
 	btAccent: 'blue', // Color de acento UI: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'theme' | <hex>
 	btTabColors: { blue: '#2b5aa8', brown: '#7d4d1f', red: '#a83227' }, // Colores base de los grupos de pestañas (tools / automations / key)
 	AutoUpdates: true,
-	UpdateLocation: 1, // 0 - SourceForge, 1 - Greasyfork, 2 - GitHub
+	UpdateLocation: 2, // 2 - GitHub (único origen publicado: releases del fork prahzera/KoC-PowerBotPlus)
 	ExtendedDebugMode: false,
 	InOutToggle: true,
 	MarchPlusToggle: true,
@@ -21237,7 +21237,7 @@ Tabs.Options = {
 		m += '<TR><TD class=xtab><INPUT id=btWideMap type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Enable wide map expansion button on the map panel") + '</td></tr>';
 		m += '<TR><TD class=xtab><INPUT id=btTransparent type=checkbox /></td><TD colspan=2 class=xtab>' + tx("Use Transparent Windows") + '&nbsp;<span style="font-size:14px;color:#FF4D4D;">*</span></td></tr>';
 		m += '<TR><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>' + tx("Game Screen Background Color") + ':&nbsp;<INPUT id=btKocBgColor type=color class=btInput value="' + GlobalOptions.btKocBgColor + '" style="width:40px;height:24px;padding:0;cursor:pointer;vertical-align:middle;"/></td></tr>';
-		var UpdateLocations = { 0: "SourceForge", 1: "GreasyFork", 2: "GitHub", 3: "pbkplowplow.com" };
+		var UpdateLocations = { 2: "GitHub (KoC-PowerBotPlus)" };
 		m += '<TR><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Automatically check for script updates on") + '&nbsp;' + htmlSelector(UpdateLocations, GlobalOptions.UpdateLocation, 'id="btUpdateLocation" class="btInput"') + '&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>' + tx('Check Now') + '</span></a></td></tr>';
 		m += '<TR><td class=xtab><INPUT id=ExtendedDebugChk type=checkbox /></td><td colspan=2 class=xtab>' + tx("Extended debug mode (Activates additional logging)") + '</td></tr>';
 		m += '</table>';

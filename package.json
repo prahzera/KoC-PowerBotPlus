@@ -1,6 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.35.0",
+  "version": "4.35.1",
+  "releasenotes": "Arreglo: selector de fuente de actualización reducido a SOLO GitHub (UpdateLocation default 2, @downloadURL/@updateURL de script.meta.js y script.js apuntan a prahzera/KoC-PowerBotPlus releases/latest). La versión y las release notes viven SOLO en package.json y el build las inyecta en @version/@releasenotes/var Version de script.js y script.meta.js.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {
