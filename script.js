@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Fix: auto-attack with 'Target is a Wilderness' now keeps sending marches and really auto-abandons. The troop check uses the same wave amounts that are actually sent (10% of wave 1 for wilderness), so the loop no longer stalls with 'insufficient troops' after one or two attacks; error 206 abandons the wilderness with the city that owns it instead of the attacking city; failed wilderness abandonments are now logged instead of failing silently; and a watchdog restarts the loop if the opening attack of a route never reports back.
-// @version		4.35.2
+// @releasenotes		Fix: auto-attack with 'Target is a Wilderness' was sending no marches at all (a typo in the new wave-troop helper threw on every attack and the anti-throttle timer swallowed the error, killing the loop). The helper is corrected and the loop is now wrapped so that any error on a route is logged and the loop keeps running instead of dying silently. Keeps the v4.35.2 fixes: troop check uses the amounts actually sent (10% of wave 1 for wilderness), error 206 abandons the wilderness with the city that owns it, failed abandonments are logged.
+// @version		4.35.3
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.35.2';
+var Version = '4.35.3';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -62317,32 +62317,40 @@ Tabs.Attack = {
 		noThrottleClear(t.timer);
 		if (!Options.AttackOptions.Running) return;
 
-		if (idx >= Options.AttackOptions.Routes.length) { idx = 0; } // safety, if route(s) have been deleted.
-		if (idx == 0 && !busted) {
-			t.loopaction = false; // reset loop action indicator for first city
-			t.AttackOrder = [];
-			for (var y = 0; y < Options.AttackOptions.Routes.length; y++) { t.AttackOrder.push(y); }
-			if (Options.AttackOptions.Randomize) {
-				t.AttackOrder = shuffle(t.AttackOrder);
+		try {
+			if (idx >= Options.AttackOptions.Routes.length) { idx = 0; } // safety, if route(s) have been deleted.
+			if (idx == 0 && !busted) {
+				t.loopaction = false; // reset loop action indicator for first city
+				t.AttackOrder = [];
+				for (var y = 0; y < Options.AttackOptions.Routes.length; y++) { t.AttackOrder.push(y); }
+				if (Options.AttackOptions.Randomize) {
+					t.AttackOrder = shuffle(t.AttackOrder);
+				}
+			}
+			t.autodelay = 0; // no delay if no action taken!
+
+			if (idx < Options.AttackOptions.Routes.length) {
+				var a = Options.AttackOptions.Routes[t.AttackOrder[idx]];
+				t.autodelay = 0; // no delay if no action taken...
+
+				if (a.Active) {
+					// do we need another round 1 yet?
+					var now = unixTime();
+					if (a.RoundTwo && a.RoundOne && !busted) {
+						if (now > (parseIntNan(a.LastRoundOne) + 90)) {
+							if (t.doAttack(idx, 1, true)) { return; } // march call initiated, loop handled from there...
+						}
+					}
+					if (a.RoundTwo) { t.doAttack(idx, 2, false); }
+					else { t.doAttack(idx, 1, false); } // if only round 1 just keep sending round 1...
+				}
 			}
 		}
-		t.autodelay = 0; // no delay if no action taken!
-
-		if (idx < Options.AttackOptions.Routes.length) {
-			var a = Options.AttackOptions.Routes[t.AttackOrder[idx]];
-			t.autodelay = 0; // no delay if no action taken...
-
-			if (a.Active) {
-				// do we need another round 1 yet?
-				var now = unixTime();
-				if (a.RoundTwo && a.RoundOne && !busted) {
-					if (now > (parseIntNan(a.LastRoundOne) + 90)) {
-						if (t.doAttack(idx, 1, true)) { return; } // march call initiated, loop handled from there...
-					}
-				}
-				if (a.RoundTwo) { t.doAttack(idx, 2, false); }
-				else { t.doAttack(idx, 1, false); } // if only round 1 just keep sending round 1...
-			}
+		catch (err) { // never let a single bad route kill the whole loop
+			t.disarmBusterWatchdog();
+			logerr(err);
+			actionLog(tx('Attack error on route') + ' ' + (idx + 1) + ': ' + (err.message || err), 'ATTACK');
+			if (t.autodelay < 1) { t.autodelay = Options.AttackOptions.intervalSecs; }
 		}
 		t.checkNextRoute(idx);
 	},
@@ -62421,32 +62429,40 @@ Tabs.Attack = {
 			if (buster) { t.armBusterWatchdog(idx); } // in case the march callback never arrives..
 
 			March.addMarch(params, function (rslt) {
-				if (buster) { t.disarmBusterWatchdog(); }
-				if (rslt.ok) {
-					var now = unixTime();
-					if (r == 1) {
-						Options.AttackOptions.Wave1Count++;
-						Options.AttackOptions.Routes[t.AttackOrder[idx]].LastRoundOne = now;
+				try {
+					if (buster) { t.disarmBusterWatchdog(); }
+					if (rslt.ok) {
+						var now = unixTime();
+						if (r == 1) {
+							Options.AttackOptions.Wave1Count++;
+							Options.AttackOptions.Routes[t.AttackOrder[idx]].LastRoundOne = now;
+						}
+						else {
+							Options.AttackOptions.Wave2Count++;
+						}
+						saveOptions();
+						if (buster) { // wave 1 success!.. reset loop on same route for wave 2...
+							t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
+						}
 					}
 					else {
-						Options.AttackOptions.Wave2Count++;
-					}
-					saveOptions();
-					if (buster) { // wave 1 success!.. reset loop on same route for wave 2...
-						t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
+						if (rslt.error_code == 206 && a.isWild) { // cannot do this to yourself! You still own the wild....
+							t.abandonRouteWild(a);
+						}
+						else {
+							if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }
+							if (GlobalOptions.ExtendedDebugMode) { actionLog(Cities.byID[a.cityId].name + ": Attack Error - " + rslt.msg, 'ATTACK'); }
+						}
+						if (buster) { // wave 1 failed.. reset loop and move on to next route
+							t.checkNextRoute(idx);
+						}
 					}
 				}
-				else {
-					if (rslt.error_code == 206 && a.isWild) { // cannot do this to yourself! You still own the wild....
-						t.abandonRouteWild(a);
-					}
-					else {
-						if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }
-						if (GlobalOptions.ExtendedDebugMode) { actionLog(Cities.byID[a.cityId].name + ": Attack Error - " + rslt.msg, 'ATTACK'); }
-					}
-					if (buster) { // wave 1 failed.. reset loop and move on to next route
-						t.checkNextRoute(idx);
-					}
+				catch (err) {
+					t.disarmBusterWatchdog();
+					logerr(err);
+					actionLog(tx('Attack error on route') + ' ' + (idx + 1) + ': ' + (err.message || err), 'ATTACK');
+					if (buster) { t.checkNextRoute(idx); }
 				}
 			});
 		}
@@ -62467,7 +62483,7 @@ Tabs.Attack = {
 			if (reduce && qty != 0 && parseIntNan(i) < 5) { // supply troops, militia, scouts and pikes only.
 				qty = Math.ceil(qty / 10);
 			}
-			trops[i] = qty;
+			troops[i] = qty;
 		}
 		return troops;
 	},

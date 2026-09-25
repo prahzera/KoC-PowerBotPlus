@@ -974,32 +974,40 @@ Tabs.Attack = {
 		noThrottleClear(t.timer);
 		if (!Options.AttackOptions.Running) return;
 
-		if (idx >= Options.AttackOptions.Routes.length) { idx = 0; } // safety, if route(s) have been deleted.
-		if (idx == 0 && !busted) {
-			t.loopaction = false; // reset loop action indicator for first city
-			t.AttackOrder = [];
-			for (var y = 0; y < Options.AttackOptions.Routes.length; y++) { t.AttackOrder.push(y); }
-			if (Options.AttackOptions.Randomize) {
-				t.AttackOrder = shuffle(t.AttackOrder);
+		try {
+			if (idx >= Options.AttackOptions.Routes.length) { idx = 0; } // safety, if route(s) have been deleted.
+			if (idx == 0 && !busted) {
+				t.loopaction = false; // reset loop action indicator for first city
+				t.AttackOrder = [];
+				for (var y = 0; y < Options.AttackOptions.Routes.length; y++) { t.AttackOrder.push(y); }
+				if (Options.AttackOptions.Randomize) {
+					t.AttackOrder = shuffle(t.AttackOrder);
+				}
+			}
+			t.autodelay = 0; // no delay if no action taken!
+
+			if (idx < Options.AttackOptions.Routes.length) {
+				var a = Options.AttackOptions.Routes[t.AttackOrder[idx]];
+				t.autodelay = 0; // no delay if no action taken...
+
+				if (a.Active) {
+					// do we need another round 1 yet?
+					var now = unixTime();
+					if (a.RoundTwo && a.RoundOne && !busted) {
+						if (now > (parseIntNan(a.LastRoundOne) + 90)) {
+							if (t.doAttack(idx, 1, true)) { return; } // march call initiated, loop handled from there...
+						}
+					}
+					if (a.RoundTwo) { t.doAttack(idx, 2, false); }
+					else { t.doAttack(idx, 1, false); } // if only round 1 just keep sending round 1...
+				}
 			}
 		}
-		t.autodelay = 0; // no delay if no action taken!
-
-		if (idx < Options.AttackOptions.Routes.length) {
-			var a = Options.AttackOptions.Routes[t.AttackOrder[idx]];
-			t.autodelay = 0; // no delay if no action taken...
-
-			if (a.Active) {
-				// do we need another round 1 yet?
-				var now = unixTime();
-				if (a.RoundTwo && a.RoundOne && !busted) {
-					if (now > (parseIntNan(a.LastRoundOne) + 90)) {
-						if (t.doAttack(idx, 1, true)) { return; } // march call initiated, loop handled from there...
-					}
-				}
-				if (a.RoundTwo) { t.doAttack(idx, 2, false); }
-				else { t.doAttack(idx, 1, false); } // if only round 1 just keep sending round 1...
-			}
+		catch (err) { // never let a single bad route kill the whole loop
+			t.disarmBusterWatchdog();
+			logerr(err);
+			actionLog(tx('Attack error on route') + ' ' + (idx + 1) + ': ' + (err.message || err), 'ATTACK');
+			if (t.autodelay < 1) { t.autodelay = Options.AttackOptions.intervalSecs; }
 		}
 		t.checkNextRoute(idx);
 	},
@@ -1078,32 +1086,40 @@ Tabs.Attack = {
 			if (buster) { t.armBusterWatchdog(idx); } // in case the march callback never arrives..
 
 			March.addMarch(params, function (rslt) {
-				if (buster) { t.disarmBusterWatchdog(); }
-				if (rslt.ok) {
-					var now = unixTime();
-					if (r == 1) {
-						Options.AttackOptions.Wave1Count++;
-						Options.AttackOptions.Routes[t.AttackOrder[idx]].LastRoundOne = now;
+				try {
+					if (buster) { t.disarmBusterWatchdog(); }
+					if (rslt.ok) {
+						var now = unixTime();
+						if (r == 1) {
+							Options.AttackOptions.Wave1Count++;
+							Options.AttackOptions.Routes[t.AttackOrder[idx]].LastRoundOne = now;
+						}
+						else {
+							Options.AttackOptions.Wave2Count++;
+						}
+						saveOptions();
+						if (buster) { // wave 1 success!.. reset loop on same route for wave 2...
+							t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
+						}
 					}
 					else {
-						Options.AttackOptions.Wave2Count++;
-					}
-					saveOptions();
-					if (buster) { // wave 1 success!.. reset loop on same route for wave 2...
-						t.timer = noThrottleTimeout(function () { t.doAutoLoop(idx, true); }, (t.autodelay * 1000));
+						if (rslt.error_code == 206 && a.isWild) { // cannot do this to yourself! You still own the wild....
+							t.abandonRouteWild(a);
+						}
+						else {
+							if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }
+							if (GlobalOptions.ExtendedDebugMode) { actionLog(Cities.byID[a.cityId].name + ": Attack Error - " + rslt.msg, 'ATTACK'); }
+						}
+						if (buster) { // wave 1 failed.. reset loop and move on to next route
+							t.checkNextRoute(idx);
+						}
 					}
 				}
-				else {
-					if (rslt.error_code == 206 && a.isWild) { // cannot do this to yourself! You still own the wild....
-						t.abandonRouteWild(a);
-					}
-					else {
-						if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }
-						if (GlobalOptions.ExtendedDebugMode) { actionLog(Cities.byID[a.cityId].name + ": Attack Error - " + rslt.msg, 'ATTACK'); }
-					}
-					if (buster) { // wave 1 failed.. reset loop and move on to next route
-						t.checkNextRoute(idx);
-					}
+				catch (err) {
+					t.disarmBusterWatchdog();
+					logerr(err);
+					actionLog(tx('Attack error on route') + ' ' + (idx + 1) + ': ' + (err.message || err), 'ATTACK');
+					if (buster) { t.checkNextRoute(idx); }
 				}
 			});
 		}
@@ -1124,7 +1140,7 @@ Tabs.Attack = {
 			if (reduce && qty != 0 && parseIntNan(i) < 5) { // supply troops, militia, scouts and pikes only.
 				qty = Math.ceil(qty / 10);
 			}
-			trops[i] = qty;
+			troops[i] = qty;
 		}
 		return troops;
 	},
