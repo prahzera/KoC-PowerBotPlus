@@ -87,6 +87,29 @@ La versión es **una sola fuente de verdad: `package.json` (`version: X.Y.Z`)**.
   el usuario final). Los textos de UI de los tabs (lo ve el usuario en el juego) van en
   español vía el sistema de lang, y no forman parte del header.
 
+## Release notes para el usuario (obligatorio)
+
+`@releasenotes` (vive en `package.json` → `releasenotes`, el build lo inyecta en el
+banner) se escribe **para un usuario promedio del juego, no para quien lee el código**.
+Quien lo lee está mirando la pantalla de actualizaciones de Tampermonkey, no un diff.
+
+- **Nada de jerga técnica**: sin nombres de funciones (`doAttack`, `getWaveTroops`,
+  `checkCityTroops`), sin rutas de archivo (`src/tabs/attack/attack.js`), sin
+  internals (`ReferenceError`, `try/catch`, `callback`, `seed`, `error_code 206`,
+  "typo", "bucle", "worker", "endpoint", "HTTP", "PATCH").
+- **Habla de lo que ve el usuario**: qué opción se arregla, qué deja de pasar y, si
+  hace falta, si debe hacer algo (recargar, volver a activar algo, borrar una ruta).
+- **Empieza por lo que estaba roto**, no por cómo se ha arreglado. El "cómo" es
+  detalle de desarrollo y va en el mensaje de commit (español y técnico), nunca en el banner.
+- **Máximo 2 frases cortas**, en inglés natural. Prefiere "Fixed:" a "Feat:"/"Refactor:".
+- Si el cambio es puramente interno y el usuario no nota nada, dilo así de claro:
+  `Internal fix, no visible change for users.` en vez de inventar una explicación.
+- Ejemplos:
+  - ❌ `Fix: ReferenceError in getWaveTroops (trops vs troops) killed the attack loop silently`
+  - ✅ `Fixed: auto-attack with "Target is a Wilderness" now keeps sending attacks and
+    abandons the wilderness tile automatically instead of stopping.`
+  - ✅ `Fixed: tabs no longer flicker when you switch between them.`
+
 ## Comandos
 
 - Build: `node build.js` (genera `script.js` + `script.meta.js` desde `src/`).

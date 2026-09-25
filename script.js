@@ -1,5 +1,5 @@
 // ==UserScript==
-// @releasenotes		Fix: auto-attack with 'Target is a Wilderness' was sending no marches at all (a typo in the new wave-troop helper threw on every attack and the anti-throttle timer swallowed the error, killing the loop). The helper is corrected and the loop is now wrapped so that any error on a route is logged and the loop keeps running instead of dying silently. Keeps the v4.35.2 fixes: troop check uses the amounts actually sent (10% of wave 1 for wilderness), error 206 abandons the wilderness with the city that owns it, failed abandonments are logged.
+// @releasenotes		Fixed: auto-attack with "Target is a Wilderness" now keeps sending attacks instead of stopping after one or two, and abandons the wilderness tile automatically so your attacks actually go through. If the auto-attack ever gets stuck, it now restarts itself by itself.
 // @version		4.35.3
 // @name			KoC Power Bot Plus
 // @namespace		PBP
