@@ -1,6 +1,6 @@
 {
     "CurrLang": "es",
-    "LangVersion": "20260916",
+    "LangVersion": "20260925",
     "Initialising PowerBot+": "Inicializando PowerBot+",
     "Dashboard": "Panel de control",
     "Server Traffic": "Tráfico del servidor",
@@ -519,6 +519,7 @@
     "Auto-publish Facebook posts for": "Auto-publicar en Facebook para",
     "Custom List ID": "ID de Lista Personalizada",
     "Auto-cancel Facebook posts": "Auto-cancelar publicaciones de Facebook",
+    "Blocked Facebook window": "Ventana de Facebook bloqueada",
     "Merlin's Magical Token Options": "Opciones del Token Mágico de Merlín",
     "Enable automatic domain selection": "Habilitar selección automática de dominio",
     "All Users": "Todos los Usuarios",

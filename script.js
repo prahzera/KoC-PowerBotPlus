@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Fixed: auto-attack with "Target is a Wilderness" now keeps sending attacks instead of stopping after one or two, and abandons the wilderness tile automatically so your attacks actually go through. If the auto-attack ever gets stuck, it now restarts itself by itself.
-// @version		4.35.3
+// @releasenotes		Facebook no longer opens share windows on top of the game: everything the site tries to open towards Facebook is now blocked, including the automatic posts and the window that kept asking you to share. Please note that the Facebook picture of a player, the Facebook group links and the button that posted your treasure chests to Facebook will not open anything anymore.
+// @version		4.35.4
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.35.3';
+var Version = '4.35.4';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -841,12 +841,13 @@ GM_addStyle(".redBanner {background-color:#a00;color:#fff;text-align: center; li
 
 if (document.URL.search(/apps.facebook.com\/kingdomsofcamelot/i) >= 0) {
 	SetGameScreen();
-	HandleInlinePublishPopup();
+	StartPublishWatcher();
 	LoadChecker(true);
 }
 else {
 	if (document.URL.search(/games\/kingdoms-of-camelot\/play/i) >= 0) {
 		SetGameScreen();
+		StartPublishWatcher();
 		LoadChecker(true);
 	}
 	else {
@@ -857,6 +858,7 @@ else {
 		}
 		else {
 			if (document.URL.search(/rycamelot.com|playgardencitygames\.com/i) >= 0) {
+				StartPublishWatcher();
 				if (window.self.location != window.parent.location) { // Fix weird bug with koc game?
 					if (document.URL.search(/main_src.php/i) != -1) {
 						SetGameScreen();
@@ -2114,39 +2116,60 @@ function CheckDisableAds() {
 	setTimeout(CheckDisableAds, 3000);
 }
 
-function HandlePublishPopup() {
-	var myregexp = /USER_ID\"\:\"([0-9]+)"/;
-	var match = myregexp.exec(document.documentElement.outerHTML)[1];
-	if (!match) {
-		myregexp = /ACCOUNT_ID\"\:\"([0-9]+)"/;
-		match = myregexp.exec(document.documentElement.outerHTML)[1];
-	}
-	if (!match) { return; }
-	readUserOptions(match);
+function PublishPopupUserId() {
+	if (uW && uW.user_id) { return String(uW.user_id); }
+	var html = document.documentElement.outerHTML;
+	var match = /USER_ID\"\:\"([0-9]+)"/.exec(html);
+	if (!match) { match = /ACCOUNT_ID\"\:\"([0-9]+)"/.exec(html); }
+	return match ? match[1] : '';
+}
 
-	if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
-		var FBInputForm = ById('uiserver_form');
-		if (!FBInputForm) FBInputForm = ById('platformDialogForm');
+function PublishPopupForm() {
+	var FBInputForm = ById('uiserver_form');
+	if (!FBInputForm) { FBInputForm = ById('platformDialogForm'); }
+	return FBInputForm;
+}
+
+function HandlePublishPopup() {
+	try {
+		var FBInputForm = PublishPopupForm();
 		if (FBInputForm) {
-			CheckPublish(FBInputForm);
+			var match = PublishPopupUserId();
+			if (match) {
+				readUserOptions(match);
+				if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
+					CheckPublish(FBInputForm);
+				}
+			}
 		}
 	}
+	catch (e) { logerr(e); }
 	setTimeout(HandlePublishPopup, 1000);
 }
 
 function HandleInlinePublishPopup() {
-	var FBInputForm = ById('platformDialogForm');
-	if (FBInputForm) {
-		var myregexp = /&amp;to=([0-9]+)&/;
-		var match = myregexp.exec(document.documentElement.outerHTML)[1];
-		if (match) {
-			readUserOptions(match);
-			if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
-				CheckPublish(FBInputForm);
+	try {
+		var FBInputForm = PublishPopupForm();
+		if (FBInputForm) {
+			var match = /&amp;to=([0-9]+)&/.exec(document.documentElement.outerHTML);
+			if (match) {
+				readUserOptions(match[1]);
+				if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
+					CheckPublish(FBInputForm);
+				}
 			}
 		}
 	}
+	catch (e) { logerr(e); }
 	setTimeout(HandleInlinePublishPopup, 1000);
+}
+
+/** starts the publish/cancel watcher on any page of the game (portal, standalone or canvas) */
+function StartPublishWatcher() {
+	if (StartPublishWatcher.started) { return; }
+	StartPublishWatcher.started = true;
+	HandlePublishPopup();
+	HandleInlinePublishPopup();
 }
 
 function CheckPublish(FBInputForm) {
@@ -2253,27 +2276,142 @@ function CheckHideFBDialogs() {
 	_massSalvageObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
 })();
 
-/** Block Facebook publish popups (feed dialog / sharer / apps.facebook.com) **/
+/** Block Facebook share popups and windows (any facebook host) **/
 
-function BlockPublishPopups() {
+var FBHosts = ['facebook.com', 'fb.com', 'fb.me', 'fb.gg', 'messenger.com'];
+
+function FBIsFacebookUrl(url) {
+	if (!url) { return false; }
+	var s = String(url);
+	try { s = decodeURIComponent(s); } catch (e) { }
+	s = s.replace(/&amp;/gi, '&');
+	if (!s) { return false; }
+	var host = '';
+	var m = s.match(/^(?:[a-z][a-z0-9+.\-]*:)?\/\/([^/?#]*)/i);
+	if (m) { host = m[1]; }
+	else {
+		// any other scheme (data:, blob:, mailto:, javascript:) is never facebook
+		if (/^[a-z][a-z0-9+.\-]*:/i.test(s)) { return false; }
+		// relative url => same host as this page, so never facebook
+		return false;
+	}
+	if (host.indexOf('@') > -1) { host = host.split('@').pop(); }
+	host = host.toLowerCase().split(':')[0];
+	if (!host) { return false; }
+	for (var i = 0; i < FBHosts.length; i++) {
+		if (host == FBHosts[i] || host.slice(-(FBHosts[i].length + 1)) == '.' + FBHosts[i]) { return true; }
+	}
+	return false;
+}
+
+function FBBlocked(kind, url) {
+	var msg = tx('Blocked Facebook window') + ' (' + kind + ') ' + String(url).substring(0, 150);
+	logit(msg);
+	try { actionLog(msg); } catch (e) { }
+	try { uW.PBBlockedFBPopups = (uW.PBBlockedFBPopups || 0) + 1; } catch (e) { }
+}
+
+var FBBridgeOpen = null;
+
+function FBInstallOpenGuard() {
 	try {
-		var _origOpen = uW.open;
-		var _fbPublishRe = /facebook\.com\/(dialog\/feed|sharer\/|sharer\.php)|apps\.facebook\.com/i;
-		uW.open = function () {
+		var w = uW;
+		if (!w) { return; }
+		if (FBBridgeOpen && w.open === FBBridgeOpen) { return; } // guard healthy
+
+		var orig = w.open;
+		if (typeof orig != 'function') { return; }
+
+		var guard = function () {
 			var url = arguments.length ? arguments[0] : '';
-			if (typeof url == 'string' && _fbPublishRe.test(url)) {
-				logit('Blocked Facebook publish popup: ' + url);
+			if (FBIsFacebookUrl(url)) {
+				FBBlocked('pop-up', url);
 				return null;
 			}
-			return _origOpen.apply(uW, arguments);
+			return orig.apply(w, arguments);
 		};
+		FBBridgeOpen = guard;
+
+		try {
+			// self healing: if the page replaces window.open we keep guarding and
+			// forward everything that is not facebook to the new function
+			Object.defineProperty(w, 'open', {
+				configurable: true,
+				enumerable: true,
+				get: function () { return guard; },
+				set: function (v) { if (typeof v == 'function') { orig = v; } }
+			});
+		}
+		catch (e) {
+			w.open = guard; // defineProperty not available on this window
+		}
 	}
-	catch (err) {
-		logerr(err);
+	catch (err) { logerr(err); }
+}
+
+function FBInstallLinkGuard() {
+	try {
+		if (!document.body || document.PBFBLinkGuard) { return; }
+		document.addEventListener('click', function (ev) {
+			var node = ev.target;
+			var link = null;
+			while (node && node.nodeType === 1) {
+				if (String(node.tagName).toUpperCase() == 'A' && node.href) { link = node; break; }
+				node = node.parentNode;
+			}
+			if (!link || !FBIsFacebookUrl(link.href)) { return; }
+			FBBlocked('link', link.href);
+			ev.preventDefault();
+			ev.stopImmediatePropagation();
+		}, true);
+		document.PBFBLinkGuard = true;
+	}
+	catch (err) { logerr(err); }
+}
+
+function FBRemoveFrames(root) {
+	if (!root || root.nodeType !== 1) { return; }
+	var frames = [];
+	if (String(root.tagName).toUpperCase() == 'IFRAME') { frames.push(root); }
+	if (root.querySelectorAll) {
+		var found = root.querySelectorAll('iframe[src]');
+		for (var i = 0; i < found.length; i++) { frames.push(found[i]); }
+	}
+	for (var f = 0; f < frames.length; f++) {
+		var src = frames[f].getAttribute('src') || '';
+		if (!FBIsFacebookUrl(src)) { continue; }
+		FBBlocked('frame', src);
+		try { frames[f].parentNode.removeChild(frames[f]); }
+		catch (e) { try { frames[f].style.display = 'none'; } catch (e2) { } }
 	}
 }
 
-BlockPublishPopups();
+function FBInstallFrameGuard() {
+	try {
+		if (document.PBFBFrameGuard) { return; }
+		var observer = new MutationObserver(function (mutations) {
+			for (var m = 0; m < mutations.length; m++) {
+				if (mutations[m].addedNodes) {
+					for (var n = 0; n < mutations[m].addedNodes.length; n++) { FBRemoveFrames(mutations[m].addedNodes[n]); }
+				}
+				if (mutations[m].type == 'attributes') { FBRemoveFrames(mutations[m].target); }
+			}
+		});
+		observer.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+		document.PBFBFrameGuard = observer;
+		FBRemoveFrames(document.body);
+	}
+	catch (err) { logerr(err); }
+}
+
+function BlockFacebookPopups() {
+	FBInstallOpenGuard();
+	FBInstallLinkGuard();
+	FBInstallFrameGuard();
+}
+
+BlockFacebookPopups();
+
 function CheckTokenCollection() {
 	LoadChecker(false);
 	var user_id = uW.user_id;
@@ -3334,6 +3472,8 @@ function EverySecond() {
 	try {
 
 		SecondLooper = SecondLooper + 1;
+
+		FBInstallOpenGuard(); // re-arm the Facebook popup guard if the page replaced window.open
 
 		inc = [];
 		incCity = [];

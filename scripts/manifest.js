@@ -67,7 +67,7 @@ const MANIFEST = [
   'auth/alerts.js', // CheckRemoveAlert(1936), CheckDisableAds(1946)
   'auth/publish.js', // HandlePublishPopup(1961), HandleInlinePublishPopup(1981), CheckPublish(1996)
   'auth/hide-fb-dialogs.js', // CheckHideFBDialogs(2052)
-  'auth/block-popups.js', // BlockPublishPopups — bloquea window.open de popups de publicar en Facebook
+  'auth/block-popups.js', // BlockFacebookPopups — bloquea popups/iframes/enlaces de Facebook (window.open auto-reparable + click + MutationObserver)
   'auth/tokens.js', // CheckTokenCollection(2058), CheckTokenDay(2186)
   'auth/widescreen.js', // WideScreen(2212)
   'auth/afk.js', // /** Afk detector **/ (2577) + afkdetector(2579)

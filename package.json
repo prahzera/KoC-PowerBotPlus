@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.35.3",
-  "releasenotes": "Fixed: auto-attack with \"Target is a Wilderness\" now keeps sending attacks instead of stopping after one or two, and abandons the wilderness tile automatically so your attacks actually go through. If the auto-attack ever gets stuck, it now restarts itself by itself.",
+  "version": "4.35.4",
+  "releasenotes": "Facebook no longer opens share windows on top of the game: everything the site tries to open towards Facebook is now blocked, including the automatic posts and the window that kept asking you to share. Please note that the Facebook picture of a player, the Facebook group links and the button that posted your treasure chests to Facebook will not open anything anymore.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {

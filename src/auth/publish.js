@@ -1,36 +1,57 @@
-function HandlePublishPopup() {
-	var myregexp = /USER_ID\"\:\"([0-9]+)"/;
-	var match = myregexp.exec(document.documentElement.outerHTML)[1];
-	if (!match) {
-		myregexp = /ACCOUNT_ID\"\:\"([0-9]+)"/;
-		match = myregexp.exec(document.documentElement.outerHTML)[1];
-	}
-	if (!match) { return; }
-	readUserOptions(match);
+function PublishPopupUserId() {
+	if (uW && uW.user_id) { return String(uW.user_id); }
+	var html = document.documentElement.outerHTML;
+	var match = /USER_ID\"\:\"([0-9]+)"/.exec(html);
+	if (!match) { match = /ACCOUNT_ID\"\:\"([0-9]+)"/.exec(html); }
+	return match ? match[1] : '';
+}
 
-	if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
-		var FBInputForm = ById('uiserver_form');
-		if (!FBInputForm) FBInputForm = ById('platformDialogForm');
+function PublishPopupForm() {
+	var FBInputForm = ById('uiserver_form');
+	if (!FBInputForm) { FBInputForm = ById('platformDialogForm'); }
+	return FBInputForm;
+}
+
+function HandlePublishPopup() {
+	try {
+		var FBInputForm = PublishPopupForm();
 		if (FBInputForm) {
-			CheckPublish(FBInputForm);
+			var match = PublishPopupUserId();
+			if (match) {
+				readUserOptions(match);
+				if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
+					CheckPublish(FBInputForm);
+				}
+			}
 		}
 	}
+	catch (e) { logerr(e); }
 	setTimeout(HandlePublishPopup, 1000);
 }
 
 function HandleInlinePublishPopup() {
-	var FBInputForm = ById('platformDialogForm');
-	if (FBInputForm) {
-		var myregexp = /&amp;to=([0-9]+)&/;
-		var match = myregexp.exec(document.documentElement.outerHTML)[1];
-		if (match) {
-			readUserOptions(match);
-			if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
-				CheckPublish(FBInputForm);
+	try {
+		var FBInputForm = PublishPopupForm();
+		if (FBInputForm) {
+			var match = /&amp;to=([0-9]+)&/.exec(document.documentElement.outerHTML);
+			if (match) {
+				readUserOptions(match[1]);
+				if (UserOptions.autoPublishGamePopups || UserOptions.autoCancelGamePopups) {
+					CheckPublish(FBInputForm);
+				}
 			}
 		}
 	}
+	catch (e) { logerr(e); }
 	setTimeout(HandleInlinePublishPopup, 1000);
+}
+
+/** starts the publish/cancel watcher on any page of the game (portal, standalone or canvas) */
+function StartPublishWatcher() {
+	if (StartPublishWatcher.started) { return; }
+	StartPublishWatcher.started = true;
+	HandlePublishPopup();
+	HandleInlinePublishPopup();
 }
 
 function CheckPublish(FBInputForm) {

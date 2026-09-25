@@ -38,12 +38,13 @@ GM_addStyle(".redBanner {background-color:#a00;color:#fff;text-align: center; li
 
 if (document.URL.search(/apps.facebook.com\/kingdomsofcamelot/i) >= 0) {
 	SetGameScreen();
-	HandleInlinePublishPopup();
+	StartPublishWatcher();
 	LoadChecker(true);
 }
 else {
 	if (document.URL.search(/games\/kingdoms-of-camelot\/play/i) >= 0) {
 		SetGameScreen();
+		StartPublishWatcher();
 		LoadChecker(true);
 	}
 	else {
@@ -54,6 +55,7 @@ else {
 		}
 		else {
 			if (document.URL.search(/rycamelot.com|playgardencitygames\.com/i) >= 0) {
+				StartPublishWatcher();
 				if (window.self.location != window.parent.location) { // Fix weird bug with koc game?
 					if (document.URL.search(/main_src.php/i) != -1) {
 						SetGameScreen();

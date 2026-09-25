@@ -5,6 +5,8 @@ function EverySecond() {
 
 		SecondLooper = SecondLooper + 1;
 
+		FBInstallOpenGuard(); // re-arm the Facebook popup guard if the page replaced window.open
+
 		inc = [];
 		incCity = [];
 
