@@ -1,4 +1,6 @@
-function AbandonWild(tileId, xCoord, yCoord, cityId, notify) {
+var wildAbandonFailLog = {};
+
+function AbandonWild(tileId, xCoord, yCoord, cityId, notify, onFail) {
 	var params = uW.Object.clone(uW.g_ajaxparams);
 	params.tid = tileId;
 	params.x = xCoord;
@@ -27,10 +29,19 @@ function AbandonWild(tileId, xCoord, yCoord, cityId, notify) {
 						}
 					}
 				}
-				if (Seed.wilderness["city" + cityId] && Seed.wilderness["city" + cityId]["t" + tileId]) {
-					delete Seed.wilderness["city" + cityId]["t" + tileId];
-					if (Object.keys(Seed.wilderness["city" + cityId]).length == 0) {
-						Seed.wilderness["city" + cityId] = uWCloneInto([]);
+				// drop the tile from whichever city is holding it in the seed
+				for (var c = 0; c < Cities.numCities; c++) {
+					var cId = Cities.cities[c].id;
+					var cWilds = Seed.wilderness["city" + cId];
+					if (!cWilds) { continue; }
+					if (cWilds["t" + tileId]) { delete cWilds["t" + tileId]; }
+					else {
+						for (var k in cWilds) {
+							if (cWilds[k] && cWilds[k].tileId == tileId) { delete cWilds[k]; }
+						}
+					}
+					if (Object.keys(cWilds).length == 0) {
+						Seed.wilderness["city" + cId] = uWCloneInto([]);
 					}
 				}
 				if (rslt.error_code == 401) { // manually force return any supposedly encamped marches.. hopefully will free up knights?
@@ -50,6 +61,24 @@ function AbandonWild(tileId, xCoord, yCoord, cityId, notify) {
 				}
 				if (notify) { notify(); }
 			}
+			else { // the tile is still owned - say so instead of failing silently
+				var emsg = rslt.msg || ('Error Code (' + rslt.error_code + ')');
+				var fkey = 't' + tileId;
+				if (!wildAbandonFailLog[fkey] || (uW.unixtime() - wildAbandonFailLog[fkey]) > 60) {
+					wildAbandonFailLog[fkey] = uW.unixtime();
+					var cname = (Cities.byID[cityId] && Cities.byID[cityId].name) ? Cities.byID[cityId].name : cityId;
+					actionLog(tx('Could not abandon wilderness at') + ' ' + xCoord + ',' + yCoord + ' (' + tx('from city') + ' ' + cname + '): ' + emsg, 'WILD');
+				}
+				if (onFail) { onFail(emsg); }
+			}
+		},
+		onFailure: function () {
+			var fkey = 't' + tileId;
+			if (!wildAbandonFailLog[fkey] || (uW.unixtime() - wildAbandonFailLog[fkey]) > 60) {
+				wildAbandonFailLog[fkey] = uW.unixtime();
+				actionLog(tx('Could not abandon wilderness at') + ' ' + xCoord + ',' + yCoord + ': ' + tx('AJAX error'), 'WILD');
+			}
+			if (onFail) { onFail(tx('AJAX error')); }
 		},
 	});
 }

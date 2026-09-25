@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.35.1",
-  "releasenotes": "Arreglo: selector de fuente de actualización reducido a SOLO GitHub (UpdateLocation default 2, @downloadURL/@updateURL de script.meta.js y script.js apuntan a prahzera/KoC-PowerBotPlus releases/latest). La versión y las release notes viven SOLO en package.json y el build las inyecta en @version/@releasenotes/var Version de script.js y script.meta.js.",
+  "version": "4.35.2",
+  "releasenotes": "Fix: auto-attack with 'Target is a Wilderness' now keeps sending marches and really auto-abandons. The troop check uses the same wave amounts that are actually sent (10% of wave 1 for wilderness), so the loop no longer stalls with 'insufficient troops' after one or two attacks; error 206 abandons the wilderness with the city that owns it instead of the attacking city; failed wilderness abandonments are now logged instead of failing silently; and a watchdog restarts the loop if the opening attack of a route never reports back.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {

@@ -77,6 +77,16 @@ La versión es **una sola fuente de verdad: `package.json` (`version: X.Y.Z`)**.
   (después del bump), no un número inventado: si agregaste un tab bumpeaste featu­re y
   el nombre de commit DEBE coincidir con la `X.Y.Z` compilada.
 
+## Idioma (obligatorio)
+
+- **Commits en español**: el mensaje de commit SIEMPRE en español (título y detalle),
+  reflejando el cambio real, con la versión real compilada si es release.
+- **Textos del header en inglés**: el banner del userscript (`src/meta/header.js`:
+  `@description`, `@releasenotes`, `@name`, comentarios del banner) y cualquier texto
+  que se compila a `script.js`/`script.meta.js` va en INGLÉS (lo lee Tampermonkey, no
+  el usuario final). Los textos de UI de los tabs (lo ve el usuario en el juego) van en
+  español vía el sistema de lang, y no forman parte del header.
+
 ## Comandos
 
 - Build: `node build.js` (genera `script.js` + `script.meta.js` desde `src/`).

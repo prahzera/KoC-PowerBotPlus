@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Arreglo: selector de fuente de actualización reducido a SOLO GitHub (UpdateLocation default 2, @downloadURL/@updateURL de script.meta.js y script.js apuntan a prahzera/KoC-PowerBotPlus releases/latest). La versión y las release notes viven SOLO en package.json y el build las inyecta en @version/@releasenotes/var Version de script.js y script.meta.js.
-// @version		4.35.1
+// @releasenotes		Fix: auto-attack with 'Target is a Wilderness' now keeps sending marches and really auto-abandons. The troop check uses the same wave amounts that are actually sent (10% of wave 1 for wilderness), so the loop no longer stalls with 'insufficient troops' after one or two attacks; error 206 abandons the wilderness with the city that owns it instead of the attacking city; failed wilderness abandonments are now logged instead of failing silently; and a watchdog restarts the loop if the opening attack of a route never reports back.
+// @version		4.35.2
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.35.1';
+var Version = '4.35.2';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -6615,7 +6615,9 @@ function PlotAllianceHQ(eMap, Data) {
 	}
 }
 
-function AbandonWild(tileId, xCoord, yCoord, cityId, notify) {
+var wildAbandonFailLog = {};
+
+function AbandonWild(tileId, xCoord, yCoord, cityId, notify, onFail) {
 	var params = uW.Object.clone(uW.g_ajaxparams);
 	params.tid = tileId;
 	params.x = xCoord;
@@ -6644,10 +6646,19 @@ function AbandonWild(tileId, xCoord, yCoord, cityId, notify) {
 						}
 					}
 				}
-				if (Seed.wilderness["city" + cityId] && Seed.wilderness["city" + cityId]["t" + tileId]) {
-					delete Seed.wilderness["city" + cityId]["t" + tileId];
-					if (Object.keys(Seed.wilderness["city" + cityId]).length == 0) {
-						Seed.wilderness["city" + cityId] = uWCloneInto([]);
+				// drop the tile from whichever city is holding it in the seed
+				for (var c = 0; c < Cities.numCities; c++) {
+					var cId = Cities.cities[c].id;
+					var cWilds = Seed.wilderness["city" + cId];
+					if (!cWilds) { continue; }
+					if (cWilds["t" + tileId]) { delete cWilds["t" + tileId]; }
+					else {
+						for (var k in cWilds) {
+							if (cWilds[k] && cWilds[k].tileId == tileId) { delete cWilds[k]; }
+						}
+					}
+					if (Object.keys(cWilds).length == 0) {
+						Seed.wilderness["city" + cId] = uWCloneInto([]);
 					}
 				}
 				if (rslt.error_code == 401) { // manually force return any supposedly encamped marches.. hopefully will free up knights?
@@ -6667,6 +6678,24 @@ function AbandonWild(tileId, xCoord, yCoord, cityId, notify) {
 				}
 				if (notify) { notify(); }
 			}
+			else { // the tile is still owned - say so instead of failing silently
+				var emsg = rslt.msg || ('Error Code (' + rslt.error_code + ')');
+				var fkey = 't' + tileId;
+				if (!wildAbandonFailLog[fkey] || (uW.unixtime() - wildAbandonFailLog[fkey]) > 60) {
+					wildAbandonFailLog[fkey] = uW.unixtime();
+					var cname = (Cities.byID[cityId] && Cities.byID[cityId].name) ? Cities.byID[cityId].name : cityId;
+					actionLog(tx('Could not abandon wilderness at') + ' ' + xCoord + ',' + yCoord + ' (' + tx('from city') + ' ' + cname + '): ' + emsg, 'WILD');
+				}
+				if (onFail) { onFail(emsg); }
+			}
+		},
+		onFailure: function () {
+			var fkey = 't' + tileId;
+			if (!wildAbandonFailLog[fkey] || (uW.unixtime() - wildAbandonFailLog[fkey]) > 60) {
+				wildAbandonFailLog[fkey] = uW.unixtime();
+				actionLog(tx('Could not abandon wilderness at') + ' ' + xCoord + ',' + yCoord + ': ' + tx('AJAX error'), 'WILD');
+			}
+			if (onFail) { onFail(tx('AJAX error')); }
 		},
 	});
 }
@@ -61321,6 +61350,11 @@ Tabs.Attack = {
 	myDiv: null,
 	dcp0: null,
 	timer: null,
+	busterTimer: null,
+	busterPending: false,
+	busterIdx: 0,
+	abandonPending: {},
+	abandonWarned: {},
 	autodelay: 0,
 	loopaction: false,
 	mercmode: 0,
@@ -61617,10 +61651,12 @@ Tabs.Attack = {
 			Options.AttackOptions.Running = false;
 			obj.value = tx("Attack = OFF");
 			noThrottleClear(t.timer);
+			t.disarmBusterWatchdog();
 		}
 		else {
 			Options.AttackOptions.Running = true;
 			obj.value = tx("Attack = ON");
+			t.disarmBusterWatchdog();
 			// clear the last round one field on all routes
 			var n = Options.AttackOptions.Routes.length;
 			while (n--) {
@@ -62368,24 +62404,12 @@ Tabs.Attack = {
 			params.champid = champid;
 		}
 
+		var troops = t.getWaveTroops(a, r);
 		var totalsend = 0;
 		for (var ui in CM.UNIT_TYPES) {
 			var i = CM.UNIT_TYPES[ui];
-			if (r == 1) { params["u" + i] = parseIntNan(a.RoundOneTroops[i]); }
-			else { params["u" + i] = parseIntNan(a.RoundTwoTroops[i]); }
+			params["u" + i] = troops[i];
 			totalsend += params["u" + i];
-		}
-
-		if (r == 1) {
-			var now = unixTime();
-			if (now < (parseInt(a.LastRoundOne) + 500) && a.isWild) {
-				for (var ui in CM.UNIT_TYPES) {
-					var i = CM.UNIT_TYPES[ui];
-					if (params["u" + i] != 0 && parseIntNan(i) < 5) { // supply troops, militia, scouts and pikes only.
-						params["u" + i] = Math.ceil(params["u" + i] / 10);
-					}
-				}
-			}
 		}
 
 		if (totalsend == 0) { // final safety net
@@ -62394,8 +62418,10 @@ Tabs.Attack = {
 		else {
 			t.autodelay = Options.AttackOptions.intervalSecs; // march is required, so delay subsequent loop
 			t.loopaction = true;
+			if (buster) { t.armBusterWatchdog(idx); } // in case the march callback never arrives..
 
 			March.addMarch(params, function (rslt) {
+				if (buster) { t.disarmBusterWatchdog(); }
 				if (rslt.ok) {
 					var now = unixTime();
 					if (r == 1) {
@@ -62411,11 +62437,8 @@ Tabs.Attack = {
 					}
 				}
 				else {
-					if (rslt.error_code == 206) { // cannot do this to yourself! You still own the wild....
-						//						if (a.isWild) {
-						var tid = CalculateTileId(a.target_x, a.target_y);
-						if (tid != 0) { AbandonWild(tid, a.target_x, a.target_y, a.cityId); }
-						//						}
+					if (rslt.error_code == 206 && a.isWild) { // cannot do this to yourself! You still own the wild....
+						t.abandonRouteWild(a);
 					}
 					else {
 						if (!rslt.msg) { rslt.msg = tx('Error Code (') + rslt.error_code + ')'; }
@@ -62431,21 +62454,95 @@ Tabs.Attack = {
 		return true; // march was requested...
 	},
 
+	// amounts of each unit type that will really be sent for this wave.
+	// For wilderness routes wave 1 is cut down to 10% of the specified amount on the
+	// attacks that follow the first one - the troop check must use these same amounts,
+	// otherwise the loop stops with "insufficient troops" after the first attack or two.
+	getWaveTroops: function (a, r) {
+		var reduce = (r == 1) && a.isWild && (unixTime() < (parseIntNan(a.LastRoundOne) + 500));
+		var troops = {};
+		for (var ui in CM.UNIT_TYPES) {
+			var i = CM.UNIT_TYPES[ui];
+			var qty = parseIntNan((r == 1) ? a.RoundOneTroops[i] : a.RoundTwoTroops[i]);
+			if (reduce && qty != 0 && parseIntNan(i) < 5) { // supply troops, militia, scouts and pikes only.
+				qty = Math.ceil(qty / 10);
+			}
+			trops[i] = qty;
+		}
+		return troops;
+	},
+
 	checkCityTroops: function (round, idx) {
 		var t = Tabs.Attack;
 		var a = Options.AttackOptions.Routes[t.AttackOrder[idx]];
-		var result = true;
+		if (!a) { return false; }
+		var have = Seed.units['city' + a.cityId];
+		if (!have) { return false; }
+		var own = t.getWaveTroops(a, round);
+		var other = (round == 1 && a.RoundTwo) ? t.getWaveTroops(a, 2) : null;
 		for (var ui in CM.UNIT_TYPES) {
 			var i = CM.UNIT_TYPES[ui];
-			var needed = 0;
-			for (var r = round; r <= 2; r++) { // wave 1 checks both wave requirements
-				if (r == 1) { needed += parseIntNan(a.RoundOneTroops[i]); }
-				else { needed += parseIntNan(a.RoundTwoTroops[i]); }
-				result = (result && (parseIntNan(Seed.units['city' + a.cityId]['unt' + i]) >= needed));
-				if (!result) { return result; }
+			var needed = own[i];
+			if (other) { needed += other[i]; } // wave 1 also has to leave enough troops behind for wave 2
+			if (parseIntNan(have['unt' + i]) < needed) { return false; }
+		}
+		return true;
+	},
+
+	// locate which of our cities owns the wilderness at these co-ords (null if nobody owns it)
+	findWild: function (x, y) {
+		for (var c = 0; c < Cities.numCities; c++) {
+			var city = Cities.cities[c];
+			var cWilds = Seed.wilderness['city' + city.id];
+			if (!cWilds) { continue; }
+			for (var k in cWilds) {
+				var w = cWilds[k];
+				if (w && w.xCoord == x && w.yCoord == y) { return { cityId: city.id, wild: w }; }
 			}
 		}
-		return result;
+		return null;
+	},
+
+	// abandon the wilderness a route points at, using the city that actually owns it
+	abandonRouteWild: function (a) {
+		var t = Tabs.Attack;
+		var found = t.findWild(a.target_x, a.target_y);
+		var tid = 0;
+		var cid = a.cityId;
+		if (found) {
+			tid = parseIntNan(found.wild.tileId);
+			cid = found.cityId;
+		}
+		else { tid = CalculateTileId(a.target_x, a.target_y); } // seed out of date, fall back on the route city
+		if (!tid) { return false; }
+		if (t.abandonPending[tid] && (unixTime() - t.abandonPending[tid]) < 60) { return true; } // request already on its way..
+		t.abandonPending[tid] = unixTime();
+		var clear = function () { delete t.abandonPending[tid]; };
+		AbandonWild(tid, a.target_x, a.target_y, cid, clear, clear);
+		return true;
+	},
+
+	armBusterWatchdog: function (idx) {
+		var t = Tabs.Attack;
+		t.busterIdx = idx;
+		t.busterPending = true;
+		noThrottleClear(t.busterTimer);
+		t.busterTimer = noThrottleTimeout(function () {
+			if (!t.busterPending) { return; }
+			t.busterPending = false;
+			if (!Options.AttackOptions.Running) { return; }
+			// the opening attack of the route never reported back - resume the loop instead of stalling
+			if (GlobalOptions.ExtendedDebugMode) { actionLog(tx('Attack loop restarted, no answer from the opening attack of route') + ' ' + (idx + 1), 'ATTACK'); }
+			if (t.autodelay < 1) { t.autodelay = Options.AttackOptions.intervalSecs; }
+			t.checkNextRoute(t.busterIdx);
+		}, 30000);
+	},
+
+	disarmBusterWatchdog: function () {
+		var t = Tabs.Attack;
+		t.busterPending = false;
+		noThrottleClear(t.busterTimer);
+		t.busterTimer = null;
 	},
 
 	checkAbandonWild: function () {
@@ -62453,21 +62550,19 @@ Tabs.Attack = {
 		if (!Options.AttackOptions.Running) { return; }
 		for (var m in Options.AttackOptions.Routes) {
 			var a = Options.AttackOptions.Routes[m];
-			if (a.isWild) {
-				for (var c = 0; c < Cities.numCities; c++) {
-					var city = Cities.cities[c];
-					var cWilds = Seed.wilderness['city' + city.id];
-					if (matTypeof(cWilds) == 'object') {
-						for (var k in Seed.wilderness['city' + city.id]) {
-							var w = Seed.wilderness['city' + city.id][k];
-							if (w.xCoord == a.target_x && w.yCoord == a.target_y) {
-								AbandonWild(w.tileId, w.xCoord, w.yCoord, city.id);
-								return; // only abandon one per loop
-							}
-						}
-					}
+			if (!a.isWild || a.target_x === '' || a.target_y === '') { continue; }
+			var found = t.findWild(a.target_x, a.target_y);
+			if (!found) {
+				// nobody owns that tile (or the seed has not caught up yet) - nothing to abandon
+				var wnow = unixTime();
+				var wkey = a.target_x + ':' + a.target_y;
+				if (!t.abandonWarned[wkey] || (wnow - t.abandonWarned[wkey]) > 300) {
+					t.abandonWarned[wkey] = wnow;
+					actionLog(tx('No city owns the wilderness of this attack route, nothing to abandon') + ' (' + a.target_x + ',' + a.target_y + ')', 'ATTACK');
 				}
+				continue;
 			}
+			if (t.abandonRouteWild(a)) { return; } // only abandon one per loop
 		}
 	},
 
