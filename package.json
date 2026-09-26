@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.35.4",
-  "releasenotes": "Facebook no longer opens share windows on top of the game: everything the site tries to open towards Facebook is now blocked, including the automatic posts and the window that kept asking you to share. Please note that the Facebook picture of a player, the Facebook group links and the button that posted your treasure chests to Facebook will not open anything anymore.",
+  "version": "4.36.0",
+  "releasenotes": "Fewer buttons and a clearer Search results bar: selections now survive re-rendering and unusable buttons are dimmed instead of failing silently. When a search finds cities you have not touched in a long time, the bot now asks whether to add them to your blacklist so their coordinates are skipped in future searches.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {

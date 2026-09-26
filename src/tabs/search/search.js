@@ -8,6 +8,8 @@ Tabs.Search = {
 	MAX_SHOW_WHILE_RUNNING: 500,
 	pageSize: 250,
 	pageNum: 1,
+	pageStart: 0,
+	pageEnd: 0,
 	renderTimer: null,
 	lastLoginIdx: {},
 	lastLoginEnqLen: 0,
@@ -81,6 +83,9 @@ Tabs.Search = {
 	lastLoginTimer: null,
 	blacklist: {},
 	blacklistDirty: false,
+	selected: {},
+	blacklistOfferPending: false,
+	lastLoginActive: 0,
 
 	Options: {
 		SearchType: 0, // 0 - city, 1 - barb camp, 2 - wild, 3 - dark forest, 4 - merc camp, 5 - nomad camp, 6 - alliance HQ - anything greater than 1, treat like wild!
@@ -422,9 +427,241 @@ Tabs.Search = {
 		if (matTypeof(l) == 'object') { t.blacklist = l; }
 	},
 
+	// ─────────── selección de filas ───────────
+	// La fuente de verdad es t.selected (mapa "x_y" -> 1). Nunca se lee el checkbox
+	// del DOM para decidir: con más de pageSize resultados los checkboxes de las
+	// filas fuera de la página no existen y ById devuelve null.
+
+	ckOf: function (row) { return row[0] + '_' + row[1]; },
+
+	isSelected: function (row) {
+		return Tabs.Search.selected[Tabs.Search.ckOf(row)] ? true : false;
+	},
+
+	setSelected: function (row, on) {
+		var t = Tabs.Search;
+		var ck = t.ckOf(row);
+		if (on) { t.selected[ck] = 1; }
+		else { delete t.selected[ck]; }
+	},
+
+	selectedCount: function () {
+		var t = Tabs.Search;
+		var n = 0;
+		for (var k in t.selected) { if (t.selected.hasOwnProperty(k)) { n++; } }
+		return n;
+	},
+
+	selectedRows: function () {
+		var t = Tabs.Search;
+		var out = [];
+		for (var k = 0; k < t.dat.length; k++) {
+			if (t.selected[t.ckOf(t.dat[k])]) { out.push(t.dat[k]); }
+		}
+		return out;
+	},
+
+	// Sólo la página que se está viendo (la tabla está paginada)
+	visibleRows: function () {
+		var t = Tabs.Search;
+		var out = [];
+		for (var i = t.pageStart; i < t.pageEnd; i++) {
+			if (i >= 0 && i < t.dat.length) { out.push(t.dat[i]); }
+		}
+		return out;
+	},
+
+	selectRows: function (rows, on) {
+		var t = Tabs.Search;
+		for (var i = 0; i < rows.length; i++) { t.setSelected(rows[i], on); }
+		t.syncSelectionUI();
+	},
+
+	clearSelection: function () {
+		var t = Tabs.Search;
+		t.selected = {};
+		t.syncSelectionUI();
+	},
+
+	// Recorta la selección a lo que sigue visible tras un filtro / nueva búsqueda
+	pruneSelection: function () {
+		var t = Tabs.Search;
+		var live = {};
+		for (var k = 0; k < t.dat.length; k++) {
+			var ck = t.ckOf(t.dat[k]);
+			if (t.selected[ck]) { live[ck] = 1; }
+		}
+		t.selected = live;
+	},
+
+	// No desmarca (Copiar coordenadas)
+	peekSelected: function () {
+		var t = Tabs.Search;
+		var rows = t.selectedRows();
+		var out = [];
+		for (var i = 0; i < rows.length; i++) { out.push(rows[i][0] + ',' + rows[i][1]); }
+		return out.join(' ');
+	},
+
+	// Consume la selección (exports y blacklist, como antes)
+	takeSelected: function () {
+		var t = Tabs.Search;
+		var s = t.peekSelected();
+		t.clearSelection();
+		return s;
+	},
+
+	// Pinta lo que ya existe en el DOM (checkboxes visibles, clases de fila, chip,
+	// check de cabecera y estado de los botones) sin re-renderizar la tabla
+	syncSelectionUI: function () {
+		var t = Tabs.Search;
+		var panel = ById('pbResultsPanel');
+		if (panel) {
+			var boxes = panel.querySelectorAll('input[id^=pbSearchScout_]');
+			for (var b = 0; b < boxes.length; b++) {
+				var id = boxes[b].id.substring('pbSearchScout_'.length);
+				var on = t.selected[id] ? true : false;
+				if (boxes[b].checked != on) { boxes[b].checked = on; }
+				var tr = boxes[b].closest ? boxes[b].closest('tr') : null;
+				if (tr) { if (on) { jQuery(tr).addClass('selRow'); } else { jQuery(tr).removeClass('selRow'); } }
+			}
+		}
+		t.paintSelectionChip();
+		t.paintActionState();
+	},
+
+	paintSelectionChip: function () {
+		var chip = ById('pbSelChip');
+		if (!chip) { return; }
+		var t = Tabs.Search;
+		var n = t.selectedCount();
+		chip.className = 'btChip btSelCount' + ((n == 0) ? ' btSelCountZero' : '');
+		chip.innerHTML = '<span>' + tx('Selected') + ': <b>' + n + '</b></span>';
+		if (n > 0) {
+			chip.innerHTML += '<a class="btSelClear" id="pbSelClear" title="' + tx('Clear selection') + '">&#10005;</a>';
+			ById('pbSelClear').addEventListener('click', function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				t.clearSelection();
+			}, false);
+		}
+		var hdr = ById('ToggleSearchScoutCheckbox');
+		if (hdr) {
+			// la cabecera refleja sólo la página visible, no la selección global
+			var vis = t.visibleRows();
+			var visSel = 0;
+			for (var i = 0; i < vis.length; i++) {
+				if (t.selected[vis[i][0] + '_' + vis[i][1]]) { visSel++; }
+			}
+			hdr.checked = (vis.length > 0 && visSel == vis.length);
+			hdr.indeterminate = (visSel > 0 && visSel < vis.length);
+		}
+	},
+
+	// Los botones que necesitan selección se apagan (no fallan en silencio) cuando
+	// no hay nada marcado
+	paintActionState: function () {
+		var t = Tabs.Search;
+		var n = t.selectedCount();
+		var ids = ['pbCoordCopy', 'pbExportMenu'];
+		for (var i = 0; i < ids.length; i++) {
+			var el = ById(ids[i]);
+			if (!el) { continue; }
+			if (n == 0) {
+				el.className = (el.className.indexOf('btDisabled') == -1) ? (el.className + ' btDisabled') : el.className;
+				el.setAttribute('title', tx('Select at least one row first'));
+			}
+			else {
+				el.className = el.className.replace(' btDisabled', '');
+				el.removeAttribute('title');
+			}
+		}
+	},
+
+	rowByCoords: function (x, y) {
+		var t = Tabs.Search;
+		for (var i = 0; i < t.dat.length; i++) {
+			if (t.dat[i][0] == x && t.dat[i][1] == y) { return t.dat[i]; }
+		}
+		return null;
+	},
+
+	// Un solo listener delegado para toda la tabla (se re-crea el panel en cada
+	// búsqueda, así que se ata aquí y no por fila)
+	bindResultsPanel: function () {
+		var t = Tabs.Search;
+		var panel = ById('pbResultsPanel');
+		if (!panel) { return; }
+
+		panel.addEventListener('change', function (e) {
+			var el = e.target;
+			if (!el || el.id == null || el.id.indexOf('pbSearchScout_') != 0) { return; }
+			var ck = el.id.substring('pbSearchScout_'.length);
+			var p = ck.split('_');
+			var row = (p.length == 2) ? t.rowByCoords(parseInt(p[0], 10), parseInt(p[1], 10)) : null;
+			if (row) { t.setSelected(row, el.checked); }
+			else if (el.checked) { t.selected[ck] = 1; }
+			else { delete t.selected[ck]; }
+			t.syncSelectionUI();
+		}, false);
+
+		panel.addEventListener('contextmenu', function (e) {
+			var tr = e.target.closest ? e.target.closest('tr') : null;
+			if (!tr || !tr.id || tr.id.indexOf('search_') != 0) { return; }
+			var p = tr.id.substring('search_'.length).split('_');
+			var row = t.rowByCoords(parseInt(p[0], 10), parseInt(p[1], 10));
+			if (!row) { return; }
+			e.preventDefault();
+			t.openRowMenu(row, { x: e.clientX, y: e.clientY });
+		}, false);
+	},
+
+	// Menú contextual de la fila (click derecho)
+	openRowMenu: function (row, point) {
+		var t = Tabs.Search;
+		var tr = ById('search_' + row[0] + '_' + row[1]);
+		if (!tr) { return; }
+		var isCity = (Options.SearchOptions.SearchType == 0);
+		var isBl = t.blacklist[t.ckOf(row)] ? true : false;
+		var items = [];
+
+		items.push({
+			label: tx('Copy Co-ordinates') + ' (' + row[0] + ',' + row[1] + ')',
+			onclick: function () { window.prompt(tx('Copy to clipboard: Ctrl+C'), '(' + row[0] + ',' + row[1] + ')'); }
+		});
+		if (Tabs.BulkScout) {
+			items.push({ label: tx('Add to Scout List'), onclick: function () { Tabs.BulkScout.ImportCoords([row[0] + ',' + row[1]]); } });
+		}
+		if (Tabs.BulkAttack) {
+			items.push({ label: tx('Add to Attack List'), onclick: function () { Tabs.BulkAttack.ImportCoords([row[0] + ',' + row[1]]); } });
+		}
+		if (Tabs.Attack) {
+			items.push({
+				label: tx('Add to Auto-Attack'),
+				onclick: function () { t.setSelected(row, true); t.ExportAttack(); }
+			});
+		}
+		items.push({ sep: true });
+		if (isCity) {
+			items.push({
+				label: isBl ? tx('Remove from blacklist') : tx('Add to blacklist'),
+				danger: isBl,
+				onclick: function () { t.rowBlacklistToggle(row); }
+			});
+		}
+		items.push({ label: tx('Go to map'), onclick: function () { GotoMap(row[0], row[1]); } });
+		if (isCity) {
+			items.push({ label: t.defending ? tx('Stop Highlighting Defenders') : tx('Highlight Defenders'), onclick: function () { t.HighlightDefenders(); } });
+		}
+
+		btMenu(tr, items, { point: point });
+	},
+
+	// ─────────── lista negra ───────────
+
 	blacklistToggle: function (row, add) {
 		var t = Tabs.Search;
-		var ck = row[0] + '_' + row[1];
+		var ck = t.ckOf(row);
 		if (add) {
 			if (!t.blacklist[ck]) { t.blacklist[ck] = 1; t.blacklistDirty = true; }
 		}
@@ -434,34 +671,52 @@ Tabs.Search = {
 		t.saveblacklist();
 	},
 
-	getSelectedRows: function () {
+	// Alta/baja desde el menú contextual de la fila: parchea la fila en el sitio para
+	// no perder la selección, la página ni el scroll
+	rowBlacklistToggle: function (row) {
 		var t = Tabs.Search;
-		var out = [];
-		for (var k = 0; k < t.dat.length; k++) {
-			var ck = t.dat[k][0] + '_' + t.dat[k][1];
-			if (ById('pbSearchScout_' + ck).checked) { out.push(t.dat[k]); }
+		var isBl = t.blacklist[t.ckOf(row)] ? true : false;
+		t.blacklistToggle(row, !isBl);
+		if (!Options.SearchOptions.ShowBlacklisted) {
+			// la fila sale de la tabla: re-pintar y avisar igualmente
+			t.renderTable();
+			btToast((isBl ? tx('Removed from blacklist') : tx('Added to blacklist')) + ': ' + row[0] + ',' + row[1]);
+			return;
 		}
-		return out;
+		var tr = ById('search_' + row[0] + '_' + row[1]);
+		if (!tr) { t.renderTable(); btToast((isBl ? tx('Removed from blacklist') : tx('Added to blacklist')) + ': ' + row[0] + ',' + row[1]); return; }
+		var tag = tr.querySelector('.btBlTag');
+		if (!isBl) {
+			if (!tag) {
+				var city = tr.querySelector('td[colspan]');
+				var host = city ? city : tr.lastChild;
+				if (host) {
+					tag = document.createElement('span');
+					tag.className = 'btBlTag';
+					tag.innerHTML = ' <span style="color:#f60;font-size:9px;">[' + tx('Blacklisted') + ']</span>';
+					host.appendChild(tag);
+				}
+			}
+		}
+		else if (tag) { tag.parentNode.removeChild(tag); }
+		btToast((isBl ? tx('Removed from blacklist') : tx('Added to blacklist')) + ': ' + row[0] + ',' + row[1]);
 	},
 
 	BlacklistSelected: function () {
 		var t = Tabs.Search;
-		var rows = t.getSelectedRows();
-		for (var i = 0; i < rows.length; i++) {
-			t.blacklistToggle(rows[i], true);
-			var ck = rows[i][0] + '_' + rows[i][1];
-			var cb = ById('pbSearchScout_' + ck);
-			if (cb) { cb.checked = false; }
-		}
+		var rows = t.selectedRows();
+		for (var i = 0; i < rows.length; i++) { t.blacklistToggle(rows[i], true); }
+		t.clearSelection();
+		btToast(tx('Blacklisted') + ': ' + rows.length);
 		t.dispMapTable();
 	},
 
 	UnblacklistSelected: function () {
 		var t = Tabs.Search;
-		var rows = t.getSelectedRows();
-		for (var i = 0; i < rows.length; i++) {
-			t.blacklistToggle(rows[i], false);
-		}
+		var rows = t.selectedRows();
+		for (var i = 0; i < rows.length; i++) { t.blacklistToggle(rows[i], false); }
+		t.clearSelection();
+		btToast(tx('Removed from blacklist') + ': ' + rows.length);
 		t.dispMapTable();
 	},
 
@@ -472,7 +727,7 @@ Tabs.Search = {
 		var out = [];
 		for (var i = 0; i < t.dat.length; i++) {
 			var row = t.dat[i];
-			var ck = row[0] + '_' + row[1];
+			var ck = t.ckOf(row);
 			if (t.blacklist[ck]) continue;
 			if (row[12] == 1) continue; // really online - never blacklist
 			var uid = row[6];
@@ -485,13 +740,72 @@ Tabs.Search = {
 		return out;
 	},
 
+	// Ofrece marcarlas en lista negra al terminar una búsqueda. Se difiere si la cola
+	// de últimos logins sigue corriendo (si no, se preguntaría dos veces con conteos
+	// parciales); se reintenta desde finishLastLoginQueue().
+	offerBlacklistInactive: function () {
+		var t = Tabs.Search;
+		t.blacklistOfferPending = false;
+		if (!Options.SearchOptions.BlacklistEnabled) { return; }
+		if (Options.SearchOptions.SearchType != 0) { return; }
+		if (t.searchRunning) { return; }
+		if (t.lastLoginRunning || t.lastLoginActive > 0) { t.blacklistOfferPending = true; return; }
+		var cand = t.blacklistCandidates();
+		if (cand.length == 0) { return; }
+		t.showBlacklistConfirm(cand);
+	},
+
+	// Modal propio del bot (CPopup) — el ModalMultiButton del juego va roto en Chrome
+	// (src/game-api/ui.js:26 no asigna el objeto al push)
+	showBlacklistConfirm: function (cand) {
+		var t = Tabs.Search;
+		if (!cand || cand.length == 0) { return; }
+
+		var old = WinManager.get('pbBlacklistConfirm');
+		if (old) { old.destroy(); }
+
+		var days = parseIntNan(Options.SearchOptions.BlacklistDays) || 365;
+		var pop = new CPopup('pbBlacklistConfirm', 0, -100, 520, 170, true, function () { });
+		pop.centerMe((typeof mainPop != 'undefined' && mainPop) ? mainPop.getMainDiv() : null);
+
+		var body = '<DIV style="height:50px;"><br><TABLE align=center style="width:500px;" class=xtab>';
+		body += '<tr><TD align=center><div style="white-space:initial;">' +
+			txArgs('Found {0} inactive cities ({1}+ days). Add them to the blacklist so their coordinates are not scanned again in future searches?',
+				[cand.length, days]) + '</div><br>&nbsp;</td></tr>';
+		body += '<tr><TD align=center>' + strButton20(tx('Yes, add to blacklist'), 'id=pbBlConfirmOk') + '&nbsp;' +
+			strButton20(tx('Cancel'), 'id=pbBlConfirmNo') + '<br>&nbsp;</td></tr></table></div>';
+		pop.getMainDiv().innerHTML = body;
+		ResetFrameSize('pbBlacklistConfirm', 170, 520);
+		pop.getTopDiv().innerHTML = '<DIV align=center><b>' + tx('Inactive cities found') + '</b></div>';
+		pop.show(true);
+
+		function close() {
+			pop.show(false);
+			pop.onClose();
+			pop.destroy();
+		}
+		ById('pbBlConfirmOk').addEventListener('click', function () {
+			close();
+			for (var i = 0; i < cand.length; i++) { t.blacklistToggle(cand[i], true); }
+			btToast(tx('Blacklisted') + ': ' + cand.length);
+			t.dispMapTable();
+		}, false);
+		ById('pbBlConfirmNo').addEventListener('click', function () {
+			close();
+		}, false);
+	},
+
+	closeBlacklistConfirm: function () {
+		var p = WinManager.get('pbBlacklistConfirm');
+		if (p) { p.show(false); p.onClose(); p.destroy(); }
+	},
+
+	// Botón "Repasar inactivas" / acción manual: mismo modal, no los marca de una
 	BlacklistInactive: function () {
 		var t = Tabs.Search;
 		var cand = t.blacklistCandidates();
-		for (var i = 0; i < cand.length; i++) {
-			t.blacklistToggle(cand[i], true);
-		}
-		t.dispMapTable();
+		if (cand.length == 0) { btToast(tx('No inactive cities found'), 'info'); return; }
+		t.showBlacklistConfirm(cand);
 	},
 
 	BlacklistDaysChange: function (e) {
@@ -783,6 +1097,8 @@ Tabs.Search = {
 
 		t.searchRunning = true;
 		t.pageNum = 1;
+		t.closeBlacklistConfirm();
+		t.blacklistOfferPending = false;
 		document.body.classList.add('pb-search-running');
 		btBusy(true, tx('Searching map...'));
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Stop Search') + '</span>';
@@ -812,6 +1128,7 @@ Tabs.Search = {
 		t.lastLoginIdx = {};
 		t.lastLoginEnqLen = 0;
 		t.dat = [];
+		t.selected = {};
 		t.lastFilterIdx = 0;
 		t.lastRenderedLen = 0;
 		t.onlineQueue = [];
@@ -937,9 +1254,17 @@ Tabs.Search = {
 		m += '</table>';
 		ById('pbSearchFilters').innerHTML = m;
 
-		m = '<TABLE class=xtab style="width:100%" cellpadding=0 cellspacing=0 align=left><TR valign=top><td style="padding-left:5px;padding-top:5px;padding-right:5px;width:155px;" align=left><div id=pbautoqsdiv>' + tx("Auto-QuickScout Mists") + '<INPUT type=checkbox id=pbAutoQS></div></td><td align=left id=pbSearchMessages>&nbsp;</td></tr></table>';
+		m = '<div id=pbSearchNote style="text-align:center;"></div>';
+		m += '<div class=btActionBar>';
+		m += '<div class="btChip" id=pbautoqsdiv title="' + tx('QuickScout each misted city as it is found') + '">' + tx("Auto-QuickScout") + '<INPUT type=checkbox id=pbAutoQS></div>';
+		m += '<div class="btChip btSelCount btSelCountZero" id=pbSelChip><span>' + tx('Selected') + ': <b>0</b></span></div>';
+		m += '<div class=btActionSpacer></div>';
+		m += '<div class=btActionBtns id=pbSearchMessages>&nbsp;</div>';
+		m += '</div>';
 		ById('pbSearchBottom').innerHTML = m;
 		ById('pbAutoQS').addEventListener('change', function () { t.dispMapTable(); }, false); // triggers autoQS
+
+		t.bindResultsPanel();
 
 		t.setupFilterDisplay();
 
@@ -1154,13 +1479,6 @@ t.setupFilterDisplay();
 		else {
 			jQuery('#pbslevel1').addClass('divHide');
 			jQuery('#pbslevel2').addClass('divHide');
-		}
-
-		if (stype != 0) {
-			if (ById('pbHighDefenders')) ById('pbHighDefenders').style.display = 'none';
-		}
-		else {
-			if (ById('pbHighDefenders')) ById('pbHighDefenders').style.display = '';
 		}
 
 		if (stype == 0 || stype == 2 || stype == 6) {
@@ -1457,7 +1775,7 @@ t.setupFilterDisplay();
 		var t = Tabs.Search;
 		if (!t.searchRunning || t.runToken !== job.id) { return; }
 		if (t.BlockList.length == 0) {
-			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true); }
+			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true, true); }
 			return;
 		}
 
@@ -1486,7 +1804,7 @@ t.setupFilterDisplay();
 			t.blocksSearched++;
 		}
 		if (blocks.length == 0) {
-			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true); }
+			if (t.activeRequests == 0) { t.stopSearch(tx('Completed!'), true, true); }
 			return;
 		}
 
@@ -1771,12 +2089,16 @@ t.setupFilterDisplay();
 	finishLastLoginQueue: function () {
 		var t = Tabs.Search;
 		t.lastLoginRunning = false;
+		t.lastLoginActive = 0;
 		t.lastLoginPending = {};
 		t.savelastlogins();
 		if (ById('pbStatStatus') && !t.searchRunning) {
 			ById('pbStatStatus').innerHTML = uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ': ' + t.lastLoginFetched + '/' + t.lastLoginTotal;
 		}
 		if (Options.SearchOptions.sortColNum == 22 || parseIntNan(Options.SearchOptions.LastLoginMinDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginMaxDays) != 0 || parseIntNan(Options.SearchOptions.LastLoginWorkers) != 0) { t.dispMapTable(); }
+		// los candidatos a lista negra dependen del last login: si la oferta se
+		// aplazó porque esta cola seguía corriendo, ahora se hace con el dato completo
+		if (t.blacklistOfferPending) { t.offerBlacklistInactive(); }
 	},
 
 	LookupMists: function (prov, notify) {
@@ -1842,6 +2164,7 @@ t.setupFilterDisplay();
 		t.dat = [];
 		t._filterAll(0, t.mapDat.length);
 		t.lastFilterIdx = t.mapDat.length;
+		t.pruneSelection();
 		ById('pbStatFound').innerHTML = tx('Found') + ': ' + t.dat.length;
 	},
 
@@ -2063,7 +2386,7 @@ t.setupFilterDisplay();
 			var numRows = t.dat.length;
 			if (numRows > t.MAX_SHOW_WHILE_RUNNING && t.searchRunning) {
 				numRows = t.MAX_SHOW_WHILE_RUNNING;
-				ById('pbSearchMessages').innerHTML = '<FONT COLOR=#FF4D4D>' + tx('NOTE: Table only shows ') + t.MAX_SHOW_WHILE_RUNNING + ' of ' + t.dat.length + tx(' results until search is completed') + '.</font>';
+				t.paintSearchNote('<FONT COLOR=#FF4D4D>' + tx('NOTE: Table only shows ') + t.MAX_SHOW_WHILE_RUNNING + ' of ' + t.dat.length + tx(' results until search is completed') + '.</font>');
 			}
 
 			var pageStart = 0;
@@ -2085,6 +2408,8 @@ t.setupFilterDisplay();
 				}
 				m += '</select></TD></TR>';
 			}
+			t.pageStart = pageStart;
+			t.pageEnd = pageEnd;
 
 			var qsdelay = 0;
 			var r = 0;
@@ -2135,18 +2460,19 @@ t.setupFilterDisplay();
 
 				if (bl) {
 					rowStyle = 'style="opacity:0.5;"';
-					cityname += ' <span style="color:#f60;font-size:9px;">[' + tx('Blacklisted') + ']</span>';
+					cityname += ' <span class="btBlTag"><span style="color:#f60;font-size:9px;">[' + tx('Blacklisted') + ']</span></span>';
 				}
 
 				if (++r % 2) { rowClass = 'evenRow'; }
 				else { rowClass = 'oddRow'; }
 				if (t.dat[i][19]) rowClass += ' highRow';
+				if (t.selected[t.ckOf(t.dat[i])]) rowClass += ' selRow';
 
 				m += '<TR id="' + RowId + '" class="' + rowClass + '" style="max-height:30px"><TD class=xtab><a id=l_' + t.dat[i][0] + '_t_' + t.dat[i][1] + ' class=divLink onclick="';
 				m += 'searchquickmarch(' + t.dat[i][0] + ', ' + t.dat[i][1] + ')';
 				m += '">' + TileImage(t.dat[i][3], t.dat[i][4], t.dat[i][5], t.dat[i][16], t.dat[i][15], t.dat[i][20]) + '</a></td>';
 				m += '<td class=xtab align=center>' + ((t.dat[i][4] != 0) ? t.dat[i][4] : '??') + '</td>';
-				m += '<TD class=xtab align=center style="padding-left:4px;padding-right:0px;"><INPUT id=pbSearchScout_' + t.dat[i][0] + '_' + t.dat[i][1] + ' type=checkbox ' + dis + '></td>';
+				m += '<TD class=xtab align=center style="padding-left:4px;padding-right:0px;"><INPUT id=pbSearchScout_' + t.dat[i][0] + '_' + t.dat[i][1] + ' type=checkbox ' + dis + ((t.selected[t.ckOf(t.dat[i])]) ? ' checked' : '') + '></td>';
 				m += '<td class=xtab align=center><DIV onclick="btGotoMap(' + t.dat[i][0] + ',' + t.dat[i][1] + ')"><A class=xlink>' + t.dat[i][0] + ',' + t.dat[i][1] + '</a></div></td>';
 				m += '<td class=xtab align=right>' + t.dat[i][2] + '</td>';
 
@@ -2187,12 +2513,20 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 			m += '</table>';
 		}
 
-		ById('pbResultsPanel').innerHTML = m;
+		var panel = ById('pbResultsPanel');
+		if (!panel) { return; }
+		var keepTop = panel.scrollTop;
+		var keepLeft = panel.scrollLeft;
+		panel.innerHTML = m;
+		panel.scrollTop = keepTop;
+		panel.scrollLeft = keepLeft;
 		if (t.dat.length != 0) {
 			var hcol = ById('SearchCol' + Options.SearchOptions.sortColNum);
 			if (hcol) { hcol.className = 'buttonv2 std green'; }
 			ById('ToggleSearchScoutCheckbox').addEventListener('change', t.doSelectall, false);
 		}
+		t.paintSelectionChip();
+		t.paintActionState();
 		t.updateMistProgress();
 	},
 
@@ -2235,23 +2569,55 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		}
 	},
 
-	doSelectall: function () {
-		var t = Tabs.Search;
-		var coords = "";
-		for (var k = 0; k < t.dat.length; k++) {
-			coords = t.dat[k][0] + '_' + t.dat[k][1];
-			if (ById('ToggleSearchScoutCheckbox').checked) ById('pbSearchScout_' + coords).checked = true;
-			else ById('pbSearchScout_' + coords).checked = false;
-		}
+	// Línea de estado sobre la barra de acciones (nota de truncado, progreso de
+	// resaltado de defensores, filtro "sólo defensores")
+	paintSearchNote: function (html) {
+		var n = ById('pbSearchNote');
+		if (n) { n.innerHTML = html || ''; }
+		// se guarda la referencia al contenedor: updateDefendProgress la usa para
+		// saber si el span de progreso sigue montado en él
+		Tabs.Search.pbSearchNote = n || null;
 	},
 
-	stopSearch: function (msg, savelast) {
+	paintDefendArea: function () {
+		var t = Tabs.Search;
+		if (!ById('pbSearchNote')) { return; }
+		if (t.defending) {
+			t.paintSearchNote('<span id=pbHighDefendersProg>' + tx('Checking') + ' ' + t.defendDone + ' ' + uW.g_js_strings.commonstr.of + ' ' + t.defendTotal + '</span>');
+			return;
+		}
+		var defcnt = 0;
+		for (var i = 0; i < t.dat.length; i++) {
+			if (t.dat[i][19]) defcnt++;
+		}
+		if (defcnt == 0) {
+			if (!t.searchRunning) { t.paintSearchNote(''); }
+			return;
+		}
+		var m = '<a title="' + tx('Show Defenders Only') + '" id=pbOnlyDefenders class="inlineButton btButton blue14" style="cursor:pointer;"><span>' +
+			(t.showOnlyDefenders ? t.defendEyeOffIcon : t.defendEyeIcon) + '</span></a>';
+		t.paintSearchNote(m);
+		ById('pbOnlyDefenders').addEventListener('click', t.ToggleOnlyDefenders, false);
+		if (t.showOnlyDefenders) jQuery('#pbOnlyDefenders').css('outline', '2px solid rgba(124,252,0,0.8)').css('outlineOffset', '1px');
+	},
+
+	// El check de cabecera actúa sobre la página visible (la tabla está paginada);
+	// "todos los resultados" vive en el menú ⋮
+	doSelectall: function () {
+		var t = Tabs.Search;
+		var hdr = ById('ToggleSearchScoutCheckbox');
+		if (!hdr) { return; }
+		t.selectRows(t.visibleRows(), hdr.checked);
+	},
+
+	stopSearch: function (msg, savelast, completed) {
 		var t = Tabs.Search;
 
 		MAP_DELAY_WATCH = 0;
 		clearTimeout(t.SearchTimer);
 		if (t.renderTimer) { clearTimeout(t.renderTimer); t.renderTimer = null; }
 		t.searchRunning = false;
+		if (!completed) { t.blacklistOfferPending = false; }
 		ById('pbStatStatus').innerHTML = msg;
 		ById('pbSearchSubmit').innerHTML = '<span>' + tx('Start Search') + '</span>';
 		document.body.classList.remove('pb-search-running');
@@ -2278,85 +2644,46 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 			}
 		}
 
-		var m = '<DIV align=right style="max-width:' + Number(GlobalOptions.btWinSize.x - 170) + 'px;overflow-x:auto;">';
-		m += strButton20(tx('Highlight Defenders'), 'id=pbHighDefenders') + '&nbsp;';
-		m += strButton20(tx('Copy Co-ordinates'), 'id=pbCoordCopy') + '&nbsp;';
-		if (Options.SearchOptions.SearchType == 0) {
-			m += strButton20(tx('Blacklist'), 'id=pbSearchBlacklist') + '&nbsp;';
-			m += strButton20(tx('Unblacklist'), 'id=pbSearchUnblacklist') + '&nbsp;';
-			if (Options.SearchOptions.BlacklistEnabled && !Options.SearchOptions.ShowBlacklisted) {
-				var blCand = t.blacklistCandidates().length;
-				if (blCand != 0) {
-					m += strButton20(tx('Blacklist inactive') + ' (' + blCand + ')', 'id=pbSearchBlacklistInactive') + '&nbsp;';
-				}
-			}
-		}
-		if (Tabs.BulkScout) m += strButton20(tx('Add to Scout List'), 'id=pbScoutExport') + '&nbsp;';
-		if (Tabs.BulkAttack) m += strButton20(tx('Add to Attack List'), 'id=pbBulkAttackExport') + '&nbsp;';
-		if (Tabs.Attack) m += strButton20(tx('Add to Auto-Attack'), 'id=pbAttackExport') + '&nbsp;';
-		m += '&nbsp;</div>&nbsp;';
+		var m = strButton20(tx('Copy Co-ordinates'), 'id=pbCoordCopy title="' + tx('Copy the selected co-ordinates') + '"');
+		m += strButton14(tx('Export') + ' &#9662;', 'id=pbExportMenu title="' + tx('Send the selected co-ordinates to another tab') + '"');
+		m += strButton14('&#8942;', 'id=pbMoreMenu title="' + tx('More actions') + '" style="min-width:26px;"');
 
-		ById('pbSearchMessages').innerHTML = m;
-		if (sNote) { ById('pbSearchMessages').innerHTML += sNote; }
-		if (ById('pbScoutExport')) ById('pbScoutExport').addEventListener('click', t.ExportScoutList, false);
-		if (ById('pbBulkAttackExport')) ById('pbBulkAttackExport').addEventListener('click', t.ExportAttackList, false);
-		if (ById('pbAttackExport')) ById('pbAttackExport').addEventListener('click', t.ExportAttack, false);
+		var msg = ById('pbSearchMessages');
+		if (!msg) { return; }
+		msg.innerHTML = m;
 		ById('pbCoordCopy').addEventListener('click', t.CopyCoords, false);
-		if (ById('pbSearchBlacklist')) ById('pbSearchBlacklist').addEventListener('click', t.BlacklistSelected, false);
-		if (ById('pbSearchUnblacklist')) ById('pbSearchUnblacklist').addEventListener('click', t.UnblacklistSelected, false);
-		if (ById('pbSearchBlacklistInactive')) ById('pbSearchBlacklistInactive').addEventListener('click', t.BlacklistInactive, false);
-		if (ById('pbHighDefenders')) ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
-
-		if (Options.SearchOptions.SearchType != 0) {
-			if (ById('pbHighDefenders')) ById('pbHighDefenders').style.display = 'none';
-		}
+		ById('pbExportMenu').addEventListener('click', t.ToggleExportMenu, false);
+		ById('pbMoreMenu').addEventListener('click', t.ToggleMoreMenu, false);
 
 		t.dispMapTable();
+		t.paintActionState();
+		t.paintDefendArea();
+		if (sNote) { t.paintSearchNote(sNote); }
+		if (completed) { t.offerBlacklistInactive(); }
 	},
 
 	ExportScoutList: function () {
 		var t = Tabs.Search;
-		var coordlist = t.getSelected();
+		var coordlist = t.takeSelected();
 		if (coordlist != "") {
 			Tabs.BulkScout.ImportCoords(coordlist.split(" "));
+			btToast(tx('Added to Scout List') + ': ' + coordlist.split(" ").length);
 		}
 	},
 
 	ExportAttackList: function () {
 		var t = Tabs.Search;
-		var coordlist = t.getSelected();
+		var coordlist = t.takeSelected();
 		if (coordlist != "") {
 			Tabs.BulkAttack.ImportCoords(coordlist.split(" "));
+			btToast(tx('Added to Attack List') + ': ' + coordlist.split(" ").length);
 		}
-	},
-
-	getSelected: function () {
-		var t = Tabs.Search;
-		var coordlist = "";
-		var coords = "";
-		for (var k = 0; k < t.dat.length; k++) {
-			coords = t.dat[k][0] + '_' + t.dat[k][1];
-			if (ById('pbSearchScout_' + coords).checked) {
-				coordlist += t.dat[k][0].toString() + ',' + t.dat[k][1].toString() + ' ';
-				ById('pbSearchScout_' + coords).checked = false;
-			}
-		}
-		return coordlist;
 	},
 
 	ExportAttack: function () {
 		var t = Tabs.Search;
-
-		var sel = false;
-		for (var k = 0; k < t.dat.length; k++) {
-			coords = t.dat[k][0] + '_' + t.dat[k][1];
-			if (ById('pbSearchScout_' + coords).checked) {
-				sel = true;
-				break;
-			}
-		}
-
-		if (sel) {
+		// No consume la selección: el tab Attack la lee al importar la ruta
+		if (t.selectedCount() > 0) {
 			Tabs.Attack.NewRoute();
 			ById('bttcAttack').click();
 		}
@@ -2364,27 +2691,89 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 
 	CopyCoords: function () {
 		var t = Tabs.Search;
+		var rows = t.selectedRows();
+		if (rows.length == 0) { return; }
 		var CoordList = [];
-		var coords = "";
-		for (var k = 0; k < t.dat.length; k++) {
-			coords = t.dat[k][0] + '_' + t.dat[k][1];
-			if (ById('pbSearchScout_' + coords).checked) {
-				CoordList.push('(' + t.dat[k][0].toString() + ',' + t.dat[k][1].toString() + ')');
+		for (var k = 0; k < rows.length; k++) {
+			CoordList.push('(' + rows[k][0].toString() + ',' + rows[k][1].toString() + ')');
+		}
+		window.prompt(tx('Copy to clipboard: Ctrl+C'), CoordList.join(" "));
+	},
+
+	// ─────────── menús de la barra de acciones ───────────
+
+	exportMenuItems: function () {
+		var t = Tabs.Search;
+		var n = t.selectedCount();
+		var items = [];
+		if (Tabs.BulkScout) {
+			items.push({ label: tx('Add to Scout List'), disabled: (n == 0), onclick: function () { t.ExportScoutList(); } });
+		}
+		if (Tabs.BulkAttack) {
+			items.push({ label: tx('Add to Attack List'), disabled: (n == 0), onclick: function () { t.ExportAttackList(); } });
+		}
+		if (Tabs.Attack) {
+			items.push({ label: tx('Add to Auto-Attack'), disabled: (n == 0), onclick: function () { t.ExportAttack(); } });
+		}
+		return items;
+	},
+
+	ToggleExportMenu: function () {
+		var t = Tabs.Search;
+		var btn = ById('pbExportMenu');
+		if (!btn) { return; }
+		btMenuToggle(btn, t.exportMenuItems());
+	},
+
+	moreMenuItems: function () {
+		var t = Tabs.Search;
+		var n = t.selectedCount();
+		var isCity = (Options.SearchOptions.SearchType == 0);
+		var items = [];
+
+		if (isCity) {
+			items.push({
+				label: t.defending ? tx('Stop Highlighting Defenders') : tx('Highlight Defenders'),
+				hint: t.defendTotal ? (tx('Checking') + ' ' + t.defendDone + '/' + t.defendTotal) : '',
+				onclick: function () { t.HighlightDefenders(); }
+			});
+		}
+
+		if (isCity) {
+			items.push({ label: tx('Blacklist selected'), disabled: (n == 0), onclick: function () { t.BlacklistSelected(); } });
+			items.push({ label: tx('Unblacklist selected'), disabled: (n == 0), onclick: function () { t.UnblacklistSelected(); } });
+			// "Repasar inactivas" es una acción manual: disponible aunque el
+			// checkbox automático esté apagado
+			if (!Options.SearchOptions.ShowBlacklisted) {
+				var blCand = t.blacklistCandidates().length;
+				if (blCand != 0) {
+					items.push({ label: tx('Review inactive') + ' (' + blCand + ')', onclick: function () { t.BlacklistInactive(); } });
+				}
 			}
 		}
-		if (CoordList.length > 0) {
-			window.prompt(tx('Copy to clipboard: Ctrl+C'), CoordList.join(" "));
-		}
+
+		items.push({ sep: true });
+		items.push({ label: tx('Select all results') + ' (' + t.dat.length + ')', disabled: (t.dat.length == 0 || n == t.dat.length), onclick: function () { t.selectRows(t.dat, true); } });
+		items.push({ label: tx('Clear selection'), disabled: (n == 0), onclick: function () { t.clearSelection(); } });
+
+		return items;
+	},
+
+	ToggleMoreMenu: function () {
+		var t = Tabs.Search;
+		var btn = ById('pbMoreMenu');
+		if (!btn) { return; }
+		btMenuToggle(btn, t.moreMenuItems());
 	},
 
 	HighlightDefenders: function () {
 		var t = Tabs.Search;
 
-		if (t.defending) {
-			if (ById('pbHighDefendersProg')) ById('pbHighDefendersProg').innerHTML = '&nbsp;';
+		if (t.defending) { // segunda pulsación = parar
+			t.highlightClearAtEnd(true);
 			return;
 		}
-		ById('pbHighDefenders').outerHTML = '<span id=pbHighDefendersProg>&nbsp;</span>';
+		t.paintSearchNote('&nbsp;');
 
 		t.defendQueue = [];
 		t.defendSeen = {};
@@ -2440,9 +2829,12 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 
 	updateDefendProgress: function () {
 		var t = Tabs.Search;
-		if (ById('pbHighDefendersProg')) {
-			ById('pbHighDefendersProg').innerHTML = tx('Checking') + ' ' + t.defendDone + ' ' + uW.g_js_strings.commonstr.of + ' ' + t.defendTotal;
+		var p = ById('pbHighDefendersProg');
+		if (p && t.pbSearchNote && p.parentNode === t.pbSearchNote) {
+			p.innerHTML = tx('Checking') + ' ' + t.defendDone + ' ' + uW.g_js_strings.commonstr.of + ' ' + t.defendTotal;
+			return;
 		}
+		t.paintDefendArea();
 	},
 
 	highlightClearAtEnd: function (forcereset) {
@@ -2457,23 +2849,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 			t.defendActive = 0;
 		}
 		t.defendQueue = [];
-		if (ById('pbHighDefendersProg')) {
-			var m = strButton20(tx('Highlight Defenders'), 'id=pbHighDefenders');
-			var defcnt = 0;
-			for (var i = 0; i < t.dat.length; i++) {
-				if (t.dat[i][19]) defcnt++;
-			}
-			if (defcnt == 0) { t.showOnlyDefenders = false; }
-			if (defcnt > 0) {
-				m += '&nbsp;<a title="' + tx('Show Defenders Only') + '" id=pbOnlyDefenders class="inlineButton btButton blue14" style="cursor:pointer;"><span>' + (t.showOnlyDefenders ? t.defendEyeOffIcon : t.defendEyeIcon) + '</span></a>';
-			}
-			ById('pbHighDefendersProg').outerHTML = m;
-			ById('pbHighDefenders').addEventListener('click', t.HighlightDefenders, false);
-			if (ById('pbOnlyDefenders')) {
-				ById('pbOnlyDefenders').addEventListener('click', t.ToggleOnlyDefenders, false);
-				if (t.showOnlyDefenders) jQuery('#pbOnlyDefenders').css('outline', '2px solid rgba(124,252,0,0.8)').css('outlineOffset', '1px');
-			}
-		}
+		t.paintDefendArea();
 	},
 
 	ToggleOnlyDefenders: function () {
@@ -2497,17 +2873,17 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		t.ReqSent[x + '_' + y] = 0;
 		var div = ById('search_' + x + '_' + y);
 		var k = (item && typeof item === 'object') ? item.k : item;
-		var coords = t.dat[k][0] + '_' + t.dat[k][1];
 		if (rslt.ok && rslt.ok == "true") {
 			t.dat[k][19] = true;
 			if (div) jQuery(div).addClass("highRow");
-			if (ById('pbSearchScout_' + coords)) ById('pbSearchScout_' + coords).checked = true;
+			t.setSelected(t.dat[k], true); // los defensores se marcan para atacar
 		}
 		else {
 			t.dat[k][19] = false;
 			if (div) jQuery(div).removeClass("highRow");
-			if (ById('pbSearchScout_' + coords)) ById('pbSearchScout_' + coords).checked = false;
+			t.setSelected(t.dat[k], false);
 		}
+		t.syncSelectionUI();
 		var numRows = t.mapDat.length;
 		for (var i = 0; i < numRows; i++) {
 			if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {

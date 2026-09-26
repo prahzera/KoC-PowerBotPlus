@@ -645,15 +645,8 @@ Tabs.Attack = {
 
 		z += '<div align="center"><TABLE cellSpacing=0 width=98% height=0% class=xtab><tr><td>&nbsp;</td><td align=center>' + strButton20(tx('Save Route'), 'id=pbatSaveRoute') + '&nbsp;';
 		if (t.EditRouteNumber >= 0) { z += strButton20(tx('Save a Copy'), 'id=pbatCopyRoute') + '&nbsp;'; }
-		if (Tabs.Search && Tabs.Search.dat) {
-			for (var k = 0; k < Tabs.Search.dat.length; k++) {
-				coords = Tabs.Search.dat[k][0] + '_' + Tabs.Search.dat[k][1];
-				elem = ById('pbSearchScout_' + coords);
-				if (elem && elem.checked) {
-					z += strButton20(tx('Bulk Add Co-ords from Search'), 'id=pbatImport') + '&nbsp;';
-					break;
-				}
-			}
+		if (Tabs.Search && Tabs.Search.dat && Tabs.Search.selectedCount() > 0) {
+			z += strButton20(tx('Bulk Add Co-ords from Search'), 'id=pbatImport') + '&nbsp;';
 		}
 		z += strButton20(uW.g_js_strings.commonstr.cancel, 'id=pbatCancelRoute') + '</td><td align=right>&nbsp;</td></tr></table></div>';
 
@@ -778,16 +771,15 @@ Tabs.Attack = {
 		if (!t.validateScreenFields('import')) { return; }
 
 		if (Tabs.Search && Tabs.Search.dat) {
-			for (var k = 0; k < Tabs.Search.dat.length; k++) {
-				coords = Tabs.Search.dat[k][0] + '_' + Tabs.Search.dat[k][1];
-				elem = ById('pbSearchScout_' + coords);
-				if (elem && elem.checked) {
-					t.RouteObject.target_x = Tabs.Search.dat[k][0];
-					t.RouteObject.target_y = Tabs.Search.dat[k][1];
-					Options.AttackOptions.Routes.push(JSON2.parse(JSON2.stringify(t.RouteObject))); // create new object in array
-					elem.checked = false;
-				}
+			// La selección vive en Tabs.Search.selected (el DOM sólo tiene la página
+			// visible: leer los checkboxes perdía las filas fuera de la página)
+			var srows = Tabs.Search.selectedRows();
+			for (var k = 0; k < srows.length; k++) {
+				t.RouteObject.target_x = srows[k][0];
+				t.RouteObject.target_y = srows[k][1];
+				Options.AttackOptions.Routes.push(JSON2.parse(JSON2.stringify(t.RouteObject))); // create new object in array
 			}
+			if (srows.length) { Tabs.Search.clearSelection(); }
 		}
 
 		t.RouteObject = null; // clear route object

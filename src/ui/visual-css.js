@@ -1,6 +1,7 @@
 /** Visual polish & animations **/
 
 function BotVisualCSS() {
+	var PanelBg = Options.Colors.Panel || '#fff';
 	return '\
 		/* === PowerBot+ UI polish / animations === */\
 		.tab, a.buttonv2.std, a.inlineButton.btButton, a.xlink, .TextLink, .divLink, .btExpander, .btBackExpander, #btEmoticonLink {\
@@ -72,6 +73,35 @@ function BotVisualCSS() {
 		.btEmptyIcon { display: inline-block; vertical-align: -3px; margin-right: 7px; }\
 		.btEmptyIcon svg { display: block; }\
 		body.btDarkTheme .btEmpty { color: #a9a69a; }\
+		.btActionBar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; }\
+		.btActionSpacer { flex: 1 1 auto; }\
+		.btActionBtns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\
+		.btChip { display: inline-flex; align-items: center; gap: 5px; padding: 1px 9px; border-radius: 999px; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.14); font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap; }\
+		.btChip input[type=checkbox] { margin: 0 0 0 1px; vertical-align: -1px; }\
+		.btSelCount { color: ' + btAccentRgb(0.14) + '; }\
+		.btSelCount b { font-weight: 700; }\
+		.btSelCount .btSelClear { margin-left: 2px; cursor: pointer; opacity: 0.55; text-decoration: none; }\
+		.btSelCount .btSelClear:hover { opacity: 1; }\
+		.btSelCountZero { color: #8a8a8a; }\
+		a.btDisabled { opacity: 0.42; filter: grayscale(0.7); pointer-events: none; cursor: default; }\
+		#pbSearchNote:empty { display: none; }\
+		tr.selRow > td { background-color: ' + btAccentRgb(0.14) + ' !important; }\
+		body.btDarkTheme tr.selRow > td { background-color: ' + btAccentRgb(0.24) + ' !important; }\
+		.btMenu { position: fixed; z-index: 2147483646; min-width: 190px; padding: 5px; border-radius: 8px; background: ' + PanelBg + '; color: ' + (Options.Colors.PanelText || '#222') + '; border: 1px solid rgba(0,0,0,0.18); box-shadow: 0 8px 24px rgba(0,0,0,0.32); font-size: 12px; font-weight: 600; }\
+		.btMenu:focus { outline: none; }\
+		.btMenuItem { display: flex; align-items: center; gap: 8px; padding: 5px 9px; border-radius: 5px; cursor: pointer; white-space: nowrap; }\
+		.btMenuItem:hover, .btMenuItem:focus { background: rgba(0,0,0,0.08); outline: none; }\
+		.btMenuItem.danger { color: #c0392b; }\
+		.btMenuItem.disabled { opacity: 0.42; cursor: default; }\
+		.btMenuItem.disabled:hover { background: none; }\
+		.btMenuItemHint { margin-left: auto; padding-left: 12px; opacity: 0.6; font-size: 11px; font-weight: 400; }\
+		.btMenuSep { height: 1px; margin: 4px 3px; background: rgba(0,0,0,0.15); }\
+		body.btDarkTheme .btChip { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }\
+		body.btDarkTheme .btChip.btSelCountZero { color: #a9a69a; }\
+		body.btDarkTheme .btMenu { background: #3a3d47; color: #E3E1D6; border-color: rgba(255,255,255,0.16); }\
+		body.btDarkTheme .btMenuItem:hover, body.btDarkTheme .btMenuItem:focus { background: rgba(255,255,255,0.1); }\
+		body.btDarkTheme .btMenuItem.danger { color: #ff8a80; }\
+		body.btDarkTheme .btMenuSep { background: rgba(255,255,255,0.16); }\
 		.btPopup { border-width: 4px; box-shadow: 1px 3px 12px rgba(0,0,0,.35); }\
 		.btPopup * { scrollbar-width: thin; }\n\
 		.btPopup *::-webkit-scrollbar { width: 10px; height: 10px; }\n\
@@ -183,6 +213,11 @@ function btAccentHex() {
 		case 'blue':
 		default: return '#2f63b8';
 	}
+}
+
+function btAccentRgb(alpha) {
+	var c = HEXtoRGB(btAccentHex());
+	return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
 }
 
 function SetAccent() {
