@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Fewer buttons and a clearer Search results bar: selections now survive re-rendering and unusable buttons are dimmed instead of failing silently. When a search finds cities you have not touched in a long time, the bot now asks whether to add them to your blacklist so their coordinates are skipped in future searches.
-// @version		4.36.0
+// @releasenotes		Highlighted rows showed no highlight at all in the dark theme: the defender cities found by a search, and the highlighted rows in Own City, Training, Fort and Player, were all invisible. The dark theme now shows the highlight again, and adds a border around it so it stays easy to see even if you picked a highlight colour close to the background.
+// @version		4.36.1
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.36.0';
+var Version = '4.36.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -3672,6 +3672,15 @@ function BotVisualCSS() {
 		#pbSearchNote:empty { display: none; }\
 		tr.selRow > td { background-color: ' + btAccentRgb(0.14) + ' !important; }\
 		body.btDarkTheme tr.selRow > td { background-color: ' + btAccentRgb(0.24) + ' !important; }\
+		/* highRow (Highlight defenders, Own City, Training, Player, ...) pinta el fondo\
+		   en las CELDAS, no en la fila: en el <TR> lo mataba la cebra del tema oscuro\
+		   (body.btDarkTheme .evenRow{background:transparent !important}). Se pone\
+		   despues de selRow a proposito: los defensores se auto-seleccionan, asi que la\
+		   fila lleva las dos clases y el resaltado debe ganar. En dark el Highlight por\
+		   defecto (#2E3B2E) esta muy cerca del panel (#23242A), de ahi el borde: asi se\
+		   ve aunque el usuario elija un Highlight poco contrastado. */\
+		tr.highRow > td { background-color: ' + btHiColor() + ' !important; }\
+		body.btDarkTheme tr.highRow > td { background-color: ' + btHiColor() + ' !important; box-shadow: inset 0 0 0 1px ' + btHiText() + '; }\
 		.btMenu { position: fixed; z-index: 2147483646; min-width: 190px; padding: 5px; border-radius: 8px; background: ' + PanelBg + '; color: ' + (Options.Colors.PanelText || '#222') + '; border: 1px solid rgba(0,0,0,0.18); box-shadow: 0 8px 24px rgba(0,0,0,0.32); font-size: 12px; font-weight: 600; }\
 		.btMenu:focus { outline: none; }\
 		.btMenuItem { display: flex; align-items: center; gap: 8px; padding: 5px 9px; border-radius: 5px; cursor: pointer; white-space: nowrap; }\
@@ -3803,6 +3812,22 @@ function btAccentHex() {
 function btAccentRgb(alpha) {
 	var c = HEXtoRGB(btAccentHex());
 	return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+}
+
+// Color de fondo del resaltado (Options.Colors.Highlight). El highlight se pinta
+// en las celdas de la fila, asi que necesita un color opaco: si el usuario deja
+// vacio el campo se cae al de su tema para no dejar la celda transparente.
+function btHiColor() {
+	var c = Options.Colors && Options.Colors.Highlight;
+	if (!c) { c = (Options.Theme == 'Dark') ? '#2E3B2E' : '#FFFFCC'; }
+	return c;
+}
+
+// Color de texto del resaltado, usado tambien como borde en el tema oscuro
+function btHiText() {
+	var c = Options.Colors && Options.Colors.HighlightText;
+	if (!c) { c = (Options.Theme == 'Dark') ? '#EAF5EA' : '#000000'; }
+	return c;
 }
 
 function SetAccent() {

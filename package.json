@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.36.0",
-  "releasenotes": "Fewer buttons and a clearer Search results bar: selections now survive re-rendering and unusable buttons are dimmed instead of failing silently. When a search finds cities you have not touched in a long time, the bot now asks whether to add them to your blacklist so their coordinates are skipped in future searches.",
+  "version": "4.36.1",
+  "releasenotes": "Highlighted rows showed no highlight at all in the dark theme: the defender cities found by a search, and the highlighted rows in Own City, Training, Fort and Player, were all invisible. The dark theme now shows the highlight again, and adds a border around it so it stays easy to see even if you picked a highlight colour close to the background.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {
