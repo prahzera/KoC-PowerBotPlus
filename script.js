@@ -31312,7 +31312,9 @@ Tabs.Search = {
 		if (Tabs.Attack) {
 			items.push({
 				label: tx('Add to Auto-Attack'),
-				onclick: function () { t.setSelected(row, true); t.ExportAttack(); }
+				// Sólo esta fila, como sus hermanos de arriba: no se mezcla con la
+				// selección global (que puede traer otras filas ya montadas)
+				onclick: function () { Tabs.Attack.ImportFromSearch([[row[0], row[1]]]); }
 			});
 		}
 		items.push({ sep: true });
@@ -33358,8 +33360,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		var t = Tabs.Search;
 		// No consume la selección: el tab Attack la lee al importar la ruta
 		if (t.selectedCount() > 0) {
-			Tabs.Attack.NewRoute();
-			ById('bttcAttack').click();
+			Tabs.Attack.ImportFromSearch(null);
 		}
 	},
 
@@ -62113,6 +62114,11 @@ Tabs.Attack = {
 		Active: true,
 	},
 	RouteObject: null,
+	// Filas que el tab Search pasa explícitamente para importar (menú contextual).
+	// La importación real ocurre cuando el usuario pulsa "Bulk Add Co-ords from
+	// Search", así que van en cola y no en la selección global: si se metieran en
+	// Tabs.Search.selected contaminarían la selección ya montada por el usuario.
+	PendingImportRows: null,
 
 	init: function (div) {
 		var t = Tabs.Attack;
@@ -62704,7 +62710,7 @@ Tabs.Attack = {
 
 		z += '<div align="center"><TABLE cellSpacing=0 width=98% height=0% class=xtab><tr><td>&nbsp;</td><td align=center>' + strButton20(tx('Save Route'), 'id=pbatSaveRoute') + '&nbsp;';
 		if (t.EditRouteNumber >= 0) { z += strButton20(tx('Save a Copy'), 'id=pbatCopyRoute') + '&nbsp;'; }
-		if (Tabs.Search && Tabs.Search.dat && Tabs.Search.selectedCount() > 0) {
+		if (Tabs.Search && (Tabs.Search.selectedCount() > 0 || t.PendingImportRows)) {
 			z += strButton20(tx('Bulk Add Co-ords from Search'), 'id=pbatImport') + '&nbsp;';
 		}
 		z += strButton20(uW.g_js_strings.commonstr.cancel, 'id=pbatCancelRoute') + '</td><td align=right>&nbsp;</td></tr></table></div>';
@@ -62824,22 +62830,38 @@ Tabs.Attack = {
 		t.PaintRoutes();
 	},
 
+	// rows = [[x,y],...] para importar justo esas (menú contextual de Search).
+	// null = usar la selección actual de Tabs.Search (acción desde la barra).
+	// Se encola porque ImportRoutes() se ejecuta tras un clic posterior del
+	// usuario en el panel: la selección global puede haber cambiado entre medias.
+	ImportFromSearch: function (rows) {
+		var t = Tabs.Attack;
+		t.PendingImportRows = rows || null;
+		t.NewRoute();
+		ById('bttcAttack').click();
+	},
+
 	ImportRoutes: function () {
 		var t = Tabs.Attack;
 
 		if (!t.validateScreenFields('import')) { return; }
 
-		if (Tabs.Search && Tabs.Search.dat) {
+		var srows = t.PendingImportRows;
+		var fromSelection = !srows;
+		t.PendingImportRows = null;
+		if (fromSelection) {
 			// La selección vive en Tabs.Search.selected (el DOM sólo tiene la página
 			// visible: leer los checkboxes perdía las filas fuera de la página)
-			var srows = Tabs.Search.selectedRows();
-			for (var k = 0; k < srows.length; k++) {
-				t.RouteObject.target_x = srows[k][0];
-				t.RouteObject.target_y = srows[k][1];
-				Options.AttackOptions.Routes.push(JSON2.parse(JSON2.stringify(t.RouteObject))); // create new object in array
-			}
-			if (srows.length) { Tabs.Search.clearSelection(); }
+			srows = (Tabs.Search && Tabs.Search.dat) ? Tabs.Search.selectedRows() : [];
 		}
+		for (var k = 0; k < srows.length; k++) {
+			t.RouteObject.target_x = srows[k][0];
+			t.RouteObject.target_y = srows[k][1];
+			Options.AttackOptions.Routes.push(JSON2.parse(JSON2.stringify(t.RouteObject))); // create new object in array
+		}
+		// Sólo se vacía la selección si las filas venían de ella: una importación
+		// del menú contextual no debe tocar lo que el usuario tenía seleccionado
+		if (srows.length && fromSelection) { Tabs.Search.clearSelection(); }
 
 		t.RouteObject = null; // clear route object
 		ById('pbatMessages').innerHTML = tx("Routes imported from Search Results!");

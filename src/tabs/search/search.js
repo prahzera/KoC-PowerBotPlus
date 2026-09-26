@@ -638,7 +638,9 @@ Tabs.Search = {
 		if (Tabs.Attack) {
 			items.push({
 				label: tx('Add to Auto-Attack'),
-				onclick: function () { t.setSelected(row, true); t.ExportAttack(); }
+				// Sólo esta fila, como sus hermanos de arriba: no se mezcla con la
+				// selección global (que puede traer otras filas ya montadas)
+				onclick: function () { Tabs.Attack.ImportFromSearch([[row[0], row[1]]]); }
 			});
 		}
 		items.push({ sep: true });
@@ -2684,8 +2686,7 @@ m += '<TD ' + rowStyle + ' class=xtab nowrap>' + ((parseIntNan(t.dat[i][6]) != 0
 		var t = Tabs.Search;
 		// No consume la selección: el tab Attack la lee al importar la ruta
 		if (t.selectedCount() > 0) {
-			Tabs.Attack.NewRoute();
-			ById('bttcAttack').click();
+			Tabs.Attack.ImportFromSearch(null);
 		}
 	},
 
