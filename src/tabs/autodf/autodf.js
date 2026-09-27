@@ -11,7 +11,6 @@ Tabs.Barb = {
 	Blocks: [],
 	popFirst: true,
 	opt: {},
-	nextattack: null,
 	searchRunning: false,
 	tilesSearched: 0,
 	tilesFound: 0,
@@ -22,11 +21,29 @@ Tabs.Barb = {
 	firstY: 0,
 	lastY: 0,
 	rallypointlevel: 0,
-	knt: {},
 	barbArray: {},
 	lookup: 1,
-	city: 1,
 	deleting: false,
+
+	// --- Estado del bucle de ataque (v4.37.0) ---
+	// Antes habia un unico cursor (t.city) y una sola cadena getnextCity que
+	// visitaba una ciudad por tick. Ahora hay dos piezas: sweep() recorre todas
+	// las ciudades y encola trabajo, pump() envia una marcha de la cola cada
+	// SendGap respetando el tope global de peticiones de March.
+	attRunning: false,
+	sweeptimer: null,
+	pumptimer: null,
+	barbQueue: [],
+	barbInFlight: {},
+	barbLastSend: 0,
+	barbStatus: {},
+	// Indices knt0/knt1 de Seed.knights ya asignados a un trabajo, por ciudad.
+	knightBusy: {},
+	// La busqueda de mapa sigue siendo de una en una (los lookups son pesados y
+	// son el principal motivo de captcha), pero las ciudades pendientes se
+	// atienden en cola FIFO en vez de depender del flag global searchRunning.
+	searchQueue: [],
+	nextSearchAt: {},
 	maplag: 0,
 	blocksSearched: 0,
 	troopDef: [],
@@ -41,6 +58,7 @@ Tabs.Barb = {
 		dfbtns: false,
 		Method: "distance",
 		SendInterval: 8,
+		SendGap: 2000,
 		MaxDistance: 20,
 		RallyClip: 0,
 		Running: false,
@@ -116,7 +134,7 @@ Tabs.Barb = {
 		m += '<DIV id=pbStatHeader><a id=StatToggle class=divLink><div class=divHeader align="center">FOREST STATS&nbsp;<img id=StatArrow height="10" src="' + DownArrow + '"></div></a></div>';
 		m += '<TABLE id=pbStatWrap width=95% height=0% class=pbTab><TR align="left">';
 		for (var i = 0; i < Seed.cities.length; i++) {
-			m += '<TD align=center style="border:1px solid #000;padding:2px;"><b>' + Seed.cities[i][1] + '</b><br><span id=pdtotalcity' + i + '></span><br><span id=pddatacity' + i + '></span><br><span id=pddataarray' + i + '></span></td>';
+			m += '<TD align=center style="border:1px solid #000;padding:2px;"><b>' + Seed.cities[i][1] + '</b><br><span id=pdtotalcity' + i + '></span><br><span id=pddatacity' + i + '></span><br><span id=pddataarray' + i + '></span><br><span id=pdfdata' + i + '></span></td>';
 		}
 		m += '</tr></table><TABLE id=pbErrWrap width=95% height=0% class=pbTab><TR align="left">';
 		for (var i = 0; i <= 6; i++) {
@@ -142,6 +160,12 @@ Tabs.Barb = {
 			if (t.barbArray[i + 1] == undefined) document.getElementById(element).innerHTML = 'No Data';
 			else document.getElementById(element).innerHTML = 'Forests:' + t.barbArray[i + 1].length;
 		}
+
+		// Si la opcion quedo activada de la sesion anterior, el boton decia
+		// "Attack = ON" pero no habia ningun temporizador corriendo: tras
+		// recargar la pagina no se atacaba hasta que el usuario pulsara el
+		// boton dos veces. Se arranca aqui el bucle.
+		if (Options.DFOptions.Running == true) t.startLoop();
 
 		document.getElementById('AttSearch').addEventListener('click', function () { t.toggleBarbState(this); }, false);
 		document.getElementById('Options').addEventListener('click', t.barbOptions, false);
@@ -415,6 +439,7 @@ Tabs.Barb = {
 		y += '<TD><SELECT id=pbcity type=list></td></tr></table>';
 		y += '<table width=100%><TD colspan=2 style="margin-top:5px; text-align:center;"><DIV class=pbStat> OPTIONS </div></td>';
 		y += '<TR><TD>Attack interval: </td><td><INPUT id=pbsendint type=text size=4 maxlength=3 value=' + Options.DFOptions.SendInterval + ' \> seconds</td></tr>';
+		y += '<TR><TD>Gap between sends: </td><td><INPUT id=barbsendgap type=text size=4 maxlength=5 value=' + Options.DFOptions.SendGap + ' \> ms <span style="font-size:9px;">(min 500)</span></td></tr>';
 		y += '<TR><TD>Max search distance: </td><td><INPUT id=pbmaxdist type=text size=4 maxlength=3 value=' + Options.DFOptions.MaxDistance + ' \></td></tr>';
 		y += '<TR><TD>Keep rallypoint slot(s) free: </td><Td><INPUT id=rallyclip type=text size=3 maxlength=2 value="' + Options.DFOptions.RallyClip + '" \> </td></tr>';
 		y += '<TR><TD><INPUT id=pbreset type=checkbox ' + (Options.DFOptions.UpdateEnabled ? 'CHECKED' : '') + '\> Reset search every </td><td><INPUT id=pbresetint type=text size=4 maxlength=3 value=' + Options.DFOptions.UpdateInterval + ' \>minutes</td></tr>';
@@ -495,6 +520,15 @@ Tabs.Barb = {
 		document.getElementById('barbstopsearch').addEventListener('change', function () {
 			document.getElementById('barbstopsearch').value = parseInt(document.getElementById('barbstopsearch').value) > 0 ? document.getElementById('barbstopsearch').value : 1
 			Options.DFOptions.stopsearch = parseInt(document.getElementById('barbstopsearch').value);
+			saveOptions();
+		}, false);
+		document.getElementById('barbsendgap').addEventListener('change', function () {
+			var gap = parseInt(document.getElementById('barbsendgap').value);
+			// Tope inferior de 500 ms: por debajo el servidor empieza a devolver
+			// error 8 de forma sistematica.
+			if (!(gap >= 500)) gap = 2000;
+			document.getElementById('barbsendgap').value = gap;
+			Options.DFOptions.SendGap = gap;
 			saveOptions();
 		}, false);
 	},
@@ -581,34 +615,374 @@ Tabs.Barb = {
 		//reloadKOC();
 	},
 
+	// Solo carga y ordena las listas de bosques guardadas. Ya NO programa el
+	// bucle de ataque: eso lo hace startLoop() y nadie mas, asi no pueden
+	// coexistir dos cadenas getnextCity (lo que pasaba antes y duplicaba el
+	// ritmo de envio al activar el tab).
+	// Tampoco reinicia Options.DFOptions.Update[city][1] en cada pasada: ese
+	// reset borraba el contador de busquedas vacias de TODAS las ciudades, con
+	// lo que el corte por stopsearch dependia del orden del bucle.
 	checkBarbData: function () {
 		var t = Tabs.Barb;
 		if (!Options.DFOptions.Running) return;
 		for (var citynum = 1; citynum <= Seed.cities.length; citynum++) {
-
-			if (!Options.DFOptions.Levels[citynum][0]) continue; //Skip city if not selected
-
-			t.barbArray[citynum] = [];
+			if (!Options.DFOptions.Levels[citynum] || !Options.DFOptions.Levels[citynum][0]) continue; //Skip city if not selected
 			var myarray = JSON2.parse(GM_getValue('DF_' + uW.tvuid + '_city_' + citynum + '_' + getServerId(), "[]"));
 			if (myarray == null) myarray = JSON2.parse(GM_getValue('DF_' + Seed.player['name'] + '_city_' + citynum + '_' + getServerId(), "[]"));
-			if ((myarray == undefined || myarray.length == 0) && t.searchRunning == false) {
-				t.lookup = citynum;
-				if (parseInt(Options.DFOptions.Update[t.lookup][1]) >= parseInt(Options.DFOptions.stopsearch)) continue; //Skip if search results are empty more than X times
-				t.searchRunning = true;
-				t.opt.startX = parseInt(Seed.cities[(citynum - 1)][2]);
-				t.opt.startY = parseInt(Seed.cities[(citynum - 1)][3]);
-				t.clickedSearch();
-			}
-			if (myarray && Array.isArray(myarray)) {
-				if (Options.DFOptions.Method == 'distance') t.barbArray[citynum] = myarray.sort(function sortBarbs(a, b) { a = a['dist']; b = b['dist']; return a == b ? 0 : (a < b ? -1 : 1); });
-				if (Options.DFOptions.Method == 'level') t.barbArray[citynum] = myarray.sort(function sortBarbs(a, b) { a = a['level'] + a['dist']; b = b['level'] + b['dist']; return parseInt(a) == parseInt(b) ? 0 : (parseInt(a) > parseInt(b) ? -1 : 1); });
-				if (Options.DFOptions.Method == 'lowlevel') t.barbArray[citynum] = myarray.sort(function sortBarbs(a, b) { a = a['level'] + a['dist']; b = b['level'] + b['dist']; return parseInt(a) == parseInt(b) ? 0 : (parseInt(a) < parseInt(b) ? -1 : 1); });
-				GM_setValue('DF_' + uW.tvuid + '_city_' + citynum + '_' + getServerId(), JSON2.stringify(t.barbArray[citynum]));
-			}
-			Options.DFOptions.Update[citynum][1] = 0;
-			saveOptions();
+			if (!myarray || !Array.isArray(myarray)) myarray = [];
+			t.barbArray[citynum] = t.sortBarbs(myarray);
+			t.saveArray(citynum);
 		}
-		t.nextattack = setTimeout(t.getnextCity, parseInt((1 + Options.DFOptions.SendInterval) * 1000));
+		saveOptions();
+	},
+
+	sortBarbs: function (myarray) {
+		if (Options.DFOptions.Method == 'distance') return myarray.sort(function sortBarbs(a, b) { a = a['dist']; b = b['dist']; return a == b ? 0 : (a < b ? -1 : 1); });
+		if (Options.DFOptions.Method == 'lowlevel') return myarray.sort(function sortBarbs(a, b) { a = a['level'] + a['dist']; b = b['level'] + b['dist']; return parseInt(a) == parseInt(b) ? 0 : (parseInt(a) < parseInt(b) ? -1 : 1); });
+		return myarray.sort(function sortBarbs(a, b) { a = a['level'] + a['dist']; b = b['level'] + b['dist']; return parseInt(a) == parseInt(b) ? 0 : (parseInt(a) > parseInt(b) ? -1 : 1); });
+	},
+
+	saveArray: function (citynum) {
+		GM_setValue('DF_' + uW.tvuid + '_city_' + citynum + '_' + getServerId(), JSON2.stringify(this.barbArray[citynum]));
+	},
+
+	// Caballeros libres de UNA ciudad, ya filtrados y ordenados. Antes esto
+	// escribia en el array compartido t.knt, lo que impedia encolar mas de una
+	// marcha por ciudad: Seed.knights solo se actualiza cuando responde el
+	// servidor, asi que dos envios seguidos en el mismo barrido elegian al
+	// mismo caballero. Ahora se consume la lista, una vez por caballero.
+	//
+	// Ademas se filtran los reservados en t.knightBusy. March.addMarch intenta
+	// marcar el caballero como ocupado al responder, pero busca la clave
+	// 'knt' + params.kid y params.kid es el knightId (un numero grande), no el
+	// indice knt0/knt1 que es como se guardan en Seed.knights. La clave nunca
+	// coincide, el caballero queda libre en local y el siguiente envio de la
+	// misma ciudad lo reutiliza. La reserva local lo evita; el lag-fix
+	// (src/panels/lag-fixes.js) devuelve los caballeros a 1 cuando la marcha
+	// vuelve, asi que no se queda ocupado de forma permanente.
+	getAtkKnight: function (cityID) {
+		var t = Tabs.Barb;
+		var knt = new Array();
+		if (!Seed.knights[cityID] || !Seed.leaders[cityID]) return knt;
+		var busy = t.knightBusy[cityID] || [];
+		for (var k in Seed.knights[cityID]) {
+			if (busy.indexOf(k) !== -1) continue;
+			if (Seed.knights[cityID][k]["knightStatus"] == 1 && Seed.leaders[cityID]["resourcefulnessKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.leaders[cityID]["politicsKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.leaders[cityID]["combatKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.leaders[cityID]["intelligenceKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.knights[cityID][k]["combat"] >= Options.DFOptions.barbMinKnight && Seed.knights[cityID][k]["combat"] <= Options.DFOptions.barbMaxKnight) {
+				knt.push({
+					Key: k,
+					Name: Seed.knights[cityID][k]["knightName"],
+					Combat: Seed.knights[cityID][k]["combat"],
+					ID: Seed.knights[cityID][k]["knightId"],
+				});
+			}
+		}
+		return knt.sort(function sort(a, b) {
+			a = parseInt(a['Combat']);
+			b = parseInt(b['Combat']);
+			if (parseInt(Options.DFOptions.knightselector) > 0) return a == b ? 0 : (a > b ? -1 : 1);
+			else return a == b ? 0 : (a < b ? -1 : 1);
+		});
+	},
+
+	// Config de tropas del nivel contra lo que hay en la ciudad. Devuelve null
+	// si la ciudad no puede cubrir la configuracion: es config estricta a
+	// proposito, no se escala hacia abajo en silencio.
+	availableTroops: function (cityID, level) {
+		var t = Tabs.Barb;
+		var trps = Options.DFOptions.Troops[level];
+		var units = Seed.units[cityID];
+		if (!trps || !units) return null;
+		var out = {};
+		var num_troops = 0;
+		for (var ii = 1; ii < parseInt(t.troopDef.length + 1); ii++) {
+			var want = parseInt(trps[ii]);
+			if (!want || want < 0) want = 0;
+			if (want > (parseInt(units['unt' + t.troopDef[ii - 1][1]]) || 0)) return null;
+			if (want > 0) out[ii] = want;
+			num_troops += want;
+		}
+		if (num_troops == 0) return null;
+		return out;
+	},
+
+	freeSlots: function (citynumber) {
+		var keepfree = Number(Options.DFOptions.RallyClip);
+		if (keepfree < Number(Options.FreeRallySlots)) keepfree = Number(Options.FreeRallySlots);
+		return Number(March.getEmptySlots(citynumber)) - keepfree;
+	},
+
+	// Un caballero se reserva en cuanto entra en la cola, no cuando se envia:
+	// entre el encolado y el envio pueden pasar varios segundos y la ciudad
+	// vuelve a barajarse en el siguiente barrido.
+	reserveKnight: function (cityID, kntKey) {
+		var t = Tabs.Barb;
+		if (!t.knightBusy[cityID]) t.knightBusy[cityID] = [];
+		if (t.knightBusy[cityID].indexOf(kntKey) === -1) t.knightBusy[cityID].push(kntKey);
+	},
+
+	releaseKnight: function (cityID, kntKey, markBusy) {
+		var t = Tabs.Barb;
+		var busy = t.knightBusy[cityID];
+		if (busy) {
+			var i = busy.indexOf(kntKey);
+			if (i !== -1) busy.splice(i, 1);
+			if (!busy.length) delete t.knightBusy[cityID];
+		}
+		// markBusy deja el caballero como ocupado en Seed: es lo que hacia
+		// March.addMarch pero con la clave equivocada, asi que nunca surtia
+		// efecto. Con esto el siguiente barrido no lo vuelve a elegir.
+		if (markBusy && Seed.knights[cityID] && Seed.knights[cityID][kntKey]) {
+			Seed.knights[cityID][kntKey].knightStatus = 10;
+		}
+	},
+
+	setStatus: function (citynum, text) {
+		var t = Tabs.Barb;
+		t.barbStatus[citynum] = text;
+		var el = document.getElementById('pdfdata' + (citynum - 1));
+		if (el) el.innerHTML = text;
+	},
+
+	// --- Productor: recorre TODAS las ciudades y encola lo que puedan atacar ---
+	tryEnqueue: function (citynum) {
+		var t = Tabs.Barb;
+		if (!Options.DFOptions.Levels[citynum] || !Options.DFOptions.Levels[citynum][0]) {
+			t.setStatus(citynum, 'Disabled');
+			return;
+		}
+		var citynumber = Seed.cities[citynum - 1][0];
+		var cityID = 'city' + citynumber;
+
+		if (Seed.resources[cityID] && Seed.resources[cityID]["rec5"] && Seed.resources[cityID]["rec5"][0] > Number(Options.DFOptions.threshold)) {
+			t.setStatus(citynum, 'Aetherstone too high');
+			return;
+		}
+
+		// La falta de bosques se comprueba ANTES que caballeros y puntos de
+		// marcha. Al reves, una ciudad sin bosques y sin caballero libre se
+		// quedaba fuera sin llegar nunca a la cola de busqueda, y se quedaba sin buscar
+		// para siempre.
+		var arr = t.barbArray[citynum];
+		if (!arr || !arr.length) {
+			t.queueSearch(citynum);
+			t.setStatus(citynum, 'No forests');
+			return;
+		}
+
+		var knt = t.getAtkKnight(cityID);
+		if (!knt.length) {
+			t.setStatus(citynum, 'No free knight');
+			return;
+		}
+
+		var free = t.freeSlots(citynumber);
+		if (free < 1) {
+			t.setStatus(citynum, 'No free rally point');
+			return;
+		}
+
+		// Una sola pasada de validacion por ciudad y barrido. Los bosques que no
+		// pasan el chequeo se quedan en la lista para el siguiente barrido; los
+		// que estan fuera de distancia se descartan, igual que hacia el codigo
+		// viejo. Se acabo el shift+push que los hacia rotar sin fin.
+		var keep = [];
+		var sent = 0, notroops = 0, far = 0;
+		for (var i = 0; i < arr.length; i++) {
+			var info = arr[i];
+			if (sent >= free || !knt.length) { keep.push(info); continue; }
+			var level = parseInt(info.level);
+			if (!Options.DFOptions.Levels[citynum][level]) { keep.push(info); continue; }
+			if (info.dist < Options.DFOptions.MinDistance[level] || info.dist > Options.DFOptions.Distance[level]) { far++; continue; }
+			var trps = t.availableTroops(cityID, level);
+			if (!trps) { notroops++; keep.push(info); continue; }
+			var kid = knt.shift();
+			t.reserveKnight(cityID, kid.Key);
+			t.barbQueue.push({
+				citynum: citynum, cityID: citynumber, cityKey: cityID, x: info['x'], y: info['y'],
+				level: level, kid: kid.ID, kntKey: kid.Key, trps: trps
+			});
+			sent++;
+		}
+		t.barbArray[citynum] = keep;
+		t.saveArray(citynum);
+
+		var out = sent + (t.barbInFlight[citynum] || 0);
+		if (sent) t.setStatus(citynum, 'Attacking (' + out + ' out)');
+		else if (notroops) t.setStatus(citynum, 'Not enough troops (' + notroops + ')');
+		else if (far) t.setStatus(citynum, 'All forests out of range');
+		else t.setStatus(citynum, 'Queued');
+	},
+
+	// --- Consumidor: saca una marcha de la cola cada SendGap ---
+	pump: function () {
+		var t = Tabs.Barb;
+		noThrottleClear(t.pumptimer);
+		t.pumptimer = null;
+		if (!t.attRunning) return;
+		var gap = Math.max(500, parseInt(Options.DFOptions.SendGap) || 2000);
+		// Sin cola no hace falta un temporizador vivo: el siguiente sweep llama
+		// a pump() de nuevo. Asi no queda un setTimeout de 2 s girando para nada.
+		if (!t.barbQueue.length) return;
+		// Si March ya tiene el tope de peticiones ocupado, addMarch meteria la
+		// marcha en su cola interna en silencio y perderiamos el bosque, porque
+		// March.loop drena uno cada 3 s. Mejor esperar aqui.
+		if (March.currentrequests >= March.maxrequests) {
+			t.pumptimer = noThrottleTimeout(function () { t.pump(); }, 1000);
+			return;
+		}
+		var wait = t.barbLastSend + gap - (new Date().getTime());
+		if (wait > 0) {
+			t.pumptimer = noThrottleTimeout(function () { t.pump(); }, wait);
+			return;
+		}
+		t.sendNext();
+		t.pumptimer = noThrottleTimeout(function () { t.pump(); }, gap);
+	},
+
+	sendNext: function () {
+		var t = Tabs.Barb;
+		// Tope duro: si la cola creciera sin control (muchos caballeros libres y
+		// un SendGap muy corto) se descartan los trabajos mas viejos en vez de
+		// acumular un retraso que ya no sirve para nada.
+		var cap = t.maxQueue();
+		while (t.barbQueue.length > cap) t.barbQueue.shift();
+		var job = t.barbQueue.shift();
+		if (!job) return;
+		t.barbLastSend = new Date().getTime();
+		t.barbInFlight[job.citynum] = (t.barbInFlight[job.citynum] || 0) + 1;
+		t.doBarb(job.cityID, job.citynum, job.x, job.y, job.level, job.kid, job.trps, job);
+	},
+
+	maxQueue: function () {
+		var t = Tabs.Barb;
+		var free = 0;
+		for (var citynum = 1; citynum <= Seed.cities.length; citynum++) {
+			if (!Options.DFOptions.Levels[citynum] || !Options.DFOptions.Levels[citynum][0]) continue;
+			free += t.getAtkKnight('city' + Seed.cities[citynum - 1][0]).length;
+		}
+		return Math.max(4, free * 2);
+	},
+
+	doSweep: function () {
+		var t = Tabs.Barb;
+		t.checkBarbData();
+		for (var citynum = 1; citynum <= Seed.cities.length; citynum++) {
+			t.refreshCityIfStale(citynum);
+			try { t.tryEnqueue(citynum); }
+			catch (ex) { logerr(ex); }
+		}
+		t.nextSearch();
+		t.pump();
+	},
+
+	sweep: function () {
+		var t = Tabs.Barb;
+		if (!t.attRunning) return;
+		noThrottleClear(t.sweeptimer);
+		t.doSweep();
+		t.sweeptimer = noThrottleTimeout(function () { t.sweep(); }, parseInt((1 + Options.DFOptions.SendInterval) * 1000));
+	},
+
+	startLoop: function () {
+		var t = Tabs.Barb;
+		if (t.attRunning) return;
+		t.attRunning = true;
+		t.barbQueue = [];
+		t.barbInFlight = {};
+		t.knightBusy = {};
+		t.barbLastSend = 0;
+		t.sweep();
+	},
+
+	stopLoop: function () {
+		var t = Tabs.Barb;
+		t.attRunning = false;
+		noThrottleClear(t.sweeptimer);
+		noThrottleClear(t.pumptimer);
+		t.sweeptimer = null;
+		t.pumptimer = null;
+		t.barbQueue = [];
+		t.searchQueue = [];
+		t.nextSearchAt = {};
+		t.barbInFlight = {};
+		// Los caballeros reservados vuelven a estar libres: no queda ninguna
+		// marcha en vuelo de este bucle.
+		t.knightBusy = {};
+		t.barbLastSend = 0;
+		// Una busqueda que quedara en vuelo sigue escribiendo su resultado al
+		// terminar, pero no vuelve a arrancar la cola: stopSearch llama a
+		// nextSearch(), que ve la cola vacia y no hace nada.
+	},
+
+	// --- Fase 4: busqueda de bosques, de una en una pero en cola FIFO ---
+	// La busqueda de mapa sigue siendo una a una: los lookups son pesados y son
+	// el principal motivo de captcha. Lo que cambia es como se elige la ciudad:
+	// antes el flag global searchRunning hacia que checkBarbData empezara siempre
+	// a recorrer por la ciudad 1, asi que el reparto dependia del orden del
+	// bucle. Ahora las ciudades pendientes se encolan y se atienden una a una.
+	queueSearch: function (citynum) {
+		var t = Tabs.Barb;
+		if (t.searchQueue.indexOf(citynum) !== -1) return;
+		t.searchQueue.push(citynum);
+	},
+
+	citySearchEligible: function (citynum) {
+		var t = Tabs.Barb;
+		if (!Options.DFOptions.Levels[citynum] || !Options.DFOptions.Levels[citynum][0]) return false;
+		var upd = Options.DFOptions.Update[citynum];
+		if (!upd) return true;
+		// Se respeta "Skip city search after N tries": tras N busquedas vacias la
+		// ciudad se aparca. Antes, con el valor por defecto de 1, un solo fallo
+		// la dejaba bloqueada y solo se recuperaba con el boton Reset Forests.
+		if (parseInt(upd[1]) >= parseInt(Options.DFOptions.stopsearch)) return false;
+		if (t.nextSearchAt[citynum] && unixTime() < t.nextSearchAt[citynum]) return false;
+		return true;
+	},
+
+	nextSearch: function () {
+		var t = Tabs.Barb;
+		if (t.searchRunning) return;
+		// Se recorre la cola descartando las ciudades que ya no tocan, para no
+		// dejar entradas muertas bloqueando a las demas.
+		for (var guard = 0; guard < Seed.cities.length + 1; guard++) {
+			if (!t.searchQueue.length) return;
+			var citynum = t.searchQueue.shift();
+			if (!t.citySearchEligible(citynum)) continue;
+			t.startSearch(citynum);
+			return;
+		}
+		t.searchQueue = [];
+	},
+
+	startSearch: function (citynum) {
+		var t = Tabs.Barb;
+		t.lookup = citynum;
+		t.searchRunning = true;
+		t.opt.startX = parseInt(Seed.cities[(citynum - 1)][2]);
+		t.opt.startY = parseInt(Seed.cities[(citynum - 1)][3]);
+		t.clickedSearch();
+	},
+
+	// Al vencer el intervalo de refresco la ciudad vuelve a buscar, pero YA NO se
+	// borra su lista de bosques. Antes si: cada UpdateInterval (30 min por
+	// defecto) se vaciaba la lista de la ciudad que tocaba en el cursor y se
+	// obligaba a re-escanear el mismo mapa, con las busquedas serializadas por
+	// detras. Ahora la lista sigue alimentando ataques mientras la busqueda
+	// repone resultado, asi que el refresco no corta el flujo.
+	refreshCityIfStale: function (citynum) {
+		var t = Tabs.Barb;
+		if (!Options.DFOptions.UpdateEnabled) return;
+		var upd = Options.DFOptions.Update[citynum];
+		if (!upd) return;
+		var now = unixTime();
+		if (now > parseInt(upd[0] + (Options.DFOptions.UpdateInterval * 60))) {
+			// upd[1] = 0 reinicia el contador de busquedas vacias para que una
+			// ciudad aparcada por stopsearch vuelva a probarse al vencer su
+			// intervalo de refresco, sin necesidad de pulsar Reset Forests.
+			upd[1] = 0;
+			t.nextSearchAt[citynum] = 0;
+			t.queueSearch(citynum);
+		}
 	},
 
 	toggleBarbState: function (obj) {
@@ -620,143 +994,20 @@ Tabs.Barb = {
 			obj.className = 'inlineButton btButton red14';
 			if (document.getElementById('DFToggleTab')) document.getElementById('DFToggleTab').innerHTML = '<span style="color: #CCC">' + tx('Dark Forest') + ': Off</span>';
 			saveOptions();
-			t.nextattack = null;
+			// Antes solo se ponia t.nextattack = null, sin clearTimeout, asi que
+			// la cadena getnextCity seguia viva y siguo mandando con el tab OFF.
+			t.stopLoop();
 		} else {
 			Options.DFOptions.Running = true;
 			obj.innerHTML = '<span>Attack = ON</span>';
 			obj.className = 'inlineButton btButton green20';
 			if (document.getElementById('DFToggleTab')) document.getElementById('DFToggleTab').innerHTML = '<span style="color: #FFFF00">' + tx('Dark Forest') + ': On</span>';
 			saveOptions();
-			t.checkBarbData();
-			t.nextattack = setTimeout(t.getnextCity, parseInt((1 + Options.DFOptions.SendInterval) * 1000));
+			t.startLoop();
 		}
 	},
 
-	barbing: function () {
-		var t = Tabs.Barb;
-		var city = t.city;
-		var citynumber = Seed.cities[city - 1][0];
-		var cityID = 'city' + citynumber;
-		t.getAtkKnight(cityID);
-		var slots = March.getMarchSlots(citynumber);
-
-		//Only send DF if city is not over 750K astone:: rewritten I want df's to farm items and level knights.. who cares about aetherstone?  -baos
-		if (Seed.resources[cityID]["rec5"][0] > Number(Options.DFOptions.threshold)) {
-			return;
-		};
-		var element1 = 'pddatacity' + (city - 1);
-		if (t.barbArray[city].length == 0) document.getElementById(element1).innerHTML = 'In search mode'; else
-			document.getElementById(element1).innerHTML = 'Sent: ' + Options.DFOptions.BarbsDone[city];
-		var element2 = 'pddataarray' + (city - 1);
-		document.getElementById(element2).innerHTML = 'RP: (' + slots + '/' + March.getTotalSlots(citynumber) + ')';
-		if (Number(Number(March.getTotalSlots(citynumber)) - Number(slots)) <= Number(Options.DFOptions.RallyClip)) return;
-		if (t.knt.length == 0) return;
-		var kid = t.knt[0].ID;
-
-		if (t.barbArray[city] && t.barbArray[city].length > 0) {
-			var barbinfo = t.barbArray[city].shift();
-		} else if (parseInt(Options.DFOptions.Update[city][1]) == 0) {
-			if (!t.searchRunning) t.checkBarbData();
-			return;
-		} else {
-			return;
-		};
-		var check = 0;
-		var barblevel = parseInt(barbinfo.level);
-
-		if (Options.DFOptions.Levels[city][barbinfo.level])
-			check = 1;
-
-		if (barbinfo.dist < Options.DFOptions.MinDistance[barblevel] || barbinfo.dist > Options.DFOptions.Distance[barblevel]) {
-			check = 0;
-			GM_setValue('DF_' + uW.tvuid + '_city_' + city + '_' + getServerId(), JSON2.stringify(t.barbArray[city]));
-			return;
-		}
-		// check troop levels in city
-		var trps = Options.DFOptions.Troops[barblevel];
-		var num_troops = 0;
-		for (var ii = 1; ii < t.troopDef.length + 1; ii++) {
-			if (parseInt(trps[ii]) > Seed.units[cityID]['unt' + t.troopDef[ii - 1][1]]) check = 0;
-			num_troops += trps[ii];
-		}
-		if (num_troops == 0) check = 0;
-
-		if (check == 0) {
-			t.barbArray[city].push(barbinfo);
-			GM_setValue('DF_' + uW.tvuid + '_city_' + city + '_' + getServerId(), JSON2.stringify(t.barbArray[city]));
-			return;
-		}
-		var element = 'pdtotalcity' + (city - 1);
-		if (t.barbArray[city] == undefined) document.getElementById(element).innerHTML = 'No Data';
-		else document.getElementById(element).innerHTML = 'Forests:' + t.barbArray[city].length;
-		var xcoord = barbinfo['x'];
-		var ycoord = barbinfo['y'];
-		t.doBarb(citynumber, city, xcoord, ycoord, barblevel, kid, trps);
-		saveOptions();
-	},
-
-	getnextCity: function () {
-		var t = Tabs.Barb;
-		if (!Options.DFOptions.Running) return;
-
-		var city = t.city + 1;
-		if (city > Seed.cities.length) {
-			city = 1;
-		}
-
-		for (var i = city; i <= Seed.cities.length; i++) {
-			if (!Options.DFOptions.Levels[i][0]) continue; //Skip city if not selected
-			else {
-				city = i;
-				break;
-			}
-		}
-
-		t.city = city;
-		if (Options.DFOptions.UpdateEnabled) {
-			var now = unixTime();
-			if (now > parseInt(Options.DFOptions.Update[city][0] + (Options.DFOptions.UpdateInterval * 60))) {
-				Options.DFOptions.Update[city][1] = 0;
-				t.barbArray[city] = []; //Clears data if last update was more than X minutes
-				GM_deleteValue('DF_' + uW.tvuid + '_city_' + city + '_' + getServerId())
-				GM_deleteValue('DF_' + Seed.player['name'] + '_city_' + city + '_' + getServerId())
-
-				GM_setValue('DF_' + uW.tvuid + '_city_' + city + '_' + getServerId(), JSON2.stringify(t.barbArray[city]));
-			}
-		}
-
-		if (Options.DFOptions.Levels[city][0]) {
-			t.barbing();
-			t.nextattack = setTimeout(t.getnextCity, parseInt((1 + Options.DFOptions.SendInterval) * 1000));
-		} else {
-			t.getnextCity();
-		}
-
-	},
-
-	getAtkKnight: function (cityID) {
-		var t = Tabs.Barb;
-		t.knt = new Array();
-		for (var k in Seed.knights[cityID]) {
-			if (Seed.knights[cityID][k]["knightStatus"] == 1 && Seed.leaders[cityID]["resourcefulnessKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.leaders[cityID]["politicsKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.leaders[cityID]["combatKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.leaders[cityID]["intelligenceKnightId"] != Seed.knights[cityID][k]["knightId"] && Seed.knights[cityID][k]["combat"] >= Options.DFOptions.barbMinKnight && Seed.knights[cityID][k]["combat"] <= Options.DFOptions.barbMaxKnight) {
-				t.knt.push({
-					Name: Seed.knights[cityID][k]["knightName"],
-					Combat: Seed.knights[cityID][k]["combat"],
-					ID: Seed.knights[cityID][k]["knightId"],
-				});
-			}
-		}
-		t.knt = t.knt.sort(function sort(a, b) {
-			a = parseInt(a['Combat']);
-			b = parseInt(b['Combat']);
-			if (parseInt(Options.DFOptions.knightselector) > 0)
-				return a == b ? 0 : (a > b ? -1 : 1);
-			else
-				return a == b ? 0 : (a < b ? -1 : 1);
-		});
-	},
-
-	doBarb: function (cityID, counter, xcoord, ycoord, level, kid, trps) {
+	doBarb: function (cityID, counter, xcoord, ycoord, level, kid, trps, job) {
 		var t = Tabs.Barb;
 		var dtime = new Date()
 		var params = uW.Object.clone(uW.g_ajaxparams);
@@ -768,6 +1019,9 @@ Tabs.Barb = {
 		for (var ii = 1; ii < parseInt(t.troopDef.length + 1); ii++) {
 			if (parseInt(trps[ii]) > Seed.units['city' + cityID]['unt' + t.troopDef[ii - 1][1]]) {
 				document.getElementById('dferrorlog').innerHTML = '<FONT color=red>' + dtime.toLocaleString() + ' ' + Cities.byID[cityID].name + ' dark forest failed: Not doing march, not enough units </FONT>';
+				t.clearInFlight(counter);
+				// Sin marcha, el caballero vuelve a estar libre.
+				if (job) t.releaseKnight(job.cityKey, job.kntKey, false);
 				return;
 			};
 			if (parseInt(trps[ii]) > 0)
@@ -778,7 +1032,12 @@ Tabs.Barb = {
 		document.getElementById('pberror1').innerHTML = 'Tries:' + Options.DFOptions.BarbsTried;
 
 		March.addMarch(params, function (rslt) {
+			t.clearInFlight(counter);
 			if (rslt.ok) {
+				// Se marca el caballero como ocupado en Seed al exito. March
+				// lo intenta con 'knt' + kid, pero kid es el knightId, no el
+				// indice, asi que nunca encontraba la entrada.
+				if (job) t.releaseKnight(job.cityKey, job.kntKey, true);
 				Options.DFOptions.BarbsDone[counter]++;
 				var element1 = 'pddatacity' + (counter - 1);
 				document.getElementById(element1).innerHTML = 'Sent: ' + Options.DFOptions.BarbsDone[counter];
@@ -787,21 +1046,32 @@ Tabs.Barb = {
 				GM_setValue('DF_' + uW.tvuid + '_city_' + counter + '_' + getServerId(), JSON2.stringify(t.barbArray[counter]));
 				saveOptions();
 			} else {
+				// El caballero se libera en cuanto la marcha termina. Si se
+				// reintenta por trafico se mantiene reservado para que otro
+				// barrido de la misma ciudad no se lo lleve mientras espera.
+				if (rslt.error_code == 8) {
+					Options.DFOptions.BarbsFailedTraffic++;
+					// MyAjaxRequest ya reintenta este error 3 veces cada 2 s, asi que
+					// esto ya es un cuarto intento. Antes se reenviaba aqui mismo
+					// sin ninguna espera, encadenando ataques contra el limite.
+					// Ahora vuelve a la cola y el hueco SendGap hace que espere.
+					t.requeueJob(job);
+					return;
+				}
+				if (job) t.releaseKnight(job.cityKey, job.kntKey, false);
 				if (rslt.error_code && rslt.msg) document.getElementById('dferrorlog').innerHTML = '<FONT color=red>' + dtime.toLocaleString() + ' ' + Cities.byID[cityID].name + ' dark forest failed: ' + rslt.msg + '</FONT>';
 				//logit( inspect(rslt,3,1));
 				if (rslt.error_code != 8 && rslt.error_code != 213 && rslt.error_code == 210) Options.DFOptions.BarbsFailedVaria++;
 				if (rslt.error_code == 213) Options.DFOptions.BarbsFailedKnight++;
 				if (rslt.error_code == 210) Options.DFOptions.BarbsFailedRP++;
 				if (rslt.error_code == 4) document.getElementById('dferrorlog').innerHTML = '<FONT color=red>' + dtime.toLocaleString() + ' ' + Cities.byID[cityID].name + ' dark forest failed: Not enough units</FONT>';
-				if (rslt.error_code == 8) {
-					Options.DFOptions.BarbsFailedTraffic++;
-					t.doBarb(cityID, counter, xcoord, ycoord, level, kid, trps);
-					return;
-				}
 				if (rslt.error_code == 104) {
+					// El objetivo no es atacable (falso, borroso, ya ocupado). El
+					// bosque ya salio de la lista al encolarlo, asi que solo hay
+					// que archivarlo y seguir. Antes decia 'new t.barbing()', que
+					// no hacia nada: con new el resultado se descarta.
 					Options.DFOptions.BarbsFailedBog++;
 					GM_setValue('DF_' + uW.tvuid + '_city_' + counter + '_' + getServerId(), JSON2.stringify(t.barbArray[counter]));
-					new t.barbing();
 					saveOptions();
 				}
 				document.getElementById('pberror2').innerHTML = 'Excess Traffic errors:' + Options.DFOptions.BarbsFailedTraffic;
@@ -815,6 +1085,31 @@ Tabs.Barb = {
 		//saveOptions();
 	},
 
+	clearInFlight: function (counter) {
+		var t = Tabs.Barb;
+		if (!t.barbInFlight[counter]) return;
+		t.barbInFlight[counter]--;
+		if (t.barbInFlight[counter] < 0) t.barbInFlight[counter] = 0;
+		if (!t.barbInFlight[counter]) delete t.barbInFlight[counter];
+	},
+
+	requeueJob: function (job) {
+		var t = Tabs.Barb;
+		if (!job) return;
+		job.retries = (job.retries || 0) + 1;
+		// Tres reintentos y el bosque se descarta: si el servidor dice exceso de
+		// trafico cuatro veces, no vamos a insistir. El caballero se libera
+		// porque el trabajo ya no sale de la cola.
+		if (job.retries > 3) {
+			t.releaseKnight(job.cityKey, job.kntKey, false);
+			return;
+		}
+		t.barbQueue.unshift(job);
+		// Ademas del hueco normal, este trabajo espera un poco mas.
+		t.barbLastSend = new Date().getTime() + 3000;
+		if (t.attRunning && !t.pumptimer) t.pumptimer = noThrottleTimeout(function () { t.pump(); }, 3000);
+	},
+
 	clickedSearch: function () {
 		var t = Tabs.Barb;
 
@@ -826,6 +1121,10 @@ Tabs.Barb = {
 		t.firstY = t.opt.startY - t.opt.maxDistance;
 		t.tilesSearched = 0;
 		t.tilesFound = 0;
+		// Antes solo se reiniciaba tilesSearched, y blocksSearched se acumulaba
+		// entre ciudades durante toda la sesion.
+		t.blocksSearched = 0;
+		t.curY = 0;
 		var element = 'pddatacity' + (t.lookup - 1);
 		var element2 = 'pddataarray' + (t.lookup - 1);
 		document.getElementById(element2).innerHTML = '';
@@ -919,10 +1218,26 @@ Tabs.Barb = {
 		document.getElementById(element).innerHTML = msg;
 		GM_setValue('DF_' + uW.tvuid + '_city_' + t.lookup + '_' + getServerId(), JSON2.stringify(t.mapDat));
 		Options.DFOptions.Update[t.lookup][0] = unixTime();
-		Options.DFOptions.Update[t.lookup][1]++;
+		// El contador cuenta solo busquedas SEGUIDAS sin resultado. Antes
+		// contaba cualquier busqueda, asi que una ciudad con buenos bosques
+		// acababa tan pronto aparcada como una que no encuentra nada, y con el
+		// valor por defecto de stopsearch=1 bastaba un fallo para dejarla
+		// bloqueada hasta que el usuario pulsara Reset Forests.
+		if (!t.mapDat || !t.mapDat.length) {
+			Options.DFOptions.Update[t.lookup][1]++;
+			// Espera creciente entre reintentos de una ciudad que no da fruto,
+			// para no gastarse el turno de busqueda en cada barrido.
+			t.nextSearchAt[t.lookup] = unixTime() + Math.min(600, (parseInt(Options.DFOptions.UpdateInterval) || 30) * 20);
+		} else {
+			Options.DFOptions.Update[t.lookup][1] = 0;
+		}
 		t.searchRunning = false;
+		t.barbArray[t.lookup] = t.sortBarbs(t.mapDat || []);
+		t.saveArray(t.lookup);
 		saveOptions();
-		t.checkBarbData();
+		// Se cede el turno a la siguiente ciudad pendiente en lugar de releer
+		// todas las listas.
+		t.nextSearch();
 		return;
 	},
 

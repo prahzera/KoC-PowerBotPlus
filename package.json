@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.36.4",
-  "releasenotes": "The Search filter sidebar is only 130px wide, so five long labels overflowed it. They are now short (Parallel, Exclude, Blacklist, Show Blacklisted, Alliance) and the full wording moved into a tooltip. The Parallel row was also never hidden, so it showed up for every Search Type even though a last login only means something for Cities and Wilds; it is now governed by the same check as the other last-login rows.",
+  "version": "4.37.0",
+  "releasenotes": "Dark Forest now sweeps every enabled city on each pass instead of advancing a single cursor one city per tick, so attacks are queued from all cities at once and sent through one pump with a new Gap between sends option (default 2000 ms, minimum 500). Troop config stays strict, and each city now shows why it is not attacking: aetherstone too high, no free knight, no free rally point, no forests, not enough troops or all forests out of range. Map searches still run one at a time but are now served from a FIFO queue, the empty-search counter only increments on consecutive empty searches (previously any search counted, so one failure parked a good city until Reset Forests), and an expired refresh no longer wipes the city list, so attacks keep flowing while the city is re-scanned. Also fixed: turning the tab off only nulled a variable without clearing the timer, so the chain kept firing with Attack = OFF; leaving the page said Attack = ON without starting anything; a city with no forests and no free knight was never queued for a search; the same knight was reused for several marches because the seed update keys on knt+knightId and never matched; error 8 retried instantly with no wait; and a bog target called new barbing(), whose result was discarded.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {
