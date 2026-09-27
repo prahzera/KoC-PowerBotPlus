@@ -12,6 +12,69 @@ function showMe() {
 	saveOptions();
 }
 
+// A game modal that needs the user's attention (Appoint a Knight, Assign Role,
+// ...) is stacked by the game's own ModalManager, far below the bot window's
+// CPopup.BASE_ZINDEX of 111111. The old code worked around that by calling
+// pthideMe(), which minimized the whole window, so every one of those clicks
+// threw away the bot's window state.
+//
+// Instead the window stays exactly where it is and the game modal is lifted
+// above it. If the modal cannot be found, fall back to the old hide so the
+// modal is never left buried behind the bot.
+var GameModalLift = {
+	_timer: null,
+	// Just above CPopup.BASE_ZINDEX. The bot window drifts to BASE+5 once
+	// clicked, hence the +1000 margin.
+	Z: 112111,
+	BOXES: '.largeModal, .xLargeModal, .mediumModal, .smallModal, .choose_modal, ' +
+		'.nomadModal, .chancellorModal, .vaultModal, .templeModal, .guardianModal, .animatedChestModal',
+
+	// Tries for ~2s, which is plenty for the game to build the modal in its own
+	// call stack. onFail runs only if it never showed up.
+	arm: function (onFail) {
+		var t = GameModalLift;
+		if (t._timer) clearTimeout(t._timer);
+		var tries = 0;
+		var tick = function () {
+			tries++;
+			if (t.lift()) { t._timer = null; return; }
+			if (tries < 20) t._timer = setTimeout(tick, 100);
+			else { t._timer = null; if (onFail) { try { onFail(); } catch (e) { logerr(e); } } }
+		};
+		tick();
+	},
+
+	lift: function () {
+		var t = GameModalLift;
+		var els = [];
+		try {
+			// The curtain is the full-screen backdrop, the boxes are the actual
+			// dialogs. The boxes go one step higher so the curtain can never
+			// cover the dialog it is supposed to be behind.
+			var curtains = document.querySelectorAll('.modalCurtain');
+			for (var i = 0; i < curtains.length; i++) els.push([curtains[i], 0]);
+			var boxes = document.querySelectorAll(t.BOXES);
+			for (var b = 0; b < boxes.length; b++) els.push([boxes[b], 1]);
+		} catch (e) { logerr(e); return false; }
+		if (!els.length) return false;
+		for (var j = 0; j < els.length; j++) {
+			var el = els[j][0];
+			var zi = t.Z + els[j][1];
+			el.style.zIndex = '' + zi;
+			// A z-index only counts inside its own stacking context, so if the
+			// game nests the dialog in a positioned wrapper, raising the dialog
+			// alone would not lift it past the bot window. Raise the ancestors up
+			// to the body as well; nested equal values still paint inner-last.
+			var up = el.parentNode;
+			while (up && up !== document.body && up.nodeType === 1) {
+				if (up.style) up.style.zIndex = '' + zi;
+				up = up.parentNode;
+			}
+		}
+		return true;
+	}
+};
+
 var WinManager = {
 	wins: {},	// prefix : CPopup obj
 

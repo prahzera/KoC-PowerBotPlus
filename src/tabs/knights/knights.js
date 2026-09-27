@@ -20,7 +20,7 @@ Tabs.Knights = {
 		t.myDiv = div;
 		uWExportFunction('ptAssignSkill', Tabs.Knights.clickedAssignPoints);
 		uWExportFunction('ptButDismiss', Tabs.Knights.postDismissKnight);
-		uWExportFunction('ptButAppoint', Tabs.Knights.postAppointKnight);
+		uWExportFunction('ptButAppoint', Tabs.Knights.appointKnight);
 		uWExportFunction('ptBoostKnight', Tabs.Knights.BoostKnight);
 
 		var m = '<DIV class=divHeader align=center>' + tx('KNIGHT ADMINISTRATION') + '</DIV>';
@@ -172,7 +172,7 @@ Tabs.Knights = {
 			});
 			for (var i = 0; i < list.length; i++)
 				m += _dispKnight(null, list[i], c, cid);
-			m += '<TR align=right><TD class=xtab>&nbsp;</td><td class=xtab align=left>' + strButton14(tx('Appoint a Knight'), 'onclick="pthideMe();ptButAppoint(' + c + ')"') + '</td><TD class=xtab align=right colspan=12><B>' + tx('Total Salary') + ':</b></td><TD class=xtab align=right><b>' + addCommas(totSalary) + '</b></td></tr>';
+			m += '<TR align=right><TD class=xtab>&nbsp;</td><td class=xtab align=left>' + strButton14(tx('Appoint a Knight'), 'onclick="ptButAppoint(' + c + ')"') + '</td><TD class=xtab align=right colspan=12><B>' + tx('Total Salary') + ':</b></td><TD class=xtab align=right><b>' + addCommas(totSalary) + '</b></td></tr>';
 			m += '<TR align=right><TD class=xtab colspan=16>&nbsp;</td></tr>';
 		}
 		m += '</table><br>';
@@ -222,6 +222,18 @@ Tabs.Knights = {
 			},
 		});
 	},
+	// "Appoint a Knight" used to call pthideMe() first, which minimized the whole
+	// bot window. The game's own dialog is stacked below the bot window, so it
+	// had to be hidden, but losing the window on every click was annoying. Now
+	// the dialog is lifted above the window instead. If it never turns up (a game
+	// modal we do not recognise), fall back to the old hide so the dialog is not
+	// left buried.
+	appointKnight: function (city) {
+		var t = Tabs.Knights;
+		t.postAppointKnight(city);
+		GameModalLift.arm(function () { hideMe(); });
+	},
+
 	postAppointKnight: function (city) {
 		var t = Tabs.Knights;
 		SelectCity(city + 1);

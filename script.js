@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Dark Forest now sweeps every enabled city on each pass instead of advancing a single cursor one city per tick, so attacks are queued from all cities at once and sent through one pump with a new Gap between sends option (default 2000 ms, minimum 500). Troop config stays strict, and each city now shows why it is not attacking: aetherstone too high, no free knight, no free rally point, no forests, not enough troops or all forests out of range. Map searches still run one at a time but are now served from a FIFO queue, the empty-search counter only increments on consecutive empty searches (previously any search counted, so one failure parked a good city until Reset Forests), and an expired refresh no longer wipes the city list, so attacks keep flowing while the city is re-scanned. Also fixed: turning the tab off only nulled a variable without clearing the timer, so the chain kept firing with Attack = OFF; leaving the page said Attack = ON without starting anything; a city with no forests and no free knight was never queued for a search; the same knight was reused for several marches because the seed update keys on knt+knightId and never matched; error 8 retried instantly with no wait; and a bog target called new barbing(), whose result was discarded.
-// @version		4.37.0
+// @releasenotes		Clicking Appoint a Knight minimized the whole Power Bot window: the button called pthideMe() because the game stacks its own dialog below the bot window, so the window had to be hidden for the dialog to be reachable. The dialog is now lifted above the window instead, so the window stays where it is. If the dialog cannot be identified the old hide is used as a fallback, so it can never end up buried behind the window.
+// @version		4.37.1
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.37.0';
+var Version = '4.37.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -4798,6 +4798,69 @@ function showMe() {
 	Options.btWinIsOpen = true;
 	saveOptions();
 }
+
+// A game modal that needs the user's attention (Appoint a Knight, Assign Role,
+// ...) is stacked by the game's own ModalManager, far below the bot window's
+// CPopup.BASE_ZINDEX of 111111. The old code worked around that by calling
+// pthideMe(), which minimized the whole window, so every one of those clicks
+// threw away the bot's window state.
+//
+// Instead the window stays exactly where it is and the game modal is lifted
+// above it. If the modal cannot be found, fall back to the old hide so the
+// modal is never left buried behind the bot.
+var GameModalLift = {
+	_timer: null,
+	// Just above CPopup.BASE_ZINDEX. The bot window drifts to BASE+5 once
+	// clicked, hence the +1000 margin.
+	Z: 112111,
+	BOXES: '.largeModal, .xLargeModal, .mediumModal, .smallModal, .choose_modal, ' +
+		'.nomadModal, .chancellorModal, .vaultModal, .templeModal, .guardianModal, .animatedChestModal',
+
+	// Tries for ~2s, which is plenty for the game to build the modal in its own
+	// call stack. onFail runs only if it never showed up.
+	arm: function (onFail) {
+		var t = GameModalLift;
+		if (t._timer) clearTimeout(t._timer);
+		var tries = 0;
+		var tick = function () {
+			tries++;
+			if (t.lift()) { t._timer = null; return; }
+			if (tries < 20) t._timer = setTimeout(tick, 100);
+			else { t._timer = null; if (onFail) { try { onFail(); } catch (e) { logerr(e); } } }
+		};
+		tick();
+	},
+
+	lift: function () {
+		var t = GameModalLift;
+		var els = [];
+		try {
+			// The curtain is the full-screen backdrop, the boxes are the actual
+			// dialogs. The boxes go one step higher so the curtain can never
+			// cover the dialog it is supposed to be behind.
+			var curtains = document.querySelectorAll('.modalCurtain');
+			for (var i = 0; i < curtains.length; i++) els.push([curtains[i], 0]);
+			var boxes = document.querySelectorAll(t.BOXES);
+			for (var b = 0; b < boxes.length; b++) els.push([boxes[b], 1]);
+		} catch (e) { logerr(e); return false; }
+		if (!els.length) return false;
+		for (var j = 0; j < els.length; j++) {
+			var el = els[j][0];
+			var zi = t.Z + els[j][1];
+			el.style.zIndex = '' + zi;
+			// A z-index only counts inside its own stacking context, so if the
+			// game nests the dialog in a positioned wrapper, raising the dialog
+			// alone would not lift it past the bot window. Raise the ancestors up
+			// to the body as well; nested equal values still paint inner-last.
+			var up = el.parentNode;
+			while (up && up !== document.body && up.nodeType === 1) {
+				if (up.style) up.style.zIndex = '' + zi;
+				up = up.parentNode;
+			}
+		}
+		return true;
+	}
+};
 
 var WinManager = {
 	wins: {},	// prefix : CPopup obj
@@ -52522,7 +52585,7 @@ Tabs.Knights = {
 		t.myDiv = div;
 		uWExportFunction('ptAssignSkill', Tabs.Knights.clickedAssignPoints);
 		uWExportFunction('ptButDismiss', Tabs.Knights.postDismissKnight);
-		uWExportFunction('ptButAppoint', Tabs.Knights.postAppointKnight);
+		uWExportFunction('ptButAppoint', Tabs.Knights.appointKnight);
 		uWExportFunction('ptBoostKnight', Tabs.Knights.BoostKnight);
 
 		var m = '<DIV class=divHeader align=center>' + tx('KNIGHT ADMINISTRATION') + '</DIV>';
@@ -52674,7 +52737,7 @@ Tabs.Knights = {
 			});
 			for (var i = 0; i < list.length; i++)
 				m += _dispKnight(null, list[i], c, cid);
-			m += '<TR align=right><TD class=xtab>&nbsp;</td><td class=xtab align=left>' + strButton14(tx('Appoint a Knight'), 'onclick="pthideMe();ptButAppoint(' + c + ')"') + '</td><TD class=xtab align=right colspan=12><B>' + tx('Total Salary') + ':</b></td><TD class=xtab align=right><b>' + addCommas(totSalary) + '</b></td></tr>';
+			m += '<TR align=right><TD class=xtab>&nbsp;</td><td class=xtab align=left>' + strButton14(tx('Appoint a Knight'), 'onclick="ptButAppoint(' + c + ')"') + '</td><TD class=xtab align=right colspan=12><B>' + tx('Total Salary') + ':</b></td><TD class=xtab align=right><b>' + addCommas(totSalary) + '</b></td></tr>';
 			m += '<TR align=right><TD class=xtab colspan=16>&nbsp;</td></tr>';
 		}
 		m += '</table><br>';
@@ -52724,6 +52787,18 @@ Tabs.Knights = {
 			},
 		});
 	},
+	// "Appoint a Knight" used to call pthideMe() first, which minimized the whole
+	// bot window. The game's own dialog is stacked below the bot window, so it
+	// had to be hidden, but losing the window on every click was annoying. Now
+	// the dialog is lifted above the window instead. If it never turns up (a game
+	// modal we do not recognise), fall back to the old hide so the dialog is not
+	// left buried.
+	appointKnight: function (city) {
+		var t = Tabs.Knights;
+		t.postAppointKnight(city);
+		GameModalLift.arm(function () { hideMe(); });
+	},
+
 	postAppointKnight: function (city) {
 		var t = Tabs.Knights;
 		SelectCity(city + 1);
