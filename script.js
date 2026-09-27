@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Auto-Ascend could prestige a city that was still busy, because the check for an idle city had been short-circuited to always true, so training, fortification, marches and the building in progress were never stopped first. Auto-Ascend now waits until the city is completely dormant: the first pass that finds the city ready stops whatever is running, later passes wait, and the ascension happens as soon as the city falls quiet, so nothing is cancelled twice.
-// @version		4.36.3
+// @releasenotes		The Search filter sidebar is only 130px wide, so five long labels overflowed it. They are now short (Parallel, Exclude, Blacklist, Show Blacklisted, Alliance) and the full wording moved into a tooltip. The Parallel row was also never hidden, so it showed up for every Search Type even though a last login only means something for Cities and Wilds; it is now governed by the same check as the other last-login rows.
+// @version		4.36.4
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.36.3';
+var Version = '4.36.4';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -31939,7 +31939,7 @@ Tabs.Search = {
 		m += '<tr id=pbsmisted2><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT id=pbSearchNewMists type=checkbox ' + (Options.SearchOptions.NewMists ? 'CHECKED' : '') + '/>' + tx('New') + '</td></tr>';
 		m += '<tr id=pbsfriendly><td><INPUT id=pbSearchFriendly type=checkbox ' + (Options.SearchOptions.Friendly ? 'CHECKED' : '') + '/>' + tx('Friendly') + '</td></tr>';
 		m += '<tr id=pbshostile><td><INPUT id=pbSearchHostile type=checkbox ' + (Options.SearchOptions.Hostile ? 'CHECKED' : '') + '/>' + tx('Hostile') + '</td></tr>';
-		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div style="cursor:pointer;" id=pbSearchHostileOpen>' + tx('Exclude Hostile Alliances') + '</div></td></tr>';
+		m += '<tr id=pbshostilefilter class=divHide><td colspan=2 align=left style="padding-left:15px;"><div style="cursor:pointer;" id=pbSearchHostileOpen>' + tx('Exclude') + '</div>' + t.searchTip('Exclude Hostile Alliances') + '</td></tr>';
 		m += '<tr id=pbsneutral><td><INPUT id=pbSearchNeutral type=checkbox ' + (Options.SearchOptions.Neutral ? 'CHECKED' : '') + '/>' + tx('Neutral') + '</td></tr>';
 		m += '<tr id=pbsunallied><td><INPUT id=pbSearchUnallied type=checkbox ' + (Options.SearchOptions.Unallied ? 'CHECKED' : '') + '/>' + tx('Unallied') + '</td></tr>';
 		m += '</table></td></tr>';
@@ -31947,17 +31947,17 @@ Tabs.Search = {
 		m += '<tr id=pbsmight2><td colspan=2 align=center><INPUT id=pbSearchMinMight class=btInput size=3 value=' + Options.SearchOptions.MinMight + '>&nbsp;-&nbsp;<INPUT id=pbSearchMaxMight class=btInput size=3 value=' + Options.SearchOptions.MaxMight + '></td></tr>';
 		m += '<tr id=pbsrank1><td colspan=2 align=center style="padding-top:5px;">' + tx('Alliance Rank') + ':</td></tr>';
 		m += '<tr id=pbsrank2><td colspan=2 align=center><INPUT id=pbSearchRank class=btInput size=3 value=' + Options.SearchOptions.Rank + '>&nbsp;' + htmlSelector({ 0: tx("and Above"), 1: tx("and Below") }, Options.SearchOptions.RankType, 'id=pbSearchRankType class=btInput') + '</td></tr>';
-		m += '<tr id=pbsaname1><td colspan=2 align=center style="padding-top:5px;">' + tx('Alliance Name') + ':</td></tr>';
+		m += '<tr id=pbsaname1><td colspan=2 align=center style="padding-top:5px;">' + tx('Alliance') + t.searchTip('Alliance Name') + ':</td></tr>';
 		m += '<tr id=pbsaname2><td colspan=2 align=center><INPUT id=pbSearchAllName class=btInput size=8 value=' + Options.SearchOptions.AllianceName + '></td></tr>';
 		m += '<tr id=pbspname1><td colspan=2 align=center style="padding-top:5px;">' + tx('Player Name') + ':</td></tr>';
 		m += '<tr id=pbspname2><td colspan=2 align=center><INPUT id=pbSearchPlayerName class=btInput size=8 value=' + Options.SearchOptions.PlayerName + '></td></tr>';
 		m += '<tr id=pbslastlogin1><td colspan=2 align=center><INPUT id=pbSearchShowLastLogin type=checkbox ' + (Options.SearchOptions.ShowLastLogin ? 'CHECKED' : '') + '/>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</td></tr>';
 		m += '<tr id=pbslastlogin2><td colspan=2 align=center style="padding-top:5px;">' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + ' (' + t.lastLoginUnit() + '):</td></tr>';
 		m += '<tr id=pbslastlogin3><td colspan=2 align=center><INPUT id=pbSearchLastLoginMinDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMinDays + '>&nbsp;-&nbsp;<INPUT id=pbSearchLastLoginMaxDays class=btInput size=3 value=' + Options.SearchOptions.LastLoginMaxDays + '></td></tr>';
-		m += '<tr id=pbslastlogin4><td colspan=2 align=center style="padding-top:5px;">' + tx('Last Login Workers') + ':&nbsp;' + htmlSelector({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 }, parseIntNan(Options.SearchOptions.LastLoginWorkers) || 3, 'id=pbSearchLastLoginWorkers class=btInput') + '</td></tr>';
-		m += '<tr id=pbsblacklist1><td colspan=2 align=center style="padding-top:5px;"><INPUT id=pbSearchBlacklistEnabled type=checkbox ' + (Options.SearchOptions.BlacklistEnabled ? 'CHECKED' : '') + '/>' + tx('City Blacklist') + '</td></tr>';
+		m += '<tr id=pbslastlogin4><td colspan=2 align=center style="padding-top:5px;">' + tx('Parallel') + t.searchTip('Last Login Workers') + ':&nbsp;' + htmlSelector({ 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 }, parseIntNan(Options.SearchOptions.LastLoginWorkers) || 3, 'id=pbSearchLastLoginWorkers class=btInput') + '</td></tr>';
+		m += '<tr id=pbsblacklist1><td colspan=2 align=center style="padding-top:5px;"><INPUT id=pbSearchBlacklistEnabled type=checkbox ' + (Options.SearchOptions.BlacklistEnabled ? 'CHECKED' : '') + '/>' + tx('Blacklist') + t.searchTip('City Blacklist') + '</td></tr>';
 		m += '<tr id=pbsblacklist2><td colspan=2 align=center style="padding-top:2px;">' + tx('Inactive after') + ':&nbsp;<INPUT id=pbSearchBlacklistDays class=btInput size=3 value=' + Options.SearchOptions.BlacklistDays + '></td></tr>';
-		m += '<tr id=pbsblacklist3><td colspan=2 align=center><INPUT id=pbSearchShowBlacklisted type=checkbox ' + (Options.SearchOptions.ShowBlacklisted ? 'CHECKED' : '') + '/>' + tx('Show blacklisted') + '</td></tr>';
+		m += '<tr id=pbsblacklist3><td colspan=2 align=center><INPUT id=pbSearchShowBlacklisted type=checkbox ' + (Options.SearchOptions.ShowBlacklisted ? 'CHECKED' : '') + '/>' + tx('Show Blacklisted') + t.searchTip('Show blacklisted') + '</td></tr>';
 		m += '<tr><td colspan=2 align=center style="padding-top:5px;">' + tx('Search Shape') + ':</td></tr>';
 		m += '<tr><td colspan=2 align=center>' + htmlSelector({ 0: tx("Square"), 1: tx("Circle") }, Options.SearchOptions.SearchShape, 'id=pbSearchShape class=btInput') + '</td></tr>';
 		m += '</table>';
@@ -32266,10 +32266,12 @@ t.setupFilterDisplay();
 				if (t.lastLoginUsable()) {
 					jQuery('#pbslastlogin2').removeClass('divHide');
 					jQuery('#pbslastlogin3').removeClass('divHide');
+					jQuery('#pbslastlogin4').removeClass('divHide');
 				}
 				else {
 					jQuery('#pbslastlogin2').addClass('divHide');
 					jQuery('#pbslastlogin3').addClass('divHide');
+					jQuery('#pbslastlogin4').addClass('divHide');
 				}
 			}
 			if (ById('pbslastloginrefresh')) {
@@ -32640,6 +32642,14 @@ t.setupFilterDisplay();
 			t.renderTimer = null;
 			if (t.searchRunning) { t.renderTable(true); }
 		}, 2000);
+	},
+
+	// El sidebar de filtros mide 130px, asi que las etiquetas van cortas y la
+	// explicacion entera se deja en el tooltip. Mismo patron tooldesc que usa la
+	// fila Refresh. El ? se pinta como hermano y no dentro del elemento clicable,
+	// para que pulsarlo no dispare la accion de al lado.
+	searchTip: function (key) {
+		return '&nbsp;<span class="tooldesc"><span style="display:inline-block;width:15px;height:15px;border:1px solid #888;border-radius:50%;text-align:center;line-height:13px;font-size:10px;cursor:help;">?</span><span class="tooltip" style="white-space: pre-line; word-wrap: break-word;">' + tx(key) + '</span></span>';
 	},
 
 	lastLoginUnit: function () {

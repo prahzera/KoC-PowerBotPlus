@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.36.3",
-  "releasenotes": "Auto-Ascend could prestige a city that was still busy, because the check for an idle city had been short-circuited to always true, so training, fortification, marches and the building in progress were never stopped first. Auto-Ascend now waits until the city is completely dormant: the first pass that finds the city ready stops whatever is running, later passes wait, and the ascension happens as soon as the city falls quiet, so nothing is cancelled twice.",
+  "version": "4.36.4",
+  "releasenotes": "The Search filter sidebar is only 130px wide, so five long labels overflowed it. They are now short (Parallel, Exclude, Blacklist, Show Blacklisted, Alliance) and the full wording moved into a tooltip. The Parallel row was also never hidden, so it showed up for every Search Type even though a last login only means something for Cities and Wilds; it is now governed by the same check as the other last-login rows.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {
