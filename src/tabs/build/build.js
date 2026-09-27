@@ -2482,7 +2482,7 @@ Tabs.Build = {
 					actionLog(Cities.byID[cityId].name + ': Successfully Ascended', 'ASCEND');
 					if (notify) { notify(cityId, faction); } // action on successful ascend...
 					// need to reload to get everything in order (the above stuff doesn't work)
-					ReloadKOC();
+					ReloadGameFrame();
 				}
 				else {
 					if (rslt.msg) {

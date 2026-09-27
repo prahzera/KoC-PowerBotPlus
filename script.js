@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Highlighted rows showed no highlight at all in the dark theme: the defender cities found by a search, and the highlighted rows in Own City, Training, Fort and Player, were all invisible. The dark theme now shows the highlight again, and adds a border around it so it stays easy to see even if you picked a highlight colour close to the background.
-// @version		4.36.1
+// @releasenotes		After an ascension the bot now refreshes its own game frame instead of loading the portal URL, which Facebook was detecting as an external page load and could block the connection. The same in-place refresh is now used for the bot's other internal restarts, while language changes and token or chest collection still reload by URL as before.
+// @version		4.36.2
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.36.1';
+var Version = '4.36.2';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -2012,7 +2012,7 @@ function KOCnotFound(secs, bot, inst) {
 		ById('btwdsecs').innerHTML = timestr(secsLeft);
 		if (secsLeft < 0) {
 			clearTimeout(countdownTimer);
-			ReloadKOC();
+			ReloadGameFrame();
 		}
 	}
 	function cancel() {
@@ -2033,6 +2033,13 @@ function KOCnotFound(secs, bot, inst) {
 		ById('btwdcan').addEventListener('click', cancel, false);
 		countdownTimer = setInterval(countdown, 1000);
 	}
+}
+
+// Reload the game frame in place, without navigating the top frame to the
+// portal URL. Facebook flags that cross-origin navigation as an external page
+// load and can block the connection, so the bot must only refresh its own frame.
+function ReloadGameFrame() {
+	setTimeout(function () { window.location.reload(true); }, 0);
 }
 
 function ReloadKOC(timer, params) {
@@ -21507,7 +21514,7 @@ Tabs.Options = {
 				UserOptions = Import.UserOptions;
 				Options = Import.Options;
 				actionLog('Settings file successfully loaded', 'OPTIONS');
-				ReloadKOC();
+				ReloadGameFrame();
 			};
 			reader.readAsText(file);
 		}, false);
@@ -21541,7 +21548,7 @@ Tabs.Options = {
 					ResetAll = true;
 					actionLog('Powerbot+ configuration imported from ' + OldServerID);
 					Tabs.ActionLog.save();
-					ReloadKOC();
+					ReloadGameFrame();
 					return;
 				}
 				else {
@@ -23730,7 +23737,7 @@ Tabs.Options = {
 							}
 							ResetAll = true;
 							actionLog('Powerbot+ restored to factory settings');
-							ReloadKOC();
+							ReloadGameFrame();
 						}, 0);
 					}
 				},
@@ -23759,7 +23766,7 @@ Tabs.Options = {
 							ResetAll = true;
 							actionLog('Powerbot+ configuration reset');
 							Tabs.ActionLog.save();
-							ReloadKOC();
+							ReloadGameFrame();
 						}, 0);
 					}
 				},
@@ -23781,7 +23788,8 @@ Tabs.Options = {
 			var div = document.createElement('div');
 			div.id = 'ptRestart';
 			uWExportFunction('ReloadKOC', ReloadKOC);
-			var msg = tx('Changes to Power Bot Plus Settings require Kingdoms of Camelot to be reloaded') + '... <a onClick="ReloadKOC();">[' + tx('Reload') + ']</a>&nbsp;<a onClick="this.parentNode.parentNode.style.display=\'none\';">[' + uW.g_js_strings.commonstr.close + ']</a>';
+			uWExportFunction('ReloadGameFrame', ReloadGameFrame);
+			var msg = tx('Changes to Power Bot Plus Settings require Kingdoms of Camelot to be reloaded') + '... <a onClick="ReloadGameFrame();">[' + tx('Reload') + ']</a>&nbsp;<a onClick="this.parentNode.parentNode.style.display=\'none\';">[' + uW.g_js_strings.commonstr.close + ']</a>';
 			div.innerHTML = '<DIV style="background: #fde073; text-align: center; line-height: 2.5; overflow: hidden; -webkit-box-shadow: 0 0 5px black; -moz-box-shadow: 0 0 5px black; box-shadow: 0 0 5px black;">' + msg + '</div>';
 			document.body.insertBefore(div, document.body.firstChild);
 		}
@@ -65823,7 +65831,7 @@ Tabs.Build = {
 					actionLog(Cities.byID[cityId].name + ': Successfully Ascended', 'ASCEND');
 					if (notify) { notify(cityId, faction); } // action on successful ascend...
 					// need to reload to get everything in order (the above stuff doesn't work)
-					ReloadKOC();
+					ReloadGameFrame();
 				}
 				else {
 					if (rslt.msg) {

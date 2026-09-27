@@ -49,7 +49,7 @@ function KOCnotFound(secs, bot, inst) {
 		ById('btwdsecs').innerHTML = timestr(secsLeft);
 		if (secsLeft < 0) {
 			clearTimeout(countdownTimer);
-			ReloadKOC();
+			ReloadGameFrame();
 		}
 	}
 	function cancel() {
@@ -70,6 +70,13 @@ function KOCnotFound(secs, bot, inst) {
 		ById('btwdcan').addEventListener('click', cancel, false);
 		countdownTimer = setInterval(countdown, 1000);
 	}
+}
+
+// Reload the game frame in place, without navigating the top frame to the
+// portal URL. Facebook flags that cross-origin navigation as an external page
+// load and can block the connection, so the bot must only refresh its own frame.
+function ReloadGameFrame() {
+	setTimeout(function () { window.location.reload(true); }, 0);
 }
 
 function ReloadKOC(timer, params) {

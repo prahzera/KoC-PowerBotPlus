@@ -751,7 +751,7 @@ Tabs.Options = {
 				UserOptions = Import.UserOptions;
 				Options = Import.Options;
 				actionLog('Settings file successfully loaded', 'OPTIONS');
-				ReloadKOC();
+				ReloadGameFrame();
 			};
 			reader.readAsText(file);
 		}, false);
@@ -785,7 +785,7 @@ Tabs.Options = {
 					ResetAll = true;
 					actionLog('Powerbot+ configuration imported from ' + OldServerID);
 					Tabs.ActionLog.save();
-					ReloadKOC();
+					ReloadGameFrame();
 					return;
 				}
 				else {
@@ -2974,7 +2974,7 @@ Tabs.Options = {
 							}
 							ResetAll = true;
 							actionLog('Powerbot+ restored to factory settings');
-							ReloadKOC();
+							ReloadGameFrame();
 						}, 0);
 					}
 				},
@@ -3003,7 +3003,7 @@ Tabs.Options = {
 							ResetAll = true;
 							actionLog('Powerbot+ configuration reset');
 							Tabs.ActionLog.save();
-							ReloadKOC();
+							ReloadGameFrame();
 						}, 0);
 					}
 				},
@@ -3025,7 +3025,8 @@ Tabs.Options = {
 			var div = document.createElement('div');
 			div.id = 'ptRestart';
 			uWExportFunction('ReloadKOC', ReloadKOC);
-			var msg = tx('Changes to Power Bot Plus Settings require Kingdoms of Camelot to be reloaded') + '... <a onClick="ReloadKOC();">[' + tx('Reload') + ']</a>&nbsp;<a onClick="this.parentNode.parentNode.style.display=\'none\';">[' + uW.g_js_strings.commonstr.close + ']</a>';
+			uWExportFunction('ReloadGameFrame', ReloadGameFrame);
+			var msg = tx('Changes to Power Bot Plus Settings require Kingdoms of Camelot to be reloaded') + '... <a onClick="ReloadGameFrame();">[' + tx('Reload') + ']</a>&nbsp;<a onClick="this.parentNode.parentNode.style.display=\'none\';">[' + uW.g_js_strings.commonstr.close + ']</a>';
 			div.innerHTML = '<DIV style="background: #fde073; text-align: center; line-height: 2.5; overflow: hidden; -webkit-box-shadow: 0 0 5px black; -moz-box-shadow: 0 0 5px black; box-shadow: 0 0 5px black;">' + msg + '</div>';
 			document.body.insertBefore(div, document.body.firstChild);
 		}
