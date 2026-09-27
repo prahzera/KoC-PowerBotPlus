@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		After an ascension the bot now refreshes its own game frame instead of loading the portal URL, which Facebook was detecting as an external page load and could block the connection. The same in-place refresh is now used for the bot's other internal restarts, while language changes and token or chest collection still reload by URL as before.
-// @version		4.36.2
+// @releasenotes		Auto-Ascend could prestige a city that was still busy, because the check for an idle city had been short-circuited to always true, so training, fortification, marches and the building in progress were never stopped first. Auto-Ascend now waits until the city is completely dormant: the first pass that finds the city ready stops whatever is running, later passes wait, and the ascension happens as soon as the city falls quiet, so nothing is cancelled twice.
+// @version		4.36.3
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.36.2';
+var Version = '4.36.3';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -65854,6 +65854,58 @@ Tabs.Build = {
 		}, true); // noretry
 	},
 
+	// The game will not prestige a city that still has anything running, so the
+	// city has to be fully dormant first. True when nothing is in progress: no
+	// construction, no training, no fortification, no revive and no troops left
+	// on the map. Marches that are already on their way home (status 10) do not
+	// count, because killCityActivity cannot stop those and counting them would
+	// keep the city waiting forever.
+	isCityDormant: function (cityId) {
+		var now = unixTime();
+		var q, i, e, m;
+
+		// no construction in progress
+		q = Seed.queue_con["city" + cityId];
+		if (q) {
+			for (i = 0; i < q.length; i++) {
+				if (parseInt(q[i][4]) > now) { return false; }
+			}
+		}
+
+		// no training in progress
+		q = Seed.queue_unt["city" + cityId];
+		if (q) {
+			for (i = 0; i < q.length; i++) {
+				if (parseInt(q[i][3]) > now) { return false; }
+			}
+		}
+
+		// no fortification in progress
+		q = Seed.queue_fort["city" + cityId];
+		if (q) {
+			for (i = 0; i < q.length; i++) {
+				if (parseInt(q[i][3]) > now) { return false; }
+			}
+		}
+
+		// no revive in progress
+		q = Seed.queue_revive["city" + cityId];
+		if (q && q.length > 0) { return false; }
+		q = Seed.queue_revive2["city" + cityId];
+		if (q && q.length > 0) { return false; }
+
+		// no troops on the map, bot raids included
+		var atkp = Seed.queue_atkp["city" + cityId];
+		if (atkp) {
+			for (e in atkp) {
+				m = atkp[e];
+				if (m && (m.marchStatus == 1 || m.marchStatus == 2)) { return false; }
+			}
+		}
+
+		return true;
+	},
+
 	checkAutoAscend: function () {
 		var t = Tabs.Build;
 
@@ -65907,17 +65959,20 @@ Tabs.Build = {
 
 					// do ascend!
 
+					// The flag doubles as the "already cleared" marker: the first
+					// pass that sees the city as ready stops whatever is running,
+					// and the later passes only wait, so nothing gets cancelled
+					// twice and the staggered cancels have time to settle.
+					var wasReady = Options.BuildOptions.AscensionReady[i];
 					Options.BuildOptions.AscensionReady[i] = true; // suspend auto functions!
 					saveOptions();
 
-					citydormant = true;
-
-					if (!citydormant) { // try and stop all the stuff going on before the next pass....
-						t.killCityActivity(cityId);
-					}
-
-					if (citydormant) {
+					if (t.isCityDormant(cityId)) {
 						t.Ascend(cityId, faction, blessingId, t.AscensionCallBack);
+					}
+					else if (!wasReady) { // try and stop all the stuff going on before the next pass....
+						actionLog(Cities.byID[cityId].name + ': Clearing city to ascend', 'ASCEND');
+						t.killCityActivity(cityId);
 					}
 				}
 				else {

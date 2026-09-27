@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.36.2",
-  "releasenotes": "After an ascension the bot now refreshes its own game frame instead of loading the portal URL, which Facebook was detecting as an external page load and could block the connection. The same in-place refresh is now used for the bot's other internal restarts, while language changes and token or chest collection still reload by URL as before.",
+  "version": "4.36.3",
+  "releasenotes": "Auto-Ascend could prestige a city that was still busy, because the check for an idle city had been short-circuited to always true, so training, fortification, marches and the building in progress were never stopped first. Auto-Ascend now waits until the city is completely dormant: the first pass that finds the city ready stops whatever is running, later passes wait, and the ascension happens as soon as the city falls quiet, so nothing is cancelled twice.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {
