@@ -1,6 +1,6 @@
 // ==UserScript==
-// @releasenotes		Clicking Appoint a Knight minimized the whole Power Bot window: the button called pthideMe() because the game stacks its own dialog below the bot window, so the window had to be hidden for the dialog to be reachable. The dialog is now lifted above the window instead, so the window stays where it is. If the dialog cannot be identified the old hide is used as a fallback, so it can never end up buried behind the window.
-// @version		4.37.1
+// @releasenotes		Added a Copy to Clipboard button next to Post to Chat in the Throne tab, Presets subtab. It copies the exact same formatted stats string that Post to Chat sends, so you can paste it into any chat by hand and anyone running the bot still gets it rendered as the stats table. Both buttons now build that string from one shared function, so the two can never drift apart. The Post to Chat label in that subtab was also passed through the translator, which it was not before, and the previously missing Copy to Clipboard translation was added.
+// @version		4.37.2
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.37.1';
+var Version = '4.37.2';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -38730,7 +38730,7 @@ Tabs.Throne = {
 		if (found) t.NextPresetNumber = parseIntNan(y)+1;
 
 		m += '</select></td><td><div id=btthronepresetcommitdiv style="height:20px;"><span style="text-align:center;display:inline-block;margin-top:3px;" id=btthronepresetMsg>&nbsp;</span></div></td></tr>';
-		m += '<tr><td valign=top colspan=2><div class=divHeader><span id=btthronepresettitle style="display:inline-block;"><b>'+tx('Preview Stats')+'</b></span><span title="'+tx('Click to revert')+'" style="display:inline-block;vertical-align:middle;margin-top:-6px;font-weight:normal;float:right;margin-right:-12px;" id=btthronepresetinitial>&nbsp;</span></div><div id=btthronepresetpreview>&nbsp;</div><div id=btthronepresetpostdiv style="display:none;" align=center><br>'+strButton8('Post to Chat',' id=btthronepresetpost')+'</div></td><td style="padding-right:0px;"><div style="max-width:'+(GlobalOptions.btWinSize.x-220)+'px;overflow-x:auto;max-height:1000px;overflow-y:auto;padding-right:0px;"><table cellpadding=0 cellspacing=0 style="padding-right:2px;border:1px solid;border-collapse:collapse;" class=xtab width=100%><tr>';
+		m += '<tr><td valign=top colspan=2><div class=divHeader><span id=btthronepresettitle style="display:inline-block;"><b>'+tx('Preview Stats')+'</b></span><span title="'+tx('Click to revert')+'" style="display:inline-block;vertical-align:middle;margin-top:-6px;font-weight:normal;float:right;margin-right:-12px;" id=btthronepresetinitial>&nbsp;</span></div><div id=btthronepresetpreview>&nbsp;</div><div id=btthronepresetpostdiv style="display:none;" align=center><br>'+strButton8(tx('Post to Chat'),' id=btthronepresetpost')+'&nbsp;'+strButton8(tx('Copy to Clipboard'),' id=btthronepresetcopy')+'</div></td><td style="padding-right:0px;"><div style="max-width:'+(GlobalOptions.btWinSize.x-220)+'px;overflow-x:auto;max-height:1000px;overflow-y:auto;padding-right:0px;"><table cellpadding=0 cellspacing=0 style="padding-right:2px;border:1px solid;border-collapse:collapse;" class=xtab width=100%><tr>';
 
 		var LineBreak = 4;
 		var DropWidth = 180;
@@ -38801,6 +38801,7 @@ Tabs.Throne = {
 
 		ById('btthronepresetselect').addEventListener('change',t.PresetSelected, false);
 		ById('btthronepresetpost').addEventListener('click',t.PostPreviewSlot, false);
+		ById('btthronepresetcopy').addEventListener('click',t.CopyPreviewSlot, false);
 		ById('btthroneSearchAutoPop').addEventListener ('click', t.PreviewAutoPop, false);
 
 		jQuery("#btthroneSearchEffectFilter input").change(t.SearchCards);
@@ -42746,7 +42747,7 @@ Tabs.Throne = {
 		sendChat(":::. |" + D.join("||"));
 	},
 
-	PostPreviewSlot : function() {
+	GetPreviewPostText : function() {
 		var t = Tabs.Throne;
 		var D = [];
 		D.push(tx('Throne Room Preview'));
@@ -42754,7 +42755,20 @@ Tabs.Throne = {
 			D.push(tx('Preview Might')+': '+addCommas(t.getPreviewMight(t.PreviewCards)));
 		}
 		D.push(t.GeneratePreviewStats(t.PreviewCards, false));
-		sendChat(":::. |" + D.join("||"));
+		return ":::. |" + D.join("||");
+	},
+
+	PostPreviewSlot : function() {
+		sendChat(Tabs.Throne.GetPreviewPostText());
+	},
+
+	// Copia al portapapeles el mismo texto exacto que genera 'Post to Chat',
+	// para poder pegarlo a mano en cualquier chat. Quien tenga el bot lo
+	// formatea igual que si se hubiera enviado, porque es el mismo formato.
+	CopyPreviewSlot : function() {
+		var t = Tabs.Throne;
+		if (jQuery.isEmptyObject(t.PreviewCards)) { return; }
+		window.prompt(tx("Copy to clipboard: Ctrl+C"), t.GetPreviewPostText());
 	},
 
 	ConvertToCard : function (trId,div,Links,ScaleFactor,nomenu,FromSearch) {

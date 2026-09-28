@@ -1378,6 +1378,7 @@
     "Checking": "Comprobando",
     "Highlight Defenders": "Resaltar defensores",
     "Copy Co-ordinates": "Copiar coordenadas",
+    "Copy to Clipboard": "Copiar al portapapeles",
     "Copy to clipboard: Ctrl+C": "Copiar al portapapeles: Ctrl+C",
     "No tiles found matching search criteria": "No se encontraron casillas que cumplan los criterios de búsqueda"
 }

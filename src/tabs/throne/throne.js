@@ -2628,7 +2628,7 @@ Tabs.Throne = {
 		if (found) t.NextPresetNumber = parseIntNan(y)+1;
 
 		m += '</select></td><td><div id=btthronepresetcommitdiv style="height:20px;"><span style="text-align:center;display:inline-block;margin-top:3px;" id=btthronepresetMsg>&nbsp;</span></div></td></tr>';
-		m += '<tr><td valign=top colspan=2><div class=divHeader><span id=btthronepresettitle style="display:inline-block;"><b>'+tx('Preview Stats')+'</b></span><span title="'+tx('Click to revert')+'" style="display:inline-block;vertical-align:middle;margin-top:-6px;font-weight:normal;float:right;margin-right:-12px;" id=btthronepresetinitial>&nbsp;</span></div><div id=btthronepresetpreview>&nbsp;</div><div id=btthronepresetpostdiv style="display:none;" align=center><br>'+strButton8('Post to Chat',' id=btthronepresetpost')+'</div></td><td style="padding-right:0px;"><div style="max-width:'+(GlobalOptions.btWinSize.x-220)+'px;overflow-x:auto;max-height:1000px;overflow-y:auto;padding-right:0px;"><table cellpadding=0 cellspacing=0 style="padding-right:2px;border:1px solid;border-collapse:collapse;" class=xtab width=100%><tr>';
+		m += '<tr><td valign=top colspan=2><div class=divHeader><span id=btthronepresettitle style="display:inline-block;"><b>'+tx('Preview Stats')+'</b></span><span title="'+tx('Click to revert')+'" style="display:inline-block;vertical-align:middle;margin-top:-6px;font-weight:normal;float:right;margin-right:-12px;" id=btthronepresetinitial>&nbsp;</span></div><div id=btthronepresetpreview>&nbsp;</div><div id=btthronepresetpostdiv style="display:none;" align=center><br>'+strButton8(tx('Post to Chat'),' id=btthronepresetpost')+'&nbsp;'+strButton8(tx('Copy to Clipboard'),' id=btthronepresetcopy')+'</div></td><td style="padding-right:0px;"><div style="max-width:'+(GlobalOptions.btWinSize.x-220)+'px;overflow-x:auto;max-height:1000px;overflow-y:auto;padding-right:0px;"><table cellpadding=0 cellspacing=0 style="padding-right:2px;border:1px solid;border-collapse:collapse;" class=xtab width=100%><tr>';
 
 		var LineBreak = 4;
 		var DropWidth = 180;
@@ -2699,6 +2699,7 @@ Tabs.Throne = {
 
 		ById('btthronepresetselect').addEventListener('change',t.PresetSelected, false);
 		ById('btthronepresetpost').addEventListener('click',t.PostPreviewSlot, false);
+		ById('btthronepresetcopy').addEventListener('click',t.CopyPreviewSlot, false);
 		ById('btthroneSearchAutoPop').addEventListener ('click', t.PreviewAutoPop, false);
 
 		jQuery("#btthroneSearchEffectFilter input").change(t.SearchCards);
@@ -6644,7 +6645,7 @@ Tabs.Throne = {
 		sendChat(":::. |" + D.join("||"));
 	},
 
-	PostPreviewSlot : function() {
+	GetPreviewPostText : function() {
 		var t = Tabs.Throne;
 		var D = [];
 		D.push(tx('Throne Room Preview'));
@@ -6652,7 +6653,20 @@ Tabs.Throne = {
 			D.push(tx('Preview Might')+': '+addCommas(t.getPreviewMight(t.PreviewCards)));
 		}
 		D.push(t.GeneratePreviewStats(t.PreviewCards, false));
-		sendChat(":::. |" + D.join("||"));
+		return ":::. |" + D.join("||");
+	},
+
+	PostPreviewSlot : function() {
+		sendChat(Tabs.Throne.GetPreviewPostText());
+	},
+
+	// Copia al portapapeles el mismo texto exacto que genera 'Post to Chat',
+	// para poder pegarlo a mano en cualquier chat. Quien tenga el bot lo
+	// formatea igual que si se hubiera enviado, porque es el mismo formato.
+	CopyPreviewSlot : function() {
+		var t = Tabs.Throne;
+		if (jQuery.isEmptyObject(t.PreviewCards)) { return; }
+		window.prompt(tx("Copy to clipboard: Ctrl+C"), t.GetPreviewPostText());
 	},
 
 	ConvertToCard : function (trId,div,Links,ScaleFactor,nomenu,FromSearch) {

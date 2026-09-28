@@ -1,7 +1,7 @@
 {
   "name": "koc-power-bot-plus",
-  "version": "4.37.1",
-  "releasenotes": "Clicking Appoint a Knight minimized the whole Power Bot window: the button called pthideMe() because the game stacks its own dialog below the bot window, so the window had to be hidden for the dialog to be reachable. The dialog is now lifted above the window instead, so the window stays where it is. If the dialog cannot be identified the old hide is used as a fallback, so it can never end up buried behind the window.",
+  "version": "4.37.2",
+  "releasenotes": "Added a Copy to Clipboard button next to Post to Chat in the Throne tab, Presets subtab. It copies the exact same formatted stats string that Post to Chat sends, so you can paste it into any chat by hand and anyone running the bot still gets it rendered as the stats table. Both buttons now build that string from one shared function, so the two can never drift apart. The Post to Chat label in that subtab was also passed through the translator, which it was not before, and the previously missing Copy to Clipboard translation was added.",
   "private": true,
   "description": "KoC Power Bot Plus — código fuente dividido en src/ que se compila a script.js (userscript de un solo archivo)",
   "scripts": {
