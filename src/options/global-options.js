@@ -40,7 +40,6 @@ var GlobalOptions = {
 		{ "source": EXTERNAL_RESOURCE + "tabs/Debug.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Tournament.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Megalith.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
-		{ "source": EXTERNAL_RESOURCE + "tabs/Aport.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Champ.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Boss.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 		{ "source": EXTERNAL_RESOURCE + "tabs/Resources.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
@@ -48,3 +47,21 @@ var GlobalOptions = {
 		{ "source": EXTERNAL_RESOURCE + "tabs/Joust.js", "data": null, "enabled": false, "lastchecked": 0, "version": "" },
 	],
 };
+
+// ExtraTabs externos que ya se compilan dentro del script base. Si el tab nativo
+// esta disponible, el externo no se evalua: si no, aparecerian dos tabs del
+// mismo modulo (el externo define Tabs.PortalTime, Champ, Boss...) y el externo
+// podria pisar la version nativa.
+var NATIVE_TAB_REPLACEMENTS = {
+	'tabs/Aport.js': 'Aport',
+	'tabs/Champ.js': 'Champ',
+	'tabs/Boss.js': 'Boss',
+};
+
+function isSupersededExtraTab(src) {
+	if (matTypeof(src) != 'string') { return false; }
+	for (var suffix in NATIVE_TAB_REPLACEMENTS) {
+		if (src.indexOf(suffix) > -1) { return matTypeof(Tabs[NATIVE_TAB_REPLACEMENTS[suffix]]) == 'object'; }
+	}
+	return false;
+}

@@ -291,7 +291,7 @@ function PowerBotStartup() {
 
 	CheckDelay = 0;
 	for (var e in GlobalOptions.ExtraTabs) {
-		if (GlobalOptions.ExtraTabs[e].enabled) {
+		if (GlobalOptions.ExtraTabs[e].enabled && !isSupersededExtraTab(GlobalOptions.ExtraTabs[e].source)) {
 			try {
 				eval(atob(GlobalOptions.ExtraTabs[e].data));
 			} catch (err) { logerr(err); }

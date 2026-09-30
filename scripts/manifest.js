@@ -172,6 +172,7 @@ const MANIFEST = [
   'tabs/throne/throne.js', // /** Throne Tab **/ + Tabs.Throne
   'tabs/boss/boss.js', // /** Boss Tab **/ + Tabs.Boss
   'tabs/champ/champ.js', // /** Champ Tab **/ + Tabs.Champ
+  'tabs/aport/aport.js', // /** Aport Tab **/ (AutoPort/PortalTime) + Tabs.Aport
   'tabs/notes/notes.js', // /** Notes Tab **/ (30996) + Tabs.Notes
   'tabs/whisper/whisper.js', // /** Whisper Tab **/ (31299) + Tabs.Whisper
   'tabs/messages/messages.js', // /** Messages Tab **/ (31583) + Tabs.Messages

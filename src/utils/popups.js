@@ -341,7 +341,8 @@ var TabIcons = {
 	OverView: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9 H21 M9 3 V21"/>',
 	Whisper: '<path d="M21 11.5 A8.5 8.5 0 0 1 5.5 16.8 L3 21 L6.3 18.9 A8.5 8.5 0 1 1 21 11.5 Z"/>',
 	Player: '<path d="M20 21 V19 A4 4 0 0 0 16 15 H8 A4 4 0 0 0 4 19 V21"/><circle cx="12" cy="7" r="4"/>',
-	Reference: '<path d="M4 19.5 A2.5 2.5 0 0 1 6.5 17 H20"/><path d="M6.5 2 H20 V22 H6.5 A2.5 2.5 0 0 1 4 19.5 V4.5 A2.5 2.5 0 0 1 6.5 2 Z"/>'
+	Reference: '<path d="M4 19.5 A2.5 2.5 0 0 1 6.5 17 H20"/><path d="M6.5 2 H20 V22 H6.5 A2.5 2.5 0 0 1 4 19.5 V4.5 A2.5 2.5 0 0 1 6.5 2 Z"/>',
+	Aport: '<path d="M4 21 V8 A8 8 0 0 1 20 8 V21"/><path d="M4 21 H20"/><path d="M9 21 V11 A3 3 0 0 1 15 11 V21"/><path d="M12 8 V4"/>'
 };
 
 function tabLabelWithIcon(name, label) {
