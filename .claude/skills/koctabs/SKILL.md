@@ -1,6 +1,6 @@
 ---
 name: koctabs
-description: Catálogo y reglas de arquitectura de los tabs externos (ExtraTabs) y tabs nativos vanilla en KoC PowerBot+. Usar SIEMPRE al agregar, importar, activar, inventariar o documentar tabs, o al tocar GlobalOptions.ExtraTabs / src/tabs/. Incluye la regla de oro: Throne, Champ y Boss son tabs NATIVOS vanilla (compilados), NO se importan por CDN.
+description: Catálogo y reglas de arquitectura de los tabs externos (ExtraTabs) y tabs nativos vanilla en KoC PowerBot+. Usar SIEMPRE al agregar, importar, activar, inventariar o documentar tabs, o al tocar GlobalOptions.ExtraTabs / src/tabs/. Incluye la regla de oro: Throne, Champ, Boss y Aport son tabs NATIVOS vanilla (compilados), NO se importan por CDN.
 ---
 
 # KoC Tabs — Catálogo y Reglas
@@ -9,17 +9,17 @@ Referencia única de tabs de este proyecto (KOClon "Host Adapter" + PowerBot+).
 
 ## Regla de oro (no olvidar nunca)
 
-**Throne, Champ y Boss son tabs NATIVOS vanilla** — viven en `src/tabs/<nombre>/`
+**Throne, Champ, Boss y Aport son tabs NATIVOS vanilla** — viven en `src/tabs/<nombre>/`
 como parte del compilado (`node build.js` → `script.js`). **NO** se importan por CDN
 ni se referencian en `GlobalOptions.ExtraTabs`. Si alguien te pide "agregar/importar
-Champ/Boss/Throne", la respuesta correcta es: portarlos como tab nativo vanilla,
+Champ/Boss/Throne/Aport", la respuesta correcta es: portarlos como tab nativo vanilla,
 como ya hicimos con Throne. Jamás hagas `enabled:true` en un ExtraTab que tenga
 equivalente nativo.
 
 ## Mecánica global
 
 - `GlobalOptions.ExtraTabs` (default en `src/options/global-options.js`, seed `ExtraTabs:`)
-  es la lista de **13 tabs externos de fábrica**, todos con `enabled:false` salvo que
+  es la lista de **12 tabs externos de fábrica** (Aport se saco del seed al nativizarlo), todos con `enabled:false` salvo que
   indiquen lo contrario. Se cargan por **URL externa** (`EXTERNAL_RESOURCE + "tabs/X.js"`),
   se descargan con `eval(atob(data))` en el arranque (`src/bootstrap/startup.js`:
   `TabLoad` + `TabAutoCheck`), cacheados en `GlobalOptions.ExtraTabs[e].data`,
@@ -30,7 +30,7 @@ equivalente nativo.
   `tabColor`, `tabDisabled`, `obj.show()`, etc.) y aparecen solos en la barra al
   compilar; se ocultan/activan en Configuración vía su checkbox.
 
-## Catálogo — 13 tabs externos de fábrica (ExtraTabs)
+## Catálogo — 12 tabs externos de fábrica (ExtraTabs)
 
 | # | Nombre interno | Archivo externo       | Nativo? | Qué hace |
 |---|----------------|-----------------------|---------|----------|
@@ -44,18 +44,32 @@ equivalente nativo.
 | 8 | Debug         | `tabs/Debug.js`      | ❌ externo | Panel de depuración/eval de la consola del script. |
 | 9 | Tournament    | `tabs/Tournament.js` | ❌ externo | Tab del Torneo (evento temporada KoC). |
 | 10| Megalith      | `tabs/Megalith.js`   | ❌ externo | Aportes al Megalito (evento alianza). |
-| 11| Aport         | `tabs/Aport.js`      | ❌ externo | Aportador de recursos al Megalito/Ciudad de la Alianza. |
+| 11| **Aport**      | `tabs/Aport.js` (legacy) | ✅ **NATIVO** | **AutoPort**: aportedor automático de recursos. Porta con Portal de Orden (tile libre en la provincia elegida o al azar), cae a Portal de Refugio si falla la busqueda de mapa, o gasta Paloma. Por ciudad: OnScout / rafaga de ataques en X min / ataques con mas de N tropas / todo ataque entrante. `Options.PortOptions` (clave conservada del ExtraTab). |
 | 12| Resources     | `tabs/Resources.js`  | ❌ externo | Panel de recursos por ciudad (tablero económico). |
 | 13| Joust         | `tabs/Joust.js`      | ❌ externo | Justas / Torneo de Caballeros (evento). |
 
 ## Estado actual
 
-- **Nativos implementados:** Throne, Champ, Boss.
+- **Nativos implementados:** Throne, Champ, Boss, Aport.
 - **Por importar (externos, enabled:false en default):** BulkAttack, Defend, Raid,
-  GuardWidget, Debug, Tournament, Megalith, Aport, Resources, Joust (10).
+  GuardWidget, Debug, Tournament, Megalith, Resources, Joust (9).
 - Procedimiento de fábrica para activar un externo sin cambiar código:
   Configuración → Tabs Adicionales → Add Tab con la URL, o setear
-  `"enabled": true` en el seed + bump de versión (el loader hace merge y lo evalúa).
+  `"enabled": true` en el seed + bump de versión (el loader lo evalúa).
+- **`ExtraTabs` NO hace merge**: el array se guarda tal cual en storage y solo el
+  seed de `src/options/global-options.js` aplica en install nueva o tras TabReset.
+  Por eso **quitar una entrada del seed no afecta a installs existentes**: siguen con
+  su array guardado, incluida esa entrada.
+- **Guard de tabs superados** (`NATIVE_TAB_REPLACEMENTS` + `isSupersededExtraTab()` en
+  `src/options/global-options.js`, aplicado en el bucle de `eval` de
+  `src/bootstrap/startup.js`): si el fuente de un ExtraTab tiene equivalente nativo
+  registrado, **no se evalúa**. Sin esto, un ExtraTab que el usuario tenía
+  habilitado crearía un segundo tab y además pisaría la versión nativa (el externo
+  define `Tabs.<nombre>` al evaluarse). Al nativizar un tab, agregá su fuente a ese
+  mapa, aunque porlegacy la entrada del seed ya esté `enabled:false`.
+- Al nativizar un externo: nombra el tab nativo como el del catálogo, pero **conservá
+  la clave de `Options` que usaba el externo** (ej. Aport → `Options.PortOptions`)
+  para que la config ya guardada por los usuarios siga sirviendo.
 
 ## Reglas de actualización de versión (obligatorias al tocar tabs)
 
