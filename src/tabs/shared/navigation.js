@@ -398,7 +398,7 @@ var cdtd = {
 			var cityId = uW.seed.cities[i][0];
 			var color = 'blue';
 			if (uW.seed.citystats['city' + cityId].gate != 0) { color = 'red'; }
-			if (Tabs.PortalTime && ((Options.PortOptions.PortCities && Options.PortOptions.PortCities[Cities.byID[cityId].idx + 1] == true) || (Options.PortOptions.PortCity && cityId == Options.PortOptions.PortCity)) && Options.PortOptions.Running) { color = 'cyan'; }
+			if (Tabs.Aport && Options.PortOptions && ((Options.PortOptions.PortCities && Options.PortOptions.PortCities[Cities.byID[cityId].idx + 1] == true) || (Options.PortOptions.PortCity && cityId == Options.PortOptions.PortCity)) && Options.PortOptions.Running) { color = 'cyan'; }
 			city.style.color = color;
 			city.style.border = '2px inset ' + color;
 			city.style.display = 'inline';

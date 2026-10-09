@@ -18,9 +18,9 @@ jobs:
       - name: Check Commit Message for Version
         id: check_msg
         run: |
-          # Get the full commit message from local git log
-          commit_msg=$(git log -1 --pretty=%B)
-          first_line=$(echo "$commit_msg" | head -n 1)
+          # Subject (%s): git normaliza y descarta un BOM inicial, que %B conservaria
+          # y romperia el match anclado ^KoC... (release saltado con job en success).
+          first_line=$(git log -1 --pretty=%s)
           echo "Commit message first line: $first_line"
           if [[ "$first_line" =~ ^KoC\ Power\ Bot\ Plus\ v([0-9.]+) ]]; then
             version="${BASH_REMATCH[1]}"

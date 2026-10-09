@@ -46,10 +46,23 @@ if (type === 'fix') {
 }
 
 const next = `${x}.${y}.${z}`;
+const previous = pkg.version;
 pkg.version = next;
 fs.writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n');
 
-console.log(`Versión: ${pkg.version} → ${next} (${label})`);
+// Sincroniza la plantilla `var Version` de src/core/version.js con package.json.
+// build.js ya inyecta la version en el output, pero sin esto la fuente queda con
+// una version vieja (confuso al leer el repo y al revisar "de que version es esto").
+const VERSION_SRC_PATH = path.join(ROOT, 'src', 'core', 'version.js');
+const VERSION_LINE_RE = /^(var Version = ')[^']*(';)$/m;
+const versionSrc = fs.readFileSync(VERSION_SRC_PATH, 'utf8');
+if (!VERSION_LINE_RE.test(versionSrc)) {
+  console.error(`No se encontró "var Version = '...'" en ${VERSION_SRC_PATH}; no se pudo sincronizar.`);
+  process.exit(1);
+}
+fs.writeFileSync(VERSION_SRC_PATH, versionSrc.replace(VERSION_LINE_RE, (_m, pre, post) => `${pre}${next}${post}`));
+
+console.log(`Versión: ${previous} → ${next} (${label})`);
 try {
   execSync('node build.js', { stdio: 'inherit', cwd: ROOT });
   execSync('node build.js --check', { stdio: 'inherit', cwd: ROOT });

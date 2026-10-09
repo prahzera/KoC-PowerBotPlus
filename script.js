@@ -1,6 +1,6 @@
 // ==UserScript==
 // @releasenotes		Fixed: AutoPort could get stuck after a failed attempt and never move your city out of danger again; it now recovers and keeps working. AutoPort is now built into the bot (no external tab to download), it no longer kicks you out to the portal page after it moves you, and it is now translated into Spanish with your existing settings kept.
-// @version		4.38.0
+// @version		4.38.1
 // @name			KoC Power Bot Plus
 // @namespace		PBP
 // @description		All-in-One Script for Kingdoms of Camelot
@@ -130,7 +130,7 @@ function InitPortalLayout() {
 }
 
 InitPortalLayout();
-var Version = '4.38.0';
+var Version = '4.38.1';
 var SourceName = "Power Bot Plus";
 function GlobalOptionsUpdate() {
 }
@@ -20166,7 +20166,7 @@ var cdtd = {
 			var cityId = uW.seed.cities[i][0];
 			var color = 'blue';
 			if (uW.seed.citystats['city' + cityId].gate != 0) { color = 'red'; }
-			if (Tabs.PortalTime && ((Options.PortOptions.PortCities && Options.PortOptions.PortCities[Cities.byID[cityId].idx + 1] == true) || (Options.PortOptions.PortCity && cityId == Options.PortOptions.PortCity)) && Options.PortOptions.Running) { color = 'cyan'; }
+			if (Tabs.Aport && Options.PortOptions && ((Options.PortOptions.PortCities && Options.PortOptions.PortCities[Cities.byID[cityId].idx + 1] == true) || (Options.PortOptions.PortCity && cityId == Options.PortOptions.PortCity)) && Options.PortOptions.Running) { color = 'cyan'; }
 			city.style.color = color;
 			city.style.border = '2px inset ' + color;
 			city.style.display = 'inline';
